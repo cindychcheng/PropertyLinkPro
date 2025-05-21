@@ -171,6 +171,10 @@ export function PropertyDialog({
                             <p className="text-sm text-neutral-medium">Service Type</p>
                             <p className="font-medium">{property.serviceType}</p>
                           </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Strata Contact</p>
+                            <p className="font-medium">{property.strataContactNumber || 'Not provided'}</p>
+                          </div>
                         </div>
                       )}
                     </div>
