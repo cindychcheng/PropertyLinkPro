@@ -35,7 +35,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export function useAppContext() {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error("useAppContext must be used within an AppProvider");
+    // Return default values instead of throwing an error
+    return {
+      isLoading: false,
+      setIsLoading: () => {},
+      activeBirthdayCount: 0,
+      setActiveBirthdayCount: () => {},
+      activeRateIncreaseCount: 0,
+      setActiveRateIncreaseCount: () => {},
+    };
   }
   return context;
 }
