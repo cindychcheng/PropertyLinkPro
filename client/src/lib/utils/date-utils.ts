@@ -27,7 +27,12 @@ export function formatInputDate(date: Date | string | null | undefined): string 
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   if (!isValid(dateObj)) return '';
   
-  return format(dateObj, 'yyyy-MM-dd');
+  // Use UTC date to avoid timezone issues
+  const year = dateObj.getUTCFullYear();
+  const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getUTCDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 }
 
 // Calculate months since a date

@@ -82,12 +82,12 @@ export function TenantForm({
       const payload = {
         propertyAddress: values.propertyAddress,
         serviceType: values.serviceType,
-        moveInDate: new Date(values.moveInDate + 'T12:00:00').toISOString(),
-        moveOutDate: values.moveOutDate ? new Date(values.moveOutDate + 'T12:00:00').toISOString() : undefined,
+        moveInDate: values.moveInDate,
+        moveOutDate: values.moveOutDate || undefined,
         name: values.name,
         contactNumber: values.contactNumber || undefined,
         email: values.email || undefined,
-        birthday: values.birthday ? new Date(values.birthday + 'T12:00:00').toISOString() : undefined,
+        birthday: values.birthday || undefined,
       };
       
       // Make sure we have a valid tenant ID when editing

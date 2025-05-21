@@ -17,6 +17,7 @@ import {
   getMonthsSince
 } from "@/lib/utils/date-utils";
 import { TrendingUp } from "lucide-react";
+import { PropertyWithDetails } from "@shared/schema";
 
 type PropertyDialogProps = {
   propertyAddress: string | null;

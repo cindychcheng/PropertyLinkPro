@@ -113,7 +113,7 @@ export function RateIncreaseForm({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       const payload = {
         propertyAddress: values.propertyAddress,
-        increaseDate: new Date(values.latestRateIncreaseDate).toISOString(),
+        increaseDate: values.latestRateIncreaseDate,
         newRate: parseFloat(values.latestRentalRate),
         notes: values.notes,
       };
