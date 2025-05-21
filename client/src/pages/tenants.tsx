@@ -26,19 +26,62 @@ export default function Tenants() {
     setCurrentPage(page);
   };
 
-  const handleEditTenant = (property: any) => {
+  // Function to look up tenant ID from the db
+  const fetchTenantForProperty = async (propertyAddress: string) => {
+    try {
+      // Retrieve the tenant data directly from the API
+      const response = await fetch(`/api/tenants/${encodeURIComponent(propertyAddress)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tenant data');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching tenant:", error);
+      return null;
+    }
+  };
+
+  const handleEditTenant = async (property: any) => {
     console.log("Editing tenant for property:", property);
-    // Extract tenant ID and ensure it's included in the edit data
-    const tenantData = {
-      id: property.tenant?.id, // Make sure ID is explicitly assigned
-      propertyAddress: property.propertyAddress,
-      serviceType: property.serviceType,
-      ...property.tenant // Add all tenant properties
-    };
-    
-    console.log("Tenant data for edit:", tenantData);
-    setEditTenant(tenantData);
-    setActiveTab("add");
+
+    try {
+      // Get actual tenant data from the database to ensure we have the correct ID
+      const tenantFromDb = await fetchTenantForProperty(property.propertyAddress);
+      console.log("Tenant data from database:", tenantFromDb);
+      
+      if (tenantFromDb) {
+        // Create tenant data with the confirmed ID from database
+        const tenantData = {
+          id: tenantFromDb.id, // Use the ID from database query
+          propertyAddress: property.propertyAddress,
+          serviceType: property.serviceType,
+          moveInDate: tenantFromDb.moveInDate,
+          moveOutDate: tenantFromDb.moveOutDate,
+          name: tenantFromDb.name,
+          contactNumber: tenantFromDb.contactNumber,
+          email: tenantFromDb.email,
+          birthday: tenantFromDb.birthday
+        };
+        
+        console.log("Tenant data for edit with confirmed ID:", tenantData);
+        setEditTenant(tenantData);
+        setActiveTab("add");
+      } else {
+        // Handle case where tenant isn't found
+        toast({
+          title: "Error",
+          description: "Could not retrieve tenant information for this property.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error preparing tenant edit:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while preparing to edit tenant information.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleFormSuccess = () => {
