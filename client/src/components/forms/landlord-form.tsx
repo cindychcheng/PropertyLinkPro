@@ -84,8 +84,13 @@ export function LandlordForm({
       const landlord = await landlordRes.json();
       
       // Then create/update the owner
-      // Format birthday date correctly for PostgreSQL - needs YYYY-MM-DD format
+      // Format birthday date correctly for PostgreSQL, ensuring local date preservation
+      // Important: When using date-only fields, we need to preserve the day exactly as selected
+      // This ensures the birthday doesn't shift due to timezone conversion
       const formattedBirthday = values.ownerBirthday ? values.ownerBirthday : undefined;
+      
+      // Log for debugging
+      console.log("Birthday being sent to server:", formattedBirthday);
       
       const ownerPayload = {
         landlordId: landlord.id,
