@@ -346,54 +346,142 @@ export function PropertyDialog({
             
             <TabsContent value="landlord" className="py-4">
               <div className="bg-neutral-lightest p-4 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Landlord Details</h2>
-                {property && property.landlordOwners && property.landlordOwners.length > 0 ? (
-                  <div>
-                    <p className="font-medium">{property.landlordOwners[0].name}</p>
-                    <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
-                    <p className="text-sm text-neutral-medium">
-                      Birthday: {property.landlordOwners[0].birthday 
-                        ? formatDisplayDate(property.landlordOwners[0].birthday) 
-                        : 'Not provided'}
-                    </p>
-                  </div>
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Landlord Details</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEditingLandlord(true)}
+                    className="h-8 px-2 text-neutral-medium hover:text-primary"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+                
+                {editingLandlord ? (
+                  <LandlordForm 
+                    landlordData={{
+                      propertyAddress: property.propertyAddress,
+                      keyNumber: property.keyNumber,
+                      strataContactNumber: property.strataContactNumber,
+                      owner: property.landlordOwners && property.landlordOwners.length > 0 
+                        ? {
+                            name: property.landlordOwners[0].name,
+                            contactNumber: property.landlordOwners[0].contactNumber,
+                            birthday: property.landlordOwners[0].birthday
+                          }
+                        : undefined
+                    }}
+                    isEdit={true}
+                    onSuccess={handleEditSuccess}
+                    onCancel={() => setEditingLandlord(false)}
+                  />
                 ) : (
-                  <p className="text-neutral-medium">No landlord information available</p>
+                  property && property.landlordOwners && property.landlordOwners.length > 0 ? (
+                    <div>
+                      <p className="font-medium">{property.landlordOwners[0].name}</p>
+                      <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
+                      <p className="text-sm text-neutral-medium">
+                        Birthday: {property.landlordOwners[0].birthday 
+                          ? formatDisplayDate(property.landlordOwners[0].birthday) 
+                          : 'Not provided'}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-neutral-medium">No landlord information available</p>
+                  )
                 )}
               </div>
             </TabsContent>
             
             <TabsContent value="tenant" className="py-4">
               <div className="bg-neutral-lightest p-4 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Tenant Details</h2>
-                {property && property.tenant ? (
-                  <div>
-                    <p className="font-medium">{property.tenant.name}</p>
-                    <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
-                    <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
-                    <p className="text-sm text-neutral-medium">
-                      Birthday: {property.tenant.birthday 
-                        ? formatDisplayDate(property.tenant.birthday) 
-                        : 'Not provided'}
-                    </p>
-                    <p className="mt-4"><strong>Move-in Date:</strong> {property.tenant.moveInDate 
-                      ? formatDisplayDate(property.tenant.moveInDate) 
-                      : 'Not specified'}</p>
-                    
-                    {property.tenant.moveOutDate && (
-                      <p><strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}</p>
-                    )}
-                  </div>
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Tenant Details</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEditingTenant(true)}
+                    className="h-8 px-2 text-neutral-medium hover:text-primary"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+                
+                {editingTenant ? (
+                  <TenantForm 
+                    tenantData={{
+                      id: property.tenant?.id,
+                      propertyAddress: property.propertyAddress,
+                      name: property.tenant?.name || "",
+                      contactNumber: property.tenant?.contactNumber,
+                      email: property.tenant?.email,
+                      birthday: property.tenant?.birthday,
+                      moveInDate: property.tenant?.moveInDate || new Date(),
+                      moveOutDate: property.tenant?.moveOutDate,
+                      serviceType: property.serviceType || ""
+                    }}
+                    isEdit={!!property.tenant}
+                    onSuccess={handleEditSuccess}
+                    onCancel={() => setEditingTenant(false)}
+                  />
                 ) : (
-                  <p className="text-warning italic">Vacant</p>
+                  property && property.tenant ? (
+                    <div>
+                      <p className="font-medium">{property.tenant.name}</p>
+                      <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
+                      <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
+                      <p className="text-sm text-neutral-medium">
+                        Birthday: {property.tenant.birthday 
+                          ? formatDisplayDate(property.tenant.birthday) 
+                          : 'Not provided'}
+                      </p>
+                      <p className="mt-4"><strong>Move-in Date:</strong> {property.tenant.moveInDate 
+                        ? formatDisplayDate(property.tenant.moveInDate) 
+                        : 'Not specified'}</p>
+                      
+                      {property.tenant.moveOutDate && (
+                        <p><strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-warning italic">Vacant</p>
+                  )
                 )}
               </div>
             </TabsContent>
             
             <TabsContent value="rental" className="py-4">
               <div className="bg-neutral-lightest p-4 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Rental History</h2>
-                {isLoadingHistory ? (
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Rental History</h2>
+                  {property?.rentalInfo && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setEditingRentalRate(true)}
+                      className="h-8 px-2 text-neutral-medium hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit Rate
+                    </Button>
+                  )}
+                </div>
+                
+                {editingRentalRate && property?.rentalInfo ? (
+                  <RateIncreaseForm 
+                    propertyData={{
+                      propertyAddress: property.propertyAddress,
+                      rentalRate: property.rentalInfo.latestRentalRate,
+                      rateIncreaseDate: property.rentalInfo.latestRateIncreaseDate
+                    }}
+                    isEdit={true}
+                    onSuccess={handleEditSuccess}
+                    onCancel={() => setEditingRentalRate(false)}
+                  />
+                ) : isLoadingHistory ? (
                   <p>Loading...</p>
                 ) : rentalHistory && rentalHistory.length > 0 ? (
                   <div className="overflow-x-auto">
