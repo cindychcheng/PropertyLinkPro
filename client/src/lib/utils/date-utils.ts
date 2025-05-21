@@ -18,19 +18,21 @@ export function formatDisplayDate(date: Date | string | null | undefined): strin
     } else {
       // Parse other date formats
       const dateObj = new Date(date);
-      year = dateObj.getFullYear();
-      month = dateObj.getMonth();
-      day = dateObj.getDate();
+      // Use UTC methods to prevent timezone shifts
+      year = dateObj.getUTCFullYear();
+      month = dateObj.getUTCMonth();
+      day = dateObj.getUTCDate();
     }
   } else {
     // If a Date object was provided
-    year = date.getFullYear();
-    month = date.getMonth();
-    day = date.getDate();
+    // Use UTC methods to prevent timezone shifts
+    year = date.getUTCFullYear();
+    month = date.getUTCMonth();
+    day = date.getUTCDate();
   }
   
-  // Create a new date set to noon to avoid timezone boundary issues
-  const normalizedDate = new Date(year, month, day, 12, 0, 0);
+  // Create a new date set to noon UTC to avoid timezone boundary issues
+  const normalizedDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
   
   if (!isValid(normalizedDate)) return 'Invalid Date';
   
@@ -63,7 +65,8 @@ export function formatBirthday(date: Date | string | null | undefined): string {
     // Handle other date string formats by parsing
     try {
       const dateObj = new Date(date);
-      return `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}`;
+      // Always use UTC methods to prevent timezone issues
+      return `${monthNames[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}`;
     } catch (e) {
       return 'Invalid Date';
     }
@@ -71,7 +74,8 @@ export function formatBirthday(date: Date | string | null | undefined): string {
   
   // Handle Date object
   try {
-    return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+    // Always use UTC methods to prevent timezone issues
+    return `${monthNames[date.getUTCMonth()]} ${date.getUTCDate()}`;
   } catch (e) {
     return 'Invalid Date';
   }
@@ -96,28 +100,29 @@ export function formatInputDate(date: Date | string | null | undefined): string 
     } else {
       // Parse other date formats
       dateObj = new Date(date);
-      // Create a new date with just the date part (no time) to prevent timezone shifts
-      year = dateObj.getFullYear();
-      month = dateObj.getMonth();
-      day = dateObj.getDate();
+      // Use UTC methods to prevent timezone shifts
+      year = dateObj.getUTCFullYear();
+      month = dateObj.getUTCMonth();
+      day = dateObj.getUTCDate();
     }
   } else {
     // If a Date object was provided
-    year = date.getFullYear();
-    month = date.getMonth();
-    day = date.getDate();
+    // Use UTC methods to prevent timezone shifts
+    year = date.getUTCFullYear();
+    month = date.getUTCMonth();
+    day = date.getUTCDate();
   }
   
-  // Create a new date set to noon to avoid timezone boundary issues
-  const normalizedDate = new Date(year, month, day, 12, 0, 0);
+  // Create a new date set to noon UTC to avoid timezone boundary issues
+  const normalizedDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
   
   if (!isValid(normalizedDate)) return '';
   
   // Format as YYYY-MM-DD for input fields
-  const formattedYear = normalizedDate.getFullYear();
+  const formattedYear = normalizedDate.getUTCFullYear();
   // Month is 0-indexed in JS Date, so add 1 for display
-  const formattedMonth = String(normalizedDate.getMonth() + 1).padStart(2, '0');
-  const formattedDay = String(normalizedDate.getDate()).padStart(2, '0');
+  const formattedMonth = String(normalizedDate.getUTCMonth() + 1).padStart(2, '0');
+  const formattedDay = String(normalizedDate.getUTCDate()).padStart(2, '0');
   
   return `${formattedYear}-${formattedMonth}-${formattedDay}`;
 }
