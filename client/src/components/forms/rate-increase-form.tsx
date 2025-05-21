@@ -124,34 +124,13 @@ export function RateIncreaseForm({
 
   const increaseMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      // For editing an existing record, we need to use the rental-increases endpoint
-      // with the appropriate fields
-      if (isEdit && propertyData) {
-        const payload = {
-          latestRateIncreaseDate: values.latestRateIncreaseDate,
-          latestRentalRate: parseFloat(values.latestRentalRate),
-          // Calculate next allowable values (12 months from increase date)
-          nextAllowableRentalIncreaseDate: calculateNextAllowableDate(new Date(values.latestRateIncreaseDate)),
-          nextAllowableRentalRate: calculateNextAllowableRate(parseFloat(values.latestRentalRate)),
-          // Calculate reminder date (8 months from increase date)
-          reminderDate: calculateReminderDate(new Date(values.latestRateIncreaseDate))
-        };
-        
-        const res = await apiRequest(
-          "PUT",
-          `/api/rental-increases/${encodeURIComponent(values.propertyAddress)}`,
-          payload
-        );
-        
-        return res.json();
-      }
-      
-      // For processing a new rate increase
+      // For any type of rental rate update, use the process-rental-increase endpoint
+      // which handles both creating rate history and updating rate information
       const payload = {
         propertyAddress: values.propertyAddress,
         increaseDate: values.latestRateIncreaseDate,
         newRate: parseFloat(values.latestRentalRate),
-        notes: values.notes,
+        notes: values.notes || "Standard rate update",
       };
       
       const res = await apiRequest(
