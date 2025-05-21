@@ -24,10 +24,25 @@ export function formatBirthday(date: Date | string | null | undefined): string {
 export function formatInputDate(date: Date | string | null | undefined): string {
   if (!date) return '';
   
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  // Ensure we handle the date properly regardless of format
+  let dateObj: Date;
+  
+  if (typeof date === 'string') {
+    // If it's a date-only string like "2023-05-15"
+    if (date.length === 10 && date.includes('-')) {
+      const [year, month, day] = date.split('-').map(num => parseInt(num, 10));
+      dateObj = new Date(Date.UTC(year, month - 1, day));
+    } else {
+      // For ISO strings or other formats
+      dateObj = new Date(date);
+    }
+  } else {
+    dateObj = date;
+  }
+  
   if (!isValid(dateObj)) return '';
   
-  // Use UTC date to avoid timezone issues
+  // Use UTC date to ensure consistent date display across timezones
   const year = dateObj.getUTCFullYear();
   const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getUTCDate()).padStart(2, '0');

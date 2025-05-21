@@ -79,6 +79,7 @@ export function TenantForm({
 
   const tenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      // Format dates properly for PostgreSQL (YYYY-MM-DD)
       const payload = {
         propertyAddress: values.propertyAddress,
         serviceType: values.serviceType,

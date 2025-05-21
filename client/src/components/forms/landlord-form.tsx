@@ -84,11 +84,14 @@ export function LandlordForm({
       const landlord = await landlordRes.json();
       
       // Then create/update the owner
+      // Format birthday date correctly for PostgreSQL - needs YYYY-MM-DD format
+      const formattedBirthday = values.ownerBirthday ? values.ownerBirthday : undefined;
+      
       const ownerPayload = {
         landlordId: landlord.id,
         name: values.ownerName,
         contactNumber: values.ownerContactNumber || undefined,
-        birthday: values.ownerBirthday || undefined,
+        birthday: formattedBirthday,
       };
       
       // For edit, we need to get the owners first to find their IDs
