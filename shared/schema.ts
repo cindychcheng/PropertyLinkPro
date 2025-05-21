@@ -138,6 +138,7 @@ export type PropertyWithDetails = {
     birthday?: Date;
   }>;
   tenant?: {
+    id: number;
     name: string;
     contactNumber?: string;
     email?: string;
