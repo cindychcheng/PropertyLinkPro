@@ -407,6 +407,7 @@ export class DatabaseStorage implements IStorage {
     
     if (tenant) {
       propertyDetails.tenant = {
+        id: tenant.id,
         name: tenant.name,
         contactNumber: tenant.contactNumber || undefined,
         email: tenant.email || undefined,
