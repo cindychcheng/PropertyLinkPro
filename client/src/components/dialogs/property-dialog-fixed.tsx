@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Dialog, 
@@ -16,7 +16,11 @@ import {
   formatCurrency,
   getMonthsSince
 } from "@/lib/utils/date-utils";
-import { TrendingUp } from "lucide-react";
+import { PropertyForm } from "@/components/forms/property-form";
+import { TenantForm } from "@/components/forms/tenant-form";
+import { LandlordForm } from "@/components/forms/landlord-form";
+import { RateIncreaseForm } from "@/components/forms/rate-increase-form";
+import { Pencil, TrendingUp } from "lucide-react";
 import { PropertyWithDetails } from "@shared/schema";
 
 type PropertyDialogProps = {
@@ -34,6 +38,13 @@ export function PropertyDialog({
 }: PropertyDialogProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // State for edit modes
+  const [editingProperty, setEditingProperty] = useState(false);
+  const [editingTenant, setEditingTenant] = useState(false);
+  const [editingLandlord, setEditingLandlord] = useState(false);
+  const [editingRentalRate, setEditingRentalRate] = useState(false);
 
   // Query for property data
   const { data: property, isLoading, error } = useQuery<PropertyWithDetails>({
@@ -48,6 +59,33 @@ export function PropertyDialog({
     enabled: isOpen && !!propertyAddress,
     staleTime: 60000, // 1 minute
   });
+  
+  // Handler for when editing is complete
+  const handleEditSuccess = () => {
+    // Reset all edit states
+    setEditingProperty(false);
+    setEditingTenant(false);
+    setEditingLandlord(false);
+    setEditingRentalRate(false);
+    
+    // Refresh data
+    if (propertyAddress) {
+      queryClient.invalidateQueries({
+        queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress)}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/properties'],
+      });
+    }
+    
+    toast({
+      title: "Changes saved",
+      description: "Your changes have been saved successfully.",
+    });
+  };
 
   // Handle errors
   if (error) {
@@ -89,23 +127,52 @@ export function PropertyDialog({
                   <div className="md:col-span-2">
                     <div className="bg-neutral-lightest rounded-lg p-4">
                       <h4 className="font-medium mb-4">Property Information</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex justify-between items-start mb-2">
                         <div>
-                          <p className="text-sm text-neutral-medium">Address</p>
-                          <p className="font-medium">{property.propertyAddress}</p>
-                          {property.propertyAddress && property.propertyAddress.includes(',') && (
-                            <p className="text-sm">{property.propertyAddress.split(',')[1]}</p>
-                          )}
+                          <h4 className="font-medium">Property Details</h4>
                         </div>
-                        <div>
-                          <p className="text-sm text-neutral-medium">Key Number</p>
-                          <p className="font-medium">{property.keyNumber}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-neutral-medium">Service Type</p>
-                          <p className="font-medium">{property.serviceType}</p>
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setEditingProperty(true)}
+                          className="h-8 px-2 text-neutral-medium hover:text-primary"
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                       </div>
+                      
+                      {editingProperty ? (
+                        <PropertyForm 
+                          propertyData={{
+                            propertyAddress: property.propertyAddress,
+                            keyNumber: property.keyNumber,
+                            strataContactNumber: property.strataContactNumber,
+                            serviceType: property.serviceType || ""
+                          }}
+                          isEdit={true}
+                          onSuccess={handleEditSuccess}
+                          onCancel={() => setEditingProperty(false)}
+                        />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-neutral-medium">Address</p>
+                            <p className="font-medium">{property.propertyAddress}</p>
+                            {property.propertyAddress && property.propertyAddress.includes(',') && (
+                              <p className="text-sm">{property.propertyAddress.split(',')[1]}</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Key Number</p>
+                            <p className="font-medium">{property.keyNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Service Type</p>
+                            <p className="font-medium">{property.serviceType}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     {property.rentalInfo && (
