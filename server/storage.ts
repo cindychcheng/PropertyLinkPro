@@ -117,17 +117,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLandlordOwner(ownerData: InsertLandlordOwner): Promise<LandlordOwner> {
+    // Import normalize function directly to prevent circular dependencies
+    const { normalizeDate } = await import('./date-utils');
+    
+    // Make a copy of the data to avoid modifying the original
+    const safeData = {...ownerData};
+    
+    // Handle date fields - normalize before storing in db
+    if (safeData.birthday) {
+      // Cast to any to allow assignment, then the db typing will handle it correctly
+      (safeData as any).birthday = normalizeDate(safeData.birthday);
+    }
+    
     const [newOwner] = await db
       .insert(landlordOwners)
-      .values(ownerData)
+      .values(safeData)
       .returning();
+    
     return newOwner;
   }
 
   async updateLandlordOwner(id: number, ownerData: Partial<InsertLandlordOwner>): Promise<LandlordOwner | undefined> {
+    // Import normalize function directly to prevent circular dependencies
+    const { normalizeDate } = await import('./date-utils');
+    
+    // Make a copy of the data to avoid modifying the original
+    const safeData = {...ownerData};
+    
+    // Handle date fields - normalize before storing in db
+    if (safeData.birthday) {
+      // Cast to any to allow assignment, then the db typing will handle it correctly
+      (safeData as any).birthday = normalizeDate(safeData.birthday);
+    }
+    
     const [updatedOwner] = await db
       .update(landlordOwners)
-      .set(ownerData)
+      .set(safeData)
       .where(eq(landlordOwners.id, id))
       .returning();
     return updatedOwner || undefined;
@@ -160,17 +185,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTenant(tenantData: InsertTenant): Promise<Tenant> {
+    // Import normalize function directly to prevent circular dependencies
+    const { normalizeDate } = await import('./date-utils');
+    
+    // Make a copy of the data to avoid modifying the original
+    const safeData = {...tenantData};
+    
+    // Handle date fields - normalize before storing in db
+    if (safeData.birthday) {
+      // Cast to any to allow assignment, then the db typing will handle it correctly
+      (safeData as any).birthday = normalizeDate(safeData.birthday);
+    }
+    
+    if (safeData.moveInDate) {
+      (safeData as any).moveInDate = normalizeDate(safeData.moveInDate);
+    }
+    
+    if (safeData.moveOutDate) {
+      (safeData as any).moveOutDate = normalizeDate(safeData.moveOutDate);
+    }
+    
     const [newTenant] = await db
       .insert(tenants)
-      .values(tenantData)
+      .values(safeData)
       .returning();
     return newTenant;
   }
 
   async updateTenant(id: number, tenantData: Partial<InsertTenant>): Promise<Tenant | undefined> {
+    // Import normalize function directly to prevent circular dependencies
+    const { normalizeDate } = await import('./date-utils');
+    
+    // Make a copy of the data to avoid modifying the original
+    const safeData = {...tenantData};
+    
+    // Handle date fields - normalize before storing in db
+    if (safeData.birthday) {
+      // Cast to any to allow assignment, then the db typing will handle it correctly
+      (safeData as any).birthday = normalizeDate(safeData.birthday);
+    }
+    
+    if (safeData.moveInDate) {
+      (safeData as any).moveInDate = normalizeDate(safeData.moveInDate);
+    }
+    
+    if (safeData.moveOutDate) {
+      (safeData as any).moveOutDate = normalizeDate(safeData.moveOutDate);
+    }
+    
     const [updatedTenant] = await db
       .update(tenants)
-      .set(tenantData)
+      .set(safeData)
       .where(eq(tenants.id, id))
       .returning();
     return updatedTenant || undefined;
