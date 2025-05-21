@@ -15,6 +15,25 @@ import {
 import { add, differenceInMonths, format } from "date-fns";
 
 // Define storage interface
+import { 
+  landlords,
+  landlordOwners,
+  tenants,
+  rentalRateIncreases,
+  rentalRateHistory,
+  type Landlord,
+  type LandlordOwner,
+  type Tenant,
+  type RentalRateIncrease,
+  type RentalRateHistory,
+  type InsertLandlord,
+  type InsertLandlordOwner,
+  type InsertTenant,
+  type InsertRentalRateIncrease,
+  type InsertRentalRateHistory,
+  type PropertyWithDetails
+} from "@shared/schema";
+
 export interface IStorage {
   // Landlord operations
   getLandlords(): Promise<Landlord[]>;
@@ -551,8 +570,26 @@ export class MemStorage implements IStorage {
 }
 
 import { db } from "./db";
-import { eq, and, isNull, desc, asc, gte, lte } from "drizzle-orm";
+import { eq, and, isNull, desc, asc, gte, lte, not } from "drizzle-orm";
 import { format, addMonths, addDays } from "date-fns";
+import { 
+  landlords,
+  landlordOwners,
+  tenants,
+  rentalRateIncreases,
+  rentalRateHistory,
+  type Landlord,
+  type LandlordOwner,
+  type Tenant,
+  type RentalRateIncrease,
+  type RentalRateHistory,
+  type InsertLandlord,
+  type InsertLandlordOwner,
+  type InsertTenant,
+  type InsertRentalRateIncrease,
+  type InsertRentalRateHistory,
+  type PropertyWithDetails
+} from "@shared/schema";
 
 // Database implementation
 export class DatabaseStorage implements IStorage {
