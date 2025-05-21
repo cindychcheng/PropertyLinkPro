@@ -35,22 +35,41 @@ export function PropertyDialog({
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
 
-  const { data: property = {}, isLoading, error } = useQuery({
+  // Property details query
+  const { 
+    data: property, 
+    isLoading, 
+    error: propertyError 
+  } = useQuery<PropertyWithDetails>({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
     staleTime: 60000, // 1 minute
   });
 
-  const { data: rentalHistory = [], isLoading: isLoadingHistory } = useQuery({
+  // Rental history query
+  const { 
+    data: rentalHistory = [], 
+    isLoading: isLoadingHistory,
+    error: historyError
+  } = useQuery<any[]>({
     queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
     staleTime: 60000, // 1 minute
   });
 
-  if (error) {
+  // Handle errors
+  if (propertyError) {
     toast({
       title: "Error fetching property details",
-      description: (error as Error).message,
+      description: (propertyError as Error).message,
+      variant: "destructive",
+    });
+  }
+
+  if (historyError) {
+    toast({
+      title: "Error fetching rental history",
+      description: (historyError as Error).message,
       variant: "destructive",
     });
   }
