@@ -87,16 +87,7 @@ export function LandlordForm({
       // Format birthday date correctly for PostgreSQL, ensuring local date preservation
       // Important: When using date-only fields, we need to preserve the day exactly as selected
       // This ensures the birthday doesn't shift due to timezone conversion
-      let formattedBirthday = undefined;
-      
-      if (values.ownerBirthday) {
-        // If it's a date-only string like "1983-02-04", extract the exact components
-        const [year, month, day] = values.ownerBirthday.split('-').map(n => parseInt(n, 10));
-        
-        // Set date with explicit UTC to prevent any timezone shifting
-        const utcDate = new Date(Date.UTC(year, month-1, day, 12, 0, 0));
-        formattedBirthday = utcDate.toISOString().split('T')[0]; // Get YYYY-MM-DD format
-      }
+      const formattedBirthday = values.ownerBirthday ? values.ownerBirthday : undefined;
       
       // Log for debugging
       console.log("Birthday being sent to server:", formattedBirthday);
