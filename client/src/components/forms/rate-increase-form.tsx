@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { PropertyWithDetails } from "@shared/schema";
 import { 
   formatInputDate, 
   formatCurrency, 
@@ -62,7 +63,7 @@ export function RateIncreaseForm({
   const effectiveAddress = propertyData?.propertyAddress || propertyAddress || "";
   
   // Fetch property details to get current rate (only if not provided through propertyData)
-  const { data: property, isLoading } = useQuery({
+  const { data: property, isLoading } = useQuery<PropertyWithDetails>({
     queryKey: [`/api/properties/${encodeURIComponent(effectiveAddress)}`],
     enabled: !propertyData && !!effectiveAddress,
     staleTime: 60000, // 1 minute
