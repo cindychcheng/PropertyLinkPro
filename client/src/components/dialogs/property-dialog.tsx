@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   formatDisplayDate, 
   formatCurrency,
+  getMonthsSince
 } from "@/lib/utils/date-utils";
 import { TrendingUp } from "lucide-react";
 
@@ -298,27 +299,302 @@ export function PropertyDialog({
             </TabsContent>
             
             <TabsContent value="landlord">
-              <div className="py-8 text-center">
-                <p className="text-neutral-medium">Landlord details will be implemented in a future update.</p>
-              </div>
+              {isLoading ? (
+                <div className="p-6">
+                  <Skeleton className="h-6 w-40 mb-4" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                </div>
+              ) : property.landlordOwners && Array.isArray(property.landlordOwners) && property.landlordOwners.length > 0 ? (
+                <div className="p-6">
+                  <h4 className="font-medium mb-6">Landlord Information</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4 mb-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-neutral-medium">Name</p>
+                        <p className="font-medium">{property.landlordOwners[0].name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Contact Number</p>
+                        <p className="font-medium">{property.landlordOwners[0].contactNumber || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Birthday</p>
+                        <p className="font-medium">
+                          {property.landlordOwners[0].birthday 
+                            ? formatDisplayDate(new Date(property.landlordOwners[0].birthday))
+                            : 'Not provided'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h4 className="font-medium mb-4">Property Details</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-neutral-medium">Property Address</p>
+                        <p className="font-medium">{property.propertyAddress || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Key Number</p>
+                        <p className="font-medium">{property.keyNumber || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Service Type</p>
+                        <p className="font-medium">{property.serviceType || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Strata Contact</p>
+                        <p className="font-medium">{property.strataContactNumber || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-neutral-medium">No landlord information available for this property.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="tenant">
-              <div className="py-8 text-center">
-                <p className="text-neutral-medium">Tenant details will be implemented in a future update.</p>
-              </div>
+              {isLoading ? (
+                <div className="p-6">
+                  <Skeleton className="h-6 w-40 mb-4" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                </div>
+              ) : property.tenant ? (
+                <div className="p-6">
+                  <h4 className="font-medium mb-6">Tenant Information</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4 mb-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-neutral-medium">Name</p>
+                        <p className="font-medium">{property.tenant.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Contact Number</p>
+                        <p className="font-medium">{property.tenant.contactNumber || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Email</p>
+                        <p className="font-medium">{property.tenant.email || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Birthday</p>
+                        <p className="font-medium">
+                          {property.tenant.birthday 
+                            ? formatDisplayDate(new Date(property.tenant.birthday))
+                            : 'Not provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Move-in Date</p>
+                        <p className="font-medium">
+                          {property.tenant.moveInDate 
+                            ? formatDisplayDate(new Date(property.tenant.moveInDate))
+                            : 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Tenancy Duration</p>
+                        <p className="font-medium">
+                          {property.tenant.moveInDate 
+                            ? `${getMonthsSince(new Date(property.tenant.moveInDate))} months`
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h4 className="font-medium mb-4">Lease Information</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-neutral-medium">Current Rental Rate</p>
+                        <p className="font-medium">
+                          {property.rentalInfo && property.rentalInfo.latestRentalRate
+                            ? `${formatCurrency(property.rentalInfo.latestRentalRate)}/month`
+                            : 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-medium">Last Increase Date</p>
+                        <p className="font-medium">
+                          {property.rentalInfo && property.rentalInfo.latestRateIncreaseDate
+                            ? formatDisplayDate(new Date(property.rentalInfo.latestRateIncreaseDate))
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-neutral-medium">This property is currently vacant. No tenant information available.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="rental">
-              <div className="py-8 text-center">
-                <p className="text-neutral-medium">Full rental history will be implemented in a future update.</p>
-              </div>
+              {isLoadingHistory ? (
+                <div className="p-6">
+                  <Skeleton className="h-6 w-40 mb-4" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+              ) : rentalHistory && rentalHistory.length > 0 ? (
+                <div className="p-6">
+                  <h4 className="font-medium mb-6">Rental Rate History</h4>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-neutral-light">
+                      <thead className="bg-neutral-lightest">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Previous Rate
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            New Rate
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Increase %
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Notes
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-neutral-light">
+                        {rentalHistory.map((history: any, index: number) => {
+                          const previousRate = parseFloat(history.previousRate);
+                          const newRate = parseFloat(history.newRate);
+                          const percentageIncrease = ((newRate - previousRate) / previousRate) * 100;
+                          
+                          return (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {formatDisplayDate(new Date(history.increaseDate))}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {formatCurrency(previousRate)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {formatCurrency(newRate)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                +{percentageIncrease.toFixed(1)}%
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                {history.notes || 'No notes'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {property.rentalInfo && (
+                    <div className="mt-6 bg-neutral-lightest rounded-lg p-4">
+                      <h4 className="font-medium mb-4">Next Rental Increase</h4>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-sm text-neutral-medium">Eligible Date</p>
+                          <p className="font-medium">
+                            {property.rentalInfo.nextAllowableRentalIncreaseDate
+                              ? formatDisplayDate(new Date(property.rentalInfo.nextAllowableRentalIncreaseDate))
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-neutral-medium">Maximum Allowable Rate</p>
+                          <p className="font-medium">
+                            {property.rentalInfo.nextAllowableRentalRate
+                              ? `${formatCurrency(property.rentalInfo.nextAllowableRentalRate)}/month`
+                              : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Button 
+                          className="bg-primary text-white"
+                          onClick={() => property.propertyAddress && onProcessRateIncrease(property.propertyAddress)}
+                          disabled={!property.propertyAddress}
+                        >
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Process New Rate Increase
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-neutral-medium">No rental increase history is available for this property.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="notes">
-              <div className="py-8 text-center">
-                <p className="text-neutral-medium">Notes will be implemented in a future update.</p>
-              </div>
+              {isLoading ? (
+                <div className="p-6">
+                  <Skeleton className="h-6 w-40 mb-4" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+              ) : (
+                <div className="p-6">
+                  <h4 className="font-medium mb-6">Property Notes</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4 mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h5 className="text-sm font-medium">General Notes</h5>
+                      <Button variant="outline" size="sm">Add Note</Button>
+                    </div>
+                    
+                    <div className="bg-white rounded-md p-4 mb-4 border border-neutral-light">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h6 className="font-medium">Property inspection completed</h6>
+                          <p className="text-sm mt-2">Annual inspection completed with no major issues found. Minor repairs needed for kitchen faucet.</p>
+                        </div>
+                        <div className="text-xs text-neutral-medium">May 10, 2025</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-md p-4 border border-neutral-light">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h6 className="font-medium">Tenant request</h6>
+                          <p className="text-sm mt-2">Tenant requested information about lease renewal terms. Follow up needed by June 1st.</p>
+                        </div>
+                        <div className="text-xs text-neutral-medium">April 25, 2025</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h4 className="font-medium mb-4">Maintenance History</h4>
+                  <div className="bg-neutral-lightest rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h5 className="text-sm font-medium">Recent Maintenance</h5>
+                      <Button variant="outline" size="sm">Add Maintenance</Button>
+                    </div>
+                    
+                    <p className="text-center p-4 text-neutral-medium">No maintenance records found.</p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
