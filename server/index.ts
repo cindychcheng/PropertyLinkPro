@@ -37,11 +37,7 @@ app.use((req, res, next) => {
   next();
 });
 
-import { seedDatabase } from "./seed-database";
-
 (async () => {
-  const server = await registerRoutes(app);
-  
   // Seed the database with initial data
   try {
     await seedDatabase();
@@ -49,6 +45,8 @@ import { seedDatabase } from "./seed-database";
   } catch (error) {
     log(`Error setting up database: ${error}`, "error");
   }
+  
+  const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
