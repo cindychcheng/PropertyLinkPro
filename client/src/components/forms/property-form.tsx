@@ -105,7 +105,7 @@ export function PropertyForm({
         }
       );
       
-      const propertyData = await propertyRes.json();
+      const propertyResult = await propertyRes.json();
       
       // If tenant information should be included
       if (values.includeTenant) {
@@ -144,7 +144,7 @@ export function PropertyForm({
         }
       }
       
-      return propertyData;
+      return propertyResult;
     },
     onSuccess: () => {
       toast({

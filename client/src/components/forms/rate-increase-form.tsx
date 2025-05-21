@@ -39,6 +39,11 @@ type RateIncreaseFormProps = {
   onSuccess?: () => void;
   onCancel?: () => void;
   propertyAddress?: string;
+  propertyData?: {
+    propertyAddress: string;
+    rentalRate: number;
+    rateIncreaseDate: Date;
+  };
   isEdit?: boolean;
 };
 
@@ -46,28 +51,35 @@ export function RateIncreaseForm({
   onSuccess,
   onCancel,
   propertyAddress,
+  propertyData,
   isEdit = false,
 }: RateIncreaseFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [increasePercent, setIncreasePercent] = useState<string>("3.0");
   
-  // Fetch property details to get current rate
+  // Determine which property address to use
+  const effectiveAddress = propertyData?.propertyAddress || propertyAddress || "";
+  
+  // Fetch property details to get current rate (only if not provided through propertyData)
   const { data: property, isLoading } = useQuery({
-    queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
-    enabled: !!propertyAddress,
+    queryKey: [`/api/properties/${encodeURIComponent(effectiveAddress)}`],
+    enabled: !propertyData && !!effectiveAddress,
     staleTime: 60000, // 1 minute
   });
 
   const currentDate = new Date();
-  const currentFormattedDate = formatInputDate(currentDate);
+  // Use the date from propertyData if available, otherwise use current date
+  const currentFormattedDate = propertyData 
+    ? formatInputDate(propertyData.rateIncreaseDate) 
+    : formatInputDate(currentDate);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      propertyAddress: propertyAddress || "",
+      propertyAddress: effectiveAddress,
       latestRateIncreaseDate: currentFormattedDate,
-      latestRentalRate: "",
+      latestRentalRate: propertyData ? propertyData.rentalRate.toString() : "",
       notes: "Standard annual increase",
     },
   });
