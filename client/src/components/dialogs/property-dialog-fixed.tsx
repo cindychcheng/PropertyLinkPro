@@ -138,7 +138,7 @@ export function PropertyDialog({
                           className="h-8 px-2 text-neutral-medium hover:text-primary"
                         >
                           <Pencil className="h-4 w-4 mr-1" />
-                          Edit
+                          Edit Property
                         </Button>
                       </div>
                       

@@ -124,6 +124,7 @@ export type InsertRentalRateHistory = z.infer<typeof insertRentalRateHistorySche
 export type PropertyWithDetails = {
   propertyAddress: string;
   keyNumber: string;
+  strataContactNumber?: string;
   serviceType: string;
   landlordOwners: Array<{
     name: string;

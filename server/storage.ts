@@ -326,6 +326,7 @@ export class DatabaseStorage implements IStorage {
       const propertyDetails: PropertyWithDetails = {
         propertyAddress: property.propertyAddress,
         keyNumber: property.keyNumber,
+        strataContactNumber: property.strataContactNumber || undefined,
         serviceType: tenant?.serviceType || '',
         landlordOwners: owners.map(owner => ({
           name: owner.name,
@@ -390,6 +391,7 @@ export class DatabaseStorage implements IStorage {
     const propertyDetails: PropertyWithDetails = {
       propertyAddress: property.propertyAddress,
       keyNumber: property.keyNumber,
+      strataContactNumber: property.strataContactNumber || undefined,
       serviceType: tenant?.serviceType || '',
       landlordOwners: owners.map(owner => ({
         name: owner.name,
