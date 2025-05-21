@@ -121,7 +121,7 @@ export function PropertyDialog({
                         </div>
                         <div>
                           <p className="text-sm text-neutral-medium">Key Number</p>
-                          <p className="font-medium">{property.keyNumber}</p>
+                          <p className="font-medium">{property.keyNumber || 'N/A'}</p>
                         </div>
                         <div>
                           <p className="text-sm text-neutral-medium">Service Type</p>
@@ -140,37 +140,44 @@ export function PropertyDialog({
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-neutral-medium">Current Rate</p>
-                            <p className="font-medium">{formatCurrency(property.rentalInfo.latestRentalRate)}/month</p>
+                            <p className="font-medium">{property.rentalInfo.latestRentalRate ? formatCurrency(property.rentalInfo.latestRentalRate) : '$0'}/month</p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Tenant Since</p>
                             <p className="font-medium">
-                              {property.tenant ? formatDisplayDate(property.tenant.moveInDate) : 'N/A'}
+                              {property.tenant && property.tenant.moveInDate ? formatDisplayDate(new Date(property.tenant.moveInDate)) : 'N/A'}
                             </p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Last Increase</p>
-                            <p className="font-medium">{formatDisplayDate(property.rentalInfo.latestRateIncreaseDate)}</p>
+                            <p className="font-medium">
+                              {property.rentalInfo.latestRateIncreaseDate ? formatDisplayDate(new Date(property.rentalInfo.latestRateIncreaseDate)) : 'N/A'}
+                            </p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Next Eligible Increase</p>
-                            <p className="font-medium">{formatDisplayDate(property.rentalInfo.nextAllowableRentalIncreaseDate)}</p>
+                            <p className="font-medium">
+                              {property.rentalInfo.nextAllowableRentalIncreaseDate ? formatDisplayDate(new Date(property.rentalInfo.nextAllowableRentalIncreaseDate)) : 'N/A'}
+                            </p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Max New Rate</p>
                             <p className="font-medium">
-                              {formatCurrency(property.rentalInfo.nextAllowableRentalRate)}/month (+3%)
+                              {property.rentalInfo.nextAllowableRentalRate ? formatCurrency(property.rentalInfo.nextAllowableRentalRate) : '$0'}/month (+3%)
                             </p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Increase Reminder</p>
-                            <p className="font-medium text-warning">{formatDisplayDate(property.rentalInfo.reminderDate)}</p>
+                            <p className="font-medium text-warning">
+                              {property.rentalInfo.reminderDate ? formatDisplayDate(new Date(property.rentalInfo.reminderDate)) : 'N/A'}
+                            </p>
                           </div>
                         </div>
                         <div className="mt-4">
                           <Button 
                             className="bg-primary text-white"
-                            onClick={() => property && onProcessRateIncrease(property.propertyAddress)}
+                            onClick={() => property.propertyAddress && onProcessRateIncrease(property.propertyAddress)}
+                            disabled={!property.propertyAddress}
                           >
                             <TrendingUp className="h-4 w-4 mr-2" />
                             Process Rate Increase
@@ -183,13 +190,13 @@ export function PropertyDialog({
                   <div>
                     <div className="bg-neutral-lightest rounded-lg p-4">
                       <h4 className="font-medium mb-4">Landlord</h4>
-                      {property.landlordOwners && property.landlordOwners.length > 0 ? (
+                      {property.landlordOwners && Array.isArray(property.landlordOwners) && property.landlordOwners.length > 0 ? (
                         <div>
                           <p className="font-medium">{property.landlordOwners[0].name}</p>
                           <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
                           <p className="text-sm text-neutral-medium">
                             Birthday: {property.landlordOwners[0].birthday 
-                              ? formatDisplayDate(property.landlordOwners[0].birthday).split(',')[0] 
+                              ? formatDisplayDate(new Date(property.landlordOwners[0].birthday)).split(',')[0] 
                               : 'Not provided'}
                           </p>
                           <div className="mt-2">
@@ -208,7 +215,7 @@ export function PropertyDialog({
                           <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
                           <p className="text-sm text-neutral-medium">
                             Birthday: {property.tenant.birthday 
-                              ? formatDisplayDate(property.tenant.birthday).split(',')[0] 
+                              ? formatDisplayDate(new Date(property.tenant.birthday)).split(',')[0] 
                               : 'Not provided'}
                           </p>
                           <div className="mt-2">
