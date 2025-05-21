@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Layout } from "@/components/layout/layout";
-import { PropertyDialog } from "@/components/dialogs/property-dialog";
+import { PropertyDialog } from "@/components/dialogs/property-dialog-fixed";
 import { RateIncreaseDialog } from "@/components/dialogs/rate-increase-dialog";
 import { AddPropertyDialog } from "@/components/dialogs/add-property-dialog";
 import { Plus, TrendingUp } from "lucide-react";
