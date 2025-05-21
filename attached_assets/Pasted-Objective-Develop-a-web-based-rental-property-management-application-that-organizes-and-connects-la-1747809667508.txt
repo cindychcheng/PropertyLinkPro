@@ -1,0 +1,121 @@
+Objective
+
+Develop a web-based rental property management application that organizes and connects landlord and tenant information via property addresses, tracks rental rate increases with compliance logic, and provides reminders for rent increases and birthdays.
+
+Core Databases and Relationships
+
+1. Landlord Database
+Primary Identifier: Property Address
+Fields:
+
+Property Address (string, required, unique per unit)
+Key Number (string/int, required)
+Owner(s):
+Name (string, required)
+Contact Number (string)
+Birthday (date)
+Strata Contact Number (string)
+Notes:
+
+Multiple owners per property should be accommodated. Use a relational or nested schema to allow multiple co-owners per property.
+Key Number should be accessible when looking up landlords.
+2. Tenant Database
+Primary Identifier: Property Address
+Fields:
+
+Property Address (string, required)
+Service Type (enum/dropdown):
+Full-Service Management
+Tenant Replacement Service
+Move-in Date (date)
+Move-out Date (date, optional)
+Tenant Name (string)
+Tenant Contact Number (string)
+Tenant Email Address (string)
+Tenant Birthday (date)
+Notes:
+
+Ensure that tenant and landlord tables both reference the same Property Address field for linking.
+Key Number and Service Type should be quickly visible when viewing tenant data.
+3. Rental Rate Increase Tracker (Sub-table or Linked Table)
+Linked To: Tenant Record (via Property Address)
+
+Fields:
+
+Latest Rate Increase Date (date)
+Latest Rental Rate (decimal/currency)
+Next Allowable Rental Increase Date (date)
+Default = Latest Rate Increase Date + 1 year
+Next Allowable Rental Rate (decimal)
+Default = Latest Rental Rate x 1.03, but editable
+Reminder Date (date)
+Default = Latest Rate Increase Date + 8 months (rounded to 1st of the month)
+Months Since Rental Rate Increase (int, auto-calculated from today’s date)
+Action Logging Fields (per new increase actioned):
+
+New Rental Increase Date (date)
+New Rental Rate (decimal)
+Logic:
+
+When a new rate increase is recorded, it becomes the new “Latest Rate Increase Date” and “Latest Rental Rate”.
+Reminder and next allowable date/rate fields are recalculated accordingly.
+Functional Requirements
+
+1. Information Lookup
+When viewing landlord or tenant, the app must display:
+Key Number
+Service Type
+2. Rental Rate Increase Reminder
+Generate a monthly list of properties due for review based on Reminder Date.
+Ability to:
+Sort list by Months Since Last Rental Rate Increase (descending)
+Filter by:
+Service Type
+Month
+Minimum Months Since Last Increase
+3. Birthday Reminders
+Generate monthly birthday card reminders for:
+Landlords
+Tenants
+January list should include all February birthdays, etc.
+Include:
+Name
+Role (Landlord/Tenant)
+Property Address
+Contact Info
+System Requirements
+
+Data Relationships
+Property Address is the central link between:
+Landlords
+Tenants
+Rental Increase Tracker
+Automation Rules
+Calculations:
+Next Allowable Rental Increase Date = Latest Increase Date + 1 year
+Next Allowable Rental Rate = Latest Rental Rate x 1.03 (editable)
+Reminder Date = First of the month, 8 months after Latest Increase Date
+Months Since Last Increase = Current Date – Latest Increase Date (in months)
+Update Triggers:
+New rate increase updates “latest” fields and recalculates all dependent fields
+UI/UX Considerations
+Dashboard views:
+Quick lookup table with search by Property Address, Key Number, or Tenant Name
+Monthly reminders (rent and birthday)
+Filters/sorts for rental increase lists
+Input forms should support:
+Multiple co-owners per property
+Edit and override default calculated fields (rate and date)
+Optional tenant move-out dates
+Deliverables
+
+Normalized database schema with relationships between properties, owners, tenants, and rental increase logs.
+CRUD interfaces for:
+Landlords
+Tenants
+Rental Rate Increase entries
+Background or scheduled task to auto-calculate/update reminders and rental info.
+Reporting tools for:
+Monthly rate increase reviews
+Birthday reminders (rolling monthly basis)
+Filters and sorting tools as defined in Functional Requirements.
