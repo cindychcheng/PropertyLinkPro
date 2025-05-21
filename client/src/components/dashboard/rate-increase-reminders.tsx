@@ -53,7 +53,7 @@ export function RateIncreaseReminders({
 }) {
   const { toast } = useToast();
 
-  const { data: reminders, isLoading, error } = useQuery({
+  const { data: reminders = [], isLoading, error } = useQuery({
     queryKey: ['/api/reminders/rental-increases'],
     staleTime: 60000, // 1 minute
   });

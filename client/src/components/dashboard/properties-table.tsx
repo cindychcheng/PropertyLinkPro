@@ -34,7 +34,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
   
   const { toast } = useToast();
 
-  const { data: properties, isLoading, error } = useQuery({
+  const { data: properties = [], isLoading, error } = useQuery({
     queryKey: ['/api/properties'],
     staleTime: 60000, // 1 minute
   });

@@ -33,13 +33,13 @@ export function PropertyDialog({
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
 
-  const { data: property, isLoading, error } = useQuery({
+  const { data: property = {}, isLoading, error } = useQuery({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
     staleTime: 60000, // 1 minute
   });
 
-  const { data: rentalHistory, isLoading: isLoadingHistory } = useQuery({
+  const { data: rentalHistory = [], isLoading: isLoadingHistory } = useQuery({
     queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
     staleTime: 60000, // 1 minute
@@ -114,8 +114,8 @@ export function PropertyDialog({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-neutral-medium">Address</p>
-                          <p className="font-medium">{property.propertyAddress}</p>
-                          {property.propertyAddress.includes(',') && (
+                          <p className="font-medium">{property.propertyAddress || 'N/A'}</p>
+                          {property.propertyAddress && property.propertyAddress.includes(',') && (
                             <p className="text-sm">{property.propertyAddress.split(',')[1]}</p>
                           )}
                         </div>
