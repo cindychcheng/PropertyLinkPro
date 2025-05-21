@@ -1,0 +1,377 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { z } from "zod";
+import { 
+  insertLandlordSchema, 
+  insertLandlordOwnerSchema, 
+  insertTenantSchema, 
+  insertRentalRateIncreaseSchema,
+  insertRentalRateHistorySchema
+} from "@shared/schema";
+import { fromZodError } from "zod-validation-error";
+
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Error handler for validation errors
+  const handleZodError = (err: unknown) => {
+    if (err instanceof z.ZodError) {
+      return { message: fromZodError(err).message, errors: err.errors };
+    }
+    
+    if (err instanceof Error) {
+      return { message: err.message };
+    }
+    
+    return { message: "An unknown error occurred" };
+  };
+
+  // Get all properties with details
+  app.get("/api/properties", async (req, res) => {
+    try {
+      const properties = await storage.getPropertiesWithDetails();
+      res.json(properties);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Get property by address
+  app.get("/api/properties/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const property = await storage.getPropertyDetailsByAddress(address);
+      
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      res.json(property);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Landlord routes
+  app.get("/api/landlords", async (req, res) => {
+    try {
+      const landlords = await storage.getLandlords();
+      res.json(landlords);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.post("/api/landlords", async (req, res) => {
+    try {
+      const landlordData = insertLandlordSchema.parse(req.body);
+      
+      // Check if property address already exists
+      const existingLandlord = await storage.getLandlordByPropertyAddress(landlordData.propertyAddress);
+      if (existingLandlord) {
+        return res.status(400).json({ message: "Property address already exists" });
+      }
+      
+      const landlord = await storage.createLandlord(landlordData);
+      res.status(201).json(landlord);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.put("/api/landlords/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const landlordData = insertLandlordSchema.partial().parse(req.body);
+      
+      const updatedLandlord = await storage.updateLandlord(address, landlordData);
+      
+      if (!updatedLandlord) {
+        return res.status(404).json({ message: "Landlord not found" });
+      }
+      
+      res.json(updatedLandlord);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.delete("/api/landlords/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const success = await storage.deleteLandlord(address);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Landlord not found" });
+      }
+      
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Landlord Owner routes
+  app.get("/api/landlords/:address/owners", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const landlord = await storage.getLandlordByPropertyAddress(address);
+      
+      if (!landlord) {
+        return res.status(404).json({ message: "Landlord not found" });
+      }
+      
+      const owners = await storage.getLandlordOwners(landlord.id);
+      res.json(owners);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.post("/api/landlord-owners", async (req, res) => {
+    try {
+      const ownerData = insertLandlordOwnerSchema.parse(req.body);
+      const owner = await storage.createLandlordOwner(ownerData);
+      res.status(201).json(owner);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.put("/api/landlord-owners/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const ownerData = insertLandlordOwnerSchema.partial().parse(req.body);
+      
+      const updatedOwner = await storage.updateLandlordOwner(id, ownerData);
+      
+      if (!updatedOwner) {
+        return res.status(404).json({ message: "Owner not found" });
+      }
+      
+      res.json(updatedOwner);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.delete("/api/landlord-owners/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const success = await storage.deleteLandlordOwner(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Owner not found" });
+      }
+      
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Tenant routes
+  app.get("/api/tenants", async (req, res) => {
+    try {
+      const tenants = await storage.getTenants();
+      res.json(tenants);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.get("/api/tenants/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const tenant = await storage.getTenantByPropertyAddress(address);
+      
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      res.json(tenant);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.post("/api/tenants", async (req, res) => {
+    try {
+      const tenantData = insertTenantSchema.parse(req.body);
+      
+      // Check if a tenant already exists for this property
+      const existingTenant = await storage.getTenantByPropertyAddress(tenantData.propertyAddress);
+      if (existingTenant) {
+        return res.status(400).json({ message: "A tenant already exists for this property" });
+      }
+      
+      const tenant = await storage.createTenant(tenantData);
+      res.status(201).json(tenant);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.put("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const tenantData = insertTenantSchema.partial().parse(req.body);
+      
+      const updatedTenant = await storage.updateTenant(id, tenantData);
+      
+      if (!updatedTenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      res.json(updatedTenant);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.delete("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const success = await storage.deleteTenant(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Rental Rate Increase routes
+  app.get("/api/rental-increases", async (req, res) => {
+    try {
+      const increases = await storage.getRentalRateIncreases();
+      res.json(increases);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.get("/api/rental-increases/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const increase = await storage.getRentalRateIncreaseByPropertyAddress(address);
+      
+      if (!increase) {
+        return res.status(404).json({ message: "Rental rate increase not found" });
+      }
+      
+      res.json(increase);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.post("/api/rental-increases", async (req, res) => {
+    try {
+      const increaseData = insertRentalRateIncreaseSchema.parse(req.body);
+      
+      // Check if rental increase already exists for this property
+      const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(increaseData.propertyAddress);
+      if (existingIncrease) {
+        return res.status(400).json({ message: "Rental rate increase already exists for this property" });
+      }
+      
+      const increase = await storage.createRentalRateIncrease(increaseData);
+      res.status(201).json(increase);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  app.put("/api/rental-increases/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const increaseData = insertRentalRateIncreaseSchema.partial().parse(req.body);
+      
+      const updatedIncrease = await storage.updateRentalRateIncrease(address, increaseData);
+      
+      if (!updatedIncrease) {
+        return res.status(404).json({ message: "Rental rate increase not found" });
+      }
+      
+      res.json(updatedIncrease);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  // Rental Rate History routes
+  app.get("/api/rental-history/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const history = await storage.getRentalRateHistory(address);
+      res.json(history);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.post("/api/rental-history", async (req, res) => {
+    try {
+      const historyData = insertRentalRateHistorySchema.parse(req.body);
+      const history = await storage.createRentalRateHistory(historyData);
+      res.status(201).json(history);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  // Reminder routes
+  app.get("/api/reminders/rental-increases", async (req, res) => {
+    try {
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+      const minMonths = req.query.minMonths ? parseInt(req.query.minMonths as string, 10) : undefined;
+      
+      const reminders = await storage.getRentalIncreaseReminders(month, minMonths);
+      res.json(reminders);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  app.get("/api/reminders/birthdays", async (req, res) => {
+    try {
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+      const reminders = await storage.getBirthdayReminders(month);
+      res.json(reminders);
+    } catch (err) {
+      res.status(500).json(handleZodError(err));
+    }
+  });
+
+  // Process a rental increase
+  app.post("/api/process-rental-increase", async (req, res) => {
+    try {
+      const schema = z.object({
+        propertyAddress: z.string(),
+        increaseDate: z.string().transform(val => new Date(val)),
+        newRate: z.number().positive(),
+        notes: z.string().optional(),
+      });
+      
+      const data = schema.parse(req.body);
+      
+      const result = await storage.processRentalIncrease(
+        data.propertyAddress,
+        data.increaseDate,
+        data.newRate,
+        data.notes
+      );
+      
+      res.status(200).json(result);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
