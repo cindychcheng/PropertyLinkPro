@@ -7,7 +7,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { RateIncreaseReminders } from "@/components/dashboard/rate-increase-reminders";
 import { BirthdayReminders } from "@/components/dashboard/birthday-reminders";
 import { PropertiesTable } from "@/components/dashboard/properties-table";
-import { PropertyDialog } from "@/components/dialogs/property-dialog-fixed";
+import { PropertyDialog } from "@/components/dialogs/property-dialog-updated";
 import { RateIncreaseDialog } from "@/components/dialogs/rate-increase-dialog";
 import { AddPropertyDialog } from "@/components/dialogs/add-property-dialog";
 import { Layout } from "@/components/layout/layout";
