@@ -1,53 +1,122 @@
 import { format, differenceInMonths, addMonths, addYears, differenceInDays, isValid } from 'date-fns';
 
-// Format a date to display in UI
+// Format a date to display in UI with timezone protection
 export function formatDisplayDate(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
   
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  if (!isValid(dateObj)) return 'Invalid Date';
+  let year: number;
+  let month: number;
+  let day: number;
   
-  return format(dateObj, 'MMM d, yyyy');
+  if (typeof date === 'string') {
+    // If it's a date-only string like "2023-05-15"
+    if (date.length === 10 && date.includes('-')) {
+      const parts = date.split('-').map(num => parseInt(num, 10));
+      year = parts[0];
+      month = parts[1] - 1;  // Months are 0-indexed in JS Date
+      day = parts[2];
+    } else {
+      // Parse other date formats
+      const dateObj = new Date(date);
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth();
+      day = dateObj.getDate();
+    }
+  } else {
+    // If a Date object was provided
+    year = date.getFullYear();
+    month = date.getMonth();
+    day = date.getDate();
+  }
+  
+  // Create a new date set to noon to avoid timezone boundary issues
+  const normalizedDate = new Date(year, month, day, 12, 0, 0);
+  
+  if (!isValid(normalizedDate)) return 'Invalid Date';
+  
+  return format(normalizedDate, 'MMM d, yyyy');
 }
 
 // Format a date to display month and day only (for birthdays)
 export function formatBirthday(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
   
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  if (!isValid(dateObj)) return 'Invalid Date';
-  
-  return format(dateObj, 'MMM d');
-}
-
-// Format a date for input fields
-export function formatInputDate(date: Date | string | null | undefined): string {
-  if (!date) return '';
-  
-  // Ensure we handle the date properly regardless of format
-  let dateObj: Date;
+  let year: number;
+  let month: number;
+  let day: number;
   
   if (typeof date === 'string') {
     // If it's a date-only string like "2023-05-15"
     if (date.length === 10 && date.includes('-')) {
-      const [year, month, day] = date.split('-').map(num => parseInt(num, 10));
-      dateObj = new Date(Date.UTC(year, month - 1, day));
+      const parts = date.split('-').map(num => parseInt(num, 10));
+      year = parts[0];
+      month = parts[1] - 1;  // Months are 0-indexed in JS Date
+      day = parts[2];
     } else {
-      // For ISO strings or other formats
-      dateObj = new Date(date);
+      // Parse other date formats
+      const dateObj = new Date(date);
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth();
+      day = dateObj.getDate();
     }
   } else {
-    dateObj = date;
+    // If a Date object was provided
+    year = date.getFullYear();
+    month = date.getMonth();
+    day = date.getDate();
   }
   
-  if (!isValid(dateObj)) return '';
+  // Create a new date set to noon to avoid timezone boundary issues
+  const normalizedDate = new Date(year, month, day, 12, 0, 0);
   
-  // Use UTC date to ensure consistent date display across timezones
-  const year = dateObj.getUTCFullYear();
-  const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getUTCDate()).padStart(2, '0');
+  if (!isValid(normalizedDate)) return 'Invalid Date';
   
-  return `${year}-${month}-${day}`;
+  return format(normalizedDate, 'MMM d');
+}
+
+// Format a date for input fields - prevents timezone shifts for birthdays
+export function formatInputDate(date: Date | string | null | undefined): string {
+  if (!date) return '';
+  
+  let dateObj: Date;
+  let year: number;
+  let month: number;
+  let day: number;
+  
+  if (typeof date === 'string') {
+    // If it's a date-only string like "2023-05-15"
+    if (date.length === 10 && date.includes('-')) {
+      const parts = date.split('-').map(num => parseInt(num, 10));
+      year = parts[0];
+      month = parts[1] - 1;  // Months are 0-indexed in JS Date
+      day = parts[2];
+    } else {
+      // Parse other date formats
+      dateObj = new Date(date);
+      // Create a new date with just the date part (no time) to prevent timezone shifts
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth();
+      day = dateObj.getDate();
+    }
+  } else {
+    // If a Date object was provided
+    year = date.getFullYear();
+    month = date.getMonth();
+    day = date.getDate();
+  }
+  
+  // Create a new date set to noon to avoid timezone boundary issues
+  const normalizedDate = new Date(year, month, day, 12, 0, 0);
+  
+  if (!isValid(normalizedDate)) return '';
+  
+  // Format as YYYY-MM-DD for input fields
+  const formattedYear = normalizedDate.getFullYear();
+  // Month is 0-indexed in JS Date, so add 1 for display
+  const formattedMonth = String(normalizedDate.getMonth() + 1).padStart(2, '0');
+  const formattedDay = String(normalizedDate.getDate()).padStart(2, '0');
+  
+  return `${formattedYear}-${formattedMonth}-${formattedDay}`;
 }
 
 // Calculate months since a date
