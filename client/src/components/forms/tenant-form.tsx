@@ -90,6 +90,11 @@ export function TenantForm({
         birthday: values.birthday ? new Date(values.birthday + 'T12:00:00').toISOString() : undefined,
       };
       
+      // Make sure we have a valid tenant ID when editing
+      if (isEdit && !tenantData?.id) {
+        throw new Error("Cannot update tenant: Missing tenant ID");
+      }
+      
       const res = await apiRequest(
         isEdit ? "PUT" : "POST",
         isEdit 
