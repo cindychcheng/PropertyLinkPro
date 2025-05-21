@@ -88,7 +88,7 @@ export function LandlordForm({
         landlordId: landlord.id,
         name: values.ownerName,
         contactNumber: values.ownerContactNumber || undefined,
-        birthday: values.ownerBirthday ? new Date(values.ownerBirthday).toISOString() : undefined,
+        birthday: values.ownerBirthday ? new Date(values.ownerBirthday + 'T12:00:00').toISOString() : undefined,
       };
       
       // For edit, we need to get the owners first to find their IDs

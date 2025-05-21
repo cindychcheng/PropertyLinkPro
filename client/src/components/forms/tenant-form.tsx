@@ -82,12 +82,12 @@ export function TenantForm({
       const payload = {
         propertyAddress: values.propertyAddress,
         serviceType: values.serviceType,
-        moveInDate: new Date(values.moveInDate).toISOString(),
-        moveOutDate: values.moveOutDate ? new Date(values.moveOutDate).toISOString() : undefined,
+        moveInDate: new Date(values.moveInDate + 'T12:00:00').toISOString(),
+        moveOutDate: values.moveOutDate ? new Date(values.moveOutDate + 'T12:00:00').toISOString() : undefined,
         name: values.name,
         contactNumber: values.contactNumber || undefined,
         email: values.email || undefined,
-        birthday: values.birthday ? new Date(values.birthday).toISOString() : undefined,
+        birthday: values.birthday ? new Date(values.birthday + 'T12:00:00').toISOString() : undefined,
       };
       
       const res = await apiRequest(
