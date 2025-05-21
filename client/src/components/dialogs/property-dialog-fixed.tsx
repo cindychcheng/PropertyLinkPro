@@ -148,6 +148,8 @@ export function PropertyDialog({
                             propertyAddress: property.propertyAddress,
                             keyNumber: property.keyNumber,
                             strataContactNumber: property.strataContactNumber,
+                            strataManagementCompany: property.strataManagementCompany,
+                            strataContactPerson: property.strataContactPerson,
                             serviceType: property.serviceType || ""
                           }}
                           isEdit={true}
@@ -172,7 +174,15 @@ export function PropertyDialog({
                             <p className="font-medium">{property.serviceType}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-neutral-medium">Strata Contact</p>
+                            <p className="text-sm text-neutral-medium">Strata Management Company</p>
+                            <p className="font-medium">{property.strataManagementCompany || 'Not provided'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Strata Contact Person</p>
+                            <p className="font-medium">{property.strataContactPerson || 'Not provided'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Strata Contact Number</p>
                             <p className="font-medium">{property.strataContactNumber || 'Not provided'}</p>
                           </div>
                         </div>

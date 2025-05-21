@@ -244,6 +244,34 @@ export function PropertyForm({
                 
                 <FormField
                   control={form.control}
+                  name="strataManagementCompany"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strata Management Company (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. ABC Property Management" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="strataContactPerson"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strata Contact Person (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. John Smith" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="strataContactNumber"
                   render={({ field }) => (
                     <FormItem>
