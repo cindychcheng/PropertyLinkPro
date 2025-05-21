@@ -228,6 +228,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json(handleZodError(err));
     }
   });
+  
+  // Add a more reliable way to update tenants by property address
+  app.put("/api/tenants/property/:address", async (req, res) => {
+    try {
+      const address = decodeURIComponent(req.params.address);
+      const tenantData = insertTenantSchema.partial().parse(req.body);
+      
+      // Get the tenant first by property address
+      const existingTenant = await storage.getTenantByPropertyAddress(address);
+      
+      if (!existingTenant) {
+        return res.status(404).json({ message: "Tenant not found for this property" });
+      }
+      
+      // Update using the ID we retrieved
+      const updatedTenant = await storage.updateTenant(existingTenant.id, tenantData);
+      
+      if (!updatedTenant) {
+        return res.status(404).json({ message: "Failed to update tenant" });
+      }
+      
+      res.json(updatedTenant);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
 
   app.delete("/api/tenants/:id", async (req, res) => {
     try {

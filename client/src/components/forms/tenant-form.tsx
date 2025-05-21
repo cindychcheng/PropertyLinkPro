@@ -99,15 +99,20 @@ export function TenantForm({
       };
       
       // Make sure we have a valid tenant ID when editing
-      if (isEdit && !tenantData?.id) {
-        console.error("Cannot update tenant: Missing tenant ID", { tenantData });
-        throw new Error("Cannot update tenant: Missing tenant ID");
+      if (isEdit) {
+        if (!tenantData?.id) {
+          console.error("Cannot update tenant: Missing tenant ID", { tenantData });
+          throw new Error("Cannot update tenant: Missing tenant ID. Try closing this form and reopening it.");
+        }
+        // Add ID to the debug log for clarity
+        console.log(`Using tenant ID for update: ${tenantData.id}`);
       }
       
+      // If we're editing, use the more reliable property address endpoint
       const res = await apiRequest(
         isEdit ? "PUT" : "POST",
         isEdit 
-          ? `/api/tenants/${tenantData?.id}`
+          ? `/api/tenants/property/${encodeURIComponent(values.propertyAddress)}`
           : "/api/tenants",
         payload
       );

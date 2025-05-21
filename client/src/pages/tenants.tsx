@@ -47,8 +47,18 @@ export default function Tenants() {
     refetch();
   };
 
+  // Debug the properties data to see what we're getting
+  console.log("Properties data for tenant display:", properties);
+  
   // Filter only properties with tenants
   const tenantProperties = properties?.filter((property: any) => property.tenant) || [];
+  
+  // Debug the tenant IDs to ensure they're properly set
+  console.log("Tenant properties:", tenantProperties.map(p => ({ 
+    address: p.propertyAddress, 
+    tenantId: p.tenant?.id,
+    tenantName: p.tenant?.name
+  })));
   
   const totalItems = tenantProperties.length;
   const paginatedData = tenantProperties?.slice(
