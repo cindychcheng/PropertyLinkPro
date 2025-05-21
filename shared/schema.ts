@@ -16,6 +16,8 @@ export const landlords = pgTable("landlords", {
   propertyAddress: text("property_address").notNull().unique(),
   keyNumber: text("key_number").notNull(),
   strataContactNumber: text("strata_contact_number"),
+  strataManagementCompany: text("strata_management_company"),
+  strataContactPerson: text("strata_contact_person"),
 });
 
 // Landlord owners - allows multiple owners per property
@@ -67,6 +69,8 @@ export const insertLandlordSchema = createInsertSchema(landlords).pick({
   propertyAddress: true,
   keyNumber: true,
   strataContactNumber: true,
+  strataManagementCompany: true,
+  strataContactPerson: true,
 });
 
 export const insertLandlordOwnerSchema = createInsertSchema(landlordOwners).pick({
@@ -125,6 +129,8 @@ export type PropertyWithDetails = {
   propertyAddress: string;
   keyNumber: string;
   strataContactNumber?: string;
+  strataManagementCompany?: string;
+  strataContactPerson?: string;
   serviceType: string;
   landlordOwners: Array<{
     name: string;

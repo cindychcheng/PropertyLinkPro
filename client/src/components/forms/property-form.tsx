@@ -31,6 +31,8 @@ const formSchema = z.object({
   propertyAddress: z.string().min(1, "Property address is required"),
   keyNumber: z.string().min(1, "Key number is required"),
   strataContactNumber: z.string().optional(),
+  strataManagementCompany: z.string().optional(),
+  strataContactPerson: z.string().optional(),
   serviceType: z.string().min(1, "Service type is required"),
   // Tenant information
   includeTenant: z.boolean().default(false),
@@ -75,6 +77,8 @@ export function PropertyForm({
       propertyAddress: propertyData?.propertyAddress || "",
       keyNumber: propertyData?.keyNumber || "",
       strataContactNumber: propertyData?.strataContactNumber || "",
+      strataManagementCompany: propertyData?.strataManagementCompany || "",
+      strataContactPerson: propertyData?.strataContactPerson || "", 
       serviceType: propertyData?.serviceType || ServiceType.FULL_SERVICE,
       includeTenant: false,
       tenantName: "",
@@ -101,6 +105,8 @@ export function PropertyForm({
           propertyAddress: values.propertyAddress,
           keyNumber: values.keyNumber,
           strataContactNumber: values.strataContactNumber || undefined,
+          strataManagementCompany: values.strataManagementCompany || undefined,
+          strataContactPerson: values.strataContactPerson || undefined,
           serviceType: values.serviceType
         }
       );

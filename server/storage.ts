@@ -327,6 +327,8 @@ export class DatabaseStorage implements IStorage {
         propertyAddress: property.propertyAddress,
         keyNumber: property.keyNumber,
         strataContactNumber: property.strataContactNumber || undefined,
+        strataManagementCompany: property.strataManagementCompany || undefined,
+        strataContactPerson: property.strataContactPerson || undefined,
         serviceType: tenant?.serviceType || '',
         landlordOwners: owners.map(owner => ({
           name: owner.name,
@@ -392,6 +394,8 @@ export class DatabaseStorage implements IStorage {
       propertyAddress: property.propertyAddress,
       keyNumber: property.keyNumber,
       strataContactNumber: property.strataContactNumber || undefined,
+      strataManagementCompany: property.strataManagementCompany || undefined,
+      strataContactPerson: property.strataContactPerson || undefined,
       serviceType: tenant?.serviceType || '',
       landlordOwners: owners.map(owner => ({
         name: owner.name,
@@ -593,7 +597,7 @@ export class MemStorage implements IStorage {
   // You can see the full implementation in the original file
   async getLandlords() { return []; }
   async getLandlordByPropertyAddress() { return undefined; }
-  async createLandlord(landlord: InsertLandlord) { return { id: 0, ...landlord, strataContactNumber: null }; }
+  async createLandlord(landlord: InsertLandlord) { return { id: 0, ...landlord, strataContactNumber: null, strataManagementCompany: null, strataContactPerson: null }; }
   async updateLandlord() { return undefined; }
   async deleteLandlord() { return false; }
   async getLandlordOwners() { return []; }
