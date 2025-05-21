@@ -38,40 +38,43 @@ export function formatDisplayDate(date: Date | string | null | undefined): strin
 }
 
 // Format a date to display month and day only (for birthdays)
+// This is a DIRECT approach that bypasses date-fns to avoid any timezone issues
 export function formatBirthday(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
   
-  let year: number;
-  let month: number;
-  let day: number;
+  // Define month names for direct formatting
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
+  // Get the date parts directly, avoiding any date object creation which can cause shifts
   if (typeof date === 'string') {
-    // If it's a date-only string like "2023-05-15"
-    if (date.length === 10 && date.includes('-')) {
-      const parts = date.split('-').map(num => parseInt(num, 10));
-      year = parts[0];
-      month = parts[1] - 1;  // Months are 0-indexed in JS Date
-      day = parts[2];
-    } else {
-      // Parse other date formats
-      const dateObj = new Date(date);
-      year = dateObj.getFullYear();
-      month = dateObj.getMonth();
-      day = dateObj.getDate();
+    // Handle ISO date string format (like "1983-02-04T00:00:00.000Z")
+    if (date.includes('T')) {
+      date = date.split('T')[0]; // Extract just the date part
     }
-  } else {
-    // If a Date object was provided
-    year = date.getFullYear();
-    month = date.getMonth();
-    day = date.getDate();
+    
+    // Now handle YYYY-MM-DD format
+    if (date.length === 10 && date.includes('-')) {
+      const [year, month, day] = date.split('-').map(n => parseInt(n, 10));
+      // month-1 because array is 0-indexed but month in date string is 1-indexed
+      return `${monthNames[month-1]} ${day}`;
+    }
+    
+    // Handle other date string formats by parsing
+    try {
+      const dateObj = new Date(date);
+      return `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}`;
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  } 
+  
+  // Handle Date object
+  try {
+    return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+  } catch (e) {
+    return 'Invalid Date';
   }
-  
-  // Create a new date set to noon to avoid timezone boundary issues
-  const normalizedDate = new Date(year, month, day, 12, 0, 0);
-  
-  if (!isValid(normalizedDate)) return 'Invalid Date';
-  
-  return format(normalizedDate, 'MMM d');
 }
 
 // Format a date for input fields - prevents timezone shifts for birthdays
