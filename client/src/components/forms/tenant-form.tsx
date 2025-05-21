@@ -80,8 +80,12 @@ export function TenantForm({
   const tenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       // Format dates properly for PostgreSQL (YYYY-MM-DD)
-      // Add debug log for birthday
-      console.log("Tenant birthday value:", values.birthday);
+      // Add debug logs for better troubleshooting
+      console.log("Tenant form submission:", { 
+        isEdit, 
+        tenantId: tenantData?.id, 
+        values 
+      });
       
       const payload = {
         propertyAddress: values.propertyAddress,
@@ -96,6 +100,7 @@ export function TenantForm({
       
       // Make sure we have a valid tenant ID when editing
       if (isEdit && !tenantData?.id) {
+        console.error("Cannot update tenant: Missing tenant ID", { tenantData });
         throw new Error("Cannot update tenant: Missing tenant ID");
       }
       

@@ -27,12 +27,17 @@ export default function Tenants() {
   };
 
   const handleEditTenant = (property: any) => {
-    setEditTenant({
-      id: property.tenant?.id,
+    console.log("Editing tenant for property:", property);
+    // Extract tenant ID and ensure it's included in the edit data
+    const tenantData = {
+      id: property.tenant?.id, // Make sure ID is explicitly assigned
       propertyAddress: property.propertyAddress,
       serviceType: property.serviceType,
-      ...property.tenant
-    });
+      ...property.tenant // Add all tenant properties
+    };
+    
+    console.log("Tenant data for edit:", tenantData);
+    setEditTenant(tenantData);
     setActiveTab("add");
   };
 
