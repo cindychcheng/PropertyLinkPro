@@ -23,25 +23,27 @@ const NavLink = ({ href, icon, children, badge, badgeColor = "bg-primary" }: Nav
   const isActive = location === href;
   
   return (
-    <Link href={href}>
-      <a
-        className={`flex items-center px-4 py-3 ${
-          isActive
-            ? "text-primary bg-primary bg-opacity-10"
-            : "text-neutral-dark hover:bg-neutral-lightest"
-        }`}
-      >
-        <span className={`mr-3 ${isActive ? "text-primary" : "text-neutral-medium"}`}>
-          {icon}
-        </span>
-        {children}
-        {badge !== undefined && (
-          <span className={`ml-auto ${badgeColor} text-white rounded-full text-xs px-2 py-1`}>
-            {badge}
+    <div>
+      <Link href={href}>
+        <div
+          className={`flex items-center px-4 py-3 cursor-pointer ${
+            isActive
+              ? "text-primary bg-primary bg-opacity-10"
+              : "text-neutral-dark hover:bg-neutral-lightest"
+          }`}
+        >
+          <span className={`mr-3 ${isActive ? "text-primary" : "text-neutral-medium"}`}>
+            {icon}
           </span>
-        )}
-      </a>
-    </Link>
+          {children}
+          {badge !== undefined && (
+            <span className={`ml-auto ${badgeColor} text-white rounded-full text-xs px-2 py-1`}>
+              {badge}
+            </span>
+          )}
+        </div>
+      </Link>
+    </div>
   );
 };
 

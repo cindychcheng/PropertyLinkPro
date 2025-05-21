@@ -55,14 +55,14 @@ export function PropertyDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Property Details</DialogTitle>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="mt-4 flex-grow overflow-y-auto pr-1">
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-5 sticky top-0 z-10 bg-background">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="landlord">Landlord</TabsTrigger>
               <TabsTrigger value="tenant">Tenant</TabsTrigger>
