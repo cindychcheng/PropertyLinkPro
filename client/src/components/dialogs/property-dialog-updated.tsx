@@ -1,0 +1,499 @@
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTitle, 
+  DialogHeader,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  formatDisplayDate, 
+  formatCurrency,
+  getMonthsSince
+} from "@/lib/utils/date-utils";
+import { PropertyForm } from "@/components/forms/property-form";
+import { TenantForm } from "@/components/forms/tenant-form";
+import { LandlordForm } from "@/components/forms/landlord-form";
+import { RateIncreaseForm } from "@/components/forms/rate-increase-form";
+import { InitialRentalRateForm } from "@/components/forms/initial-rental-rate-form";
+import { Pencil, TrendingUp } from "lucide-react";
+import { PropertyWithDetails } from "@shared/schema";
+
+type PropertyDialogProps = {
+  propertyAddress: string | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onProcessRateIncrease: (address: string) => void;
+};
+
+export function PropertyDialog({
+  propertyAddress,
+  isOpen,
+  onClose,
+  onProcessRateIncrease,
+}: PropertyDialogProps) {
+  const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // State for edit modes
+  const [editingProperty, setEditingProperty] = useState(false);
+  const [editingTenant, setEditingTenant] = useState(false);
+  const [editingLandlord, setEditingLandlord] = useState(false);
+  const [editingRentalRate, setEditingRentalRate] = useState(false);
+
+  // Query for property data
+  const {
+    data: property,
+    isLoading: isLoadingProperty,
+  } = useQuery({
+    queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
+    enabled: isOpen && !!propertyAddress,
+  });
+
+  // Query for rental history
+  const {
+    data: rentalHistory,
+    isLoading: isLoadingHistory,
+  } = useQuery({
+    queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress || '')}`],
+    enabled: isOpen && !!propertyAddress,
+  });
+
+  // Handle success of edit operations
+  const handleEditSuccess = () => {
+    // Close edit forms
+    setEditingProperty(false);
+    setEditingTenant(false);
+    setEditingLandlord(false);
+    setEditingRentalRate(false);
+    
+    // Invalidate queries to refresh data
+    if (propertyAddress) {
+      queryClient.invalidateQueries({
+        queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress)}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/properties'],
+      });
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">
+            {isLoadingProperty ? (
+              <Skeleton className="h-8 w-64" />
+            ) : (
+              property?.propertyAddress || "Property Details"
+            )}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="mt-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-5 mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="rental">Rental History</TabsTrigger>
+              <TabsTrigger value="landlord">Landlord</TabsTrigger>
+              <TabsTrigger value="tenant">Tenant</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="py-4">
+              {isLoadingProperty ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </div>
+              ) : (
+                <div className="bg-neutral-lightest p-4 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h2 className="text-xl font-semibold">Property Details</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setEditingProperty(true)}
+                      className="h-8 px-2 text-neutral-medium hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                  
+                  {editingProperty && property ? (
+                    <PropertyForm 
+                      propertyData={{
+                        propertyAddress: property.propertyAddress,
+                        keyNumber: property.keyNumber,
+                        strataContactNumber: property.strataContactNumber,
+                        strataManagementCompany: property.strataManagementCompany,
+                        strataContactPerson: property.strataContactPerson,
+                        serviceType: property.serviceType
+                      }}
+                      isEdit={true}
+                      onSuccess={handleEditSuccess}
+                      onCancel={() => setEditingProperty(false)}
+                    />
+                  ) : property ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium mb-4">Property Information</h4>
+                          <p><strong>Address:</strong> {property.propertyAddress}</p>
+                          <p><strong>Key Number:</strong> {property.keyNumber}</p>
+                          <p><strong>Service Type:</strong> {property.serviceType}</p>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-4">Strata Information</h4>
+                          <p><strong>Strata Management:</strong> {property.strataManagementCompany || 'Not provided'}</p>
+                          <p><strong>Contact Person:</strong> {property.strataContactPerson || 'Not provided'}</p>
+                          <p><strong>Contact Number:</strong> {property.strataContactNumber || 'Not provided'}</p>
+                        </div>
+                      </div>
+                      
+                      <hr className="my-4 border-neutral-light" />
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium mb-4">Current Owner</h4>
+                          {property.landlordOwners && property.landlordOwners.length > 0 ? (
+                            <div>
+                              <p className="font-medium">{property.landlordOwners[0].name}</p>
+                              <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
+                              <p className="text-sm text-neutral-medium">
+                                Birthday: {property.landlordOwners[0].birthday 
+                                  ? formatDisplayDate(property.landlordOwners[0].birthday).split(',')[0] 
+                                  : 'Not provided'}
+                              </p>
+                              <div className="mt-2">
+                                <a href="#" className="text-primary text-sm hover:underline">View details</a>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-neutral-medium">No landlord information available</p>
+                          )}
+                          
+                          <h4 className="font-medium mb-4 mt-6">Current Tenant</h4>
+                          {property.tenant ? (
+                            <div>
+                              <p className="font-medium">{property.tenant.name}</p>
+                              <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
+                              <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
+                              <p className="text-sm text-neutral-medium">
+                                Birthday: {property.tenant.birthday 
+                                  ? formatDisplayDate(property.tenant.birthday).split(',')[0] 
+                                  : 'Not provided'}
+                              </p>
+                              <div className="mt-2">
+                                <a href="#" className="text-primary text-sm hover:underline">View details</a>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-warning italic">Vacant</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-4">Rental Information</h4>
+                          {property.rentalInfo ? (
+                            <div>
+                              <p><strong>Current Rental Rate:</strong> {formatCurrency(property.rentalInfo.latestRentalRate)}</p>
+                              <p><strong>Last Increase Date:</strong> {formatDisplayDate(property.rentalInfo.latestRateIncreaseDate)}</p>
+                              <p><strong>Next Allowable Increase:</strong> {formatDisplayDate(property.rentalInfo.nextAllowableRentalIncreaseDate)}</p>
+                              <p><strong>Next Allowable Rate:</strong> {formatCurrency(property.rentalInfo.nextAllowableRentalRate)}</p>
+                              <p><strong>Reminder Date:</strong> {formatDisplayDate(property.rentalInfo.reminderDate)}</p>
+                              <p><strong>Months Since Increase:</strong> {getMonthsSince(property.rentalInfo.latestRateIncreaseDate)}</p>
+                              
+                              <div className="mt-4">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    if (propertyAddress) {
+                                      onProcessRateIncrease(propertyAddress);
+                                      onClose();
+                                    }
+                                  }}
+                                >
+                                  <TrendingUp className="h-4 w-4 mr-1" />
+                                  Process Rate Increase
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-warning italic">No rental information available</p>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => setEditingRentalRate(true)}
+                              >
+                                <span className="mr-2">+</span> Add Initial Rental Rate
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>No property information available</p>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="rental" className="py-4">
+              <div className="bg-neutral-lightest p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Rental History</h2>
+                  {property?.rentalInfo && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setEditingRentalRate(true)}
+                      className="h-8 px-2 text-neutral-medium hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit Rate
+                    </Button>
+                  )}
+                </div>
+                
+                {editingRentalRate ? (
+                  property?.rentalInfo ? (
+                    <RateIncreaseForm 
+                      propertyData={{
+                        propertyAddress: property.propertyAddress,
+                        rentalRate: property.rentalInfo.latestRentalRate,
+                        rateIncreaseDate: property.rentalInfo.latestRateIncreaseDate
+                      }}
+                      isEdit={true}
+                      onSuccess={handleEditSuccess}
+                      onCancel={() => setEditingRentalRate(false)}
+                    />
+                  ) : property ? (
+                    <InitialRentalRateForm 
+                      propertyAddress={property.propertyAddress}
+                      onSuccess={handleEditSuccess}
+                      onCancel={() => setEditingRentalRate(false)}
+                    />
+                  ) : null
+                ) : isLoadingHistory ? (
+                  <div className="flex justify-center items-center h-40">
+                    <p>Loading rental history...</p>
+                  </div>
+                ) : rentalHistory && rentalHistory.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-neutral-light">
+                      <thead className="bg-neutral-lightest">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Previous Rate
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            New Rate
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Increase %
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                            Notes
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-neutral-light">
+                        {rentalHistory.map((history: any, index: number) => {
+                          const previousRate = parseFloat(history.previousRate);
+                          const newRate = parseFloat(history.newRate);
+                          const percentageIncrease = previousRate > 0
+                            ? ((newRate - previousRate) / previousRate) * 100
+                            : 0;
+                          
+                          return (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {formatDisplayDate(history.increaseDate)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {previousRate === 0 ? 'N/A' : formatCurrency(previousRate)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {formatCurrency(newRate)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {previousRate === 0 ? 'N/A' : `+${percentageIncrease.toFixed(1)}%`}
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                {history.notes || 'No notes'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 bg-neutral-lightest rounded-lg">
+                    {property?.rentalInfo ? (
+                      <p className="text-neutral-medium">No rental increase history available</p>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-neutral-medium">No rental rate information has been set for this property.</p>
+                        {!editingRentalRate && property && (
+                          <Button 
+                            onClick={() => setEditingRentalRate(true)}
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                          >
+                            <span className="mr-2">+</span> Add Initial Rental Rate
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="landlord" className="py-4">
+              <div className="bg-neutral-lightest p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Landlord Details</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEditingLandlord(true)}
+                    className="h-8 px-2 text-neutral-medium hover:text-primary"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+                
+                {editingLandlord && property ? (
+                  <LandlordForm 
+                    landlordData={{
+                      propertyAddress: property.propertyAddress,
+                      keyNumber: property.keyNumber,
+                      strataContactNumber: property.strataContactNumber,
+                      strataManagementCompany: property.strataManagementCompany,
+                      strataContactPerson: property.strataContactPerson,
+                      owner: property.landlordOwners && property.landlordOwners.length > 0 
+                        ? {
+                            name: property.landlordOwners[0].name,
+                            contactNumber: property.landlordOwners[0].contactNumber,
+                            birthday: property.landlordOwners[0].birthday
+                          }
+                        : undefined
+                    }}
+                    isEdit={true}
+                    onSuccess={handleEditSuccess}
+                    onCancel={() => setEditingLandlord(false)}
+                  />
+                ) : (
+                  property && property.landlordOwners && property.landlordOwners.length > 0 ? (
+                    <div>
+                      <p className="font-medium">{property.landlordOwners[0].name}</p>
+                      <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
+                      <p className="text-sm text-neutral-medium">
+                        Birthday: {property.landlordOwners[0].birthday 
+                          ? formatDisplayDate(property.landlordOwners[0].birthday) 
+                          : 'Not provided'}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-neutral-medium">No landlord information available</p>
+                  )
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="tenant" className="py-4">
+              <div className="bg-neutral-lightest p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">Tenant Details</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEditingTenant(true)}
+                    className="h-8 px-2 text-neutral-medium hover:text-primary"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+                
+                {editingTenant && property ? (
+                  <TenantForm 
+                    tenantData={{
+                      id: property.tenant?.id,
+                      propertyAddress: property.propertyAddress,
+                      name: property.tenant?.name || "",
+                      contactNumber: property.tenant?.contactNumber,
+                      email: property.tenant?.email,
+                      birthday: property.tenant?.birthday,
+                      moveInDate: property.tenant?.moveInDate || new Date(),
+                      moveOutDate: property.tenant?.moveOutDate,
+                      serviceType: property.serviceType || ""
+                    }}
+                    isEdit={!!property.tenant}
+                    onSuccess={handleEditSuccess}
+                    onCancel={() => setEditingTenant(false)}
+                  />
+                ) : (
+                  property && property.tenant ? (
+                    <div>
+                      <p className="font-medium">{property.tenant.name}</p>
+                      <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
+                      <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
+                      <p className="text-sm text-neutral-medium">
+                        Birthday: {property.tenant.birthday 
+                          ? formatDisplayDate(property.tenant.birthday) 
+                          : 'Not provided'}
+                      </p>
+                      <p className="mt-4"><strong>Move-in Date:</strong> {property.tenant.moveInDate 
+                        ? formatDisplayDate(property.tenant.moveInDate) 
+                        : 'Not specified'}</p>
+                      
+                      {property.tenant.moveOutDate && (
+                        <p><strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-warning italic">Vacant</p>
+                  )
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="notes" className="py-4">
+              <div className="bg-neutral-lightest p-4 rounded-lg">
+                <h2 className="text-xl font-semibold mb-4">Notes</h2>
+                <p className="text-neutral-medium italic">No notes available for this property.</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

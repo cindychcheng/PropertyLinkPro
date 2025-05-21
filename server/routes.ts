@@ -320,6 +320,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json(handleZodError(err));
     }
   });
+  
+  // Add initial rental rate (first rental rate for a property)
+  app.post("/api/rental-increases/initial", async (req, res) => {
+    try {
+      // Validate request body with a custom schema
+      const initialRateSchema = z.object({
+        propertyAddress: z.string(),
+        initialRentalRate: z.number().positive("Rental rate must be a positive number"),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+      });
+      
+      const data = initialRateSchema.parse(req.body);
+      
+      // Check if rental increase already exists for this property
+      const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(data.propertyAddress);
+      if (existingIncrease) {
+        return res.status(400).json({ message: "Rental rate information already exists for this property" });
+      }
+      
+      // Create initial rental rate with appropriate calculations
+      const startDate = new Date(data.startDate);
+      
+      // Calculate next allowable increase date (1 year from start date)
+      const nextAllowableDate = new Date(startDate);
+      nextAllowableDate.setFullYear(nextAllowableDate.getFullYear() + 1);
+      
+      // Calculate reminder date (8 months from start date)
+      const reminderDate = new Date(startDate);
+      reminderDate.setMonth(reminderDate.getMonth() + 8);
+      
+      // Calculate next allowable rate (3% increase)
+      const nextAllowableRate = Math.round(data.initialRentalRate * 1.03 * 100) / 100;
+      
+      // Create the rental rate increase record
+      const increase = await storage.createRentalRateIncrease({
+        propertyAddress: data.propertyAddress,
+        latestRateIncreaseDate: data.startDate,
+        latestRentalRate: data.initialRentalRate,
+        nextAllowableRentalIncreaseDate: nextAllowableDate.toISOString().split('T')[0],
+        nextAllowableRentalRate: nextAllowableRate,
+        reminderDate: reminderDate.toISOString().split('T')[0]
+      });
+      
+      // Also create a history entry for the initial rate
+      await storage.createRentalRateHistory({
+        propertyAddress: data.propertyAddress,
+        increaseDate: data.startDate,
+        previousRate: 0, // No previous rate for initial entry
+        newRate: data.initialRentalRate,
+        notes: "Initial rental rate"
+      });
+      
+      res.status(201).json(increase);
+    } catch (err) {
+      res.status(400).json(handleZodError(err));
+    }
+  });
 
   app.put("/api/rental-increases/:address", async (req, res) => {
     try {

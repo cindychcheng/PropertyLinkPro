@@ -20,6 +20,7 @@ import { PropertyForm } from "@/components/forms/property-form";
 import { TenantForm } from "@/components/forms/tenant-form";
 import { LandlordForm } from "@/components/forms/landlord-form";
 import { RateIncreaseForm } from "@/components/forms/rate-increase-form";
+import { InitialRentalRateForm } from "@/components/forms/initial-rental-rate-form";
 import { Pencil, TrendingUp } from "lucide-react";
 import { PropertyWithDetails } from "@shared/schema";
 
@@ -352,7 +353,38 @@ export function PropertyDialog({
                   </div>
                 ) : (
                   <div className="text-center py-4 bg-neutral-lightest rounded-lg">
-                    <p className="text-neutral-medium">No rental increase history available</p>
+                    {property && property.rentalInfo ? (
+                      <p className="text-neutral-medium">No rental increase history available</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {editingRentalRate ? (
+                          <>
+                            <h3 className="text-base font-medium mb-4">Add Initial Rental Rate</h3>
+                            <div className="max-w-lg mx-auto">
+                              {property && (
+                                <InitialRentalRateForm 
+                                  propertyAddress={property.propertyAddress}
+                                  onSuccess={handleEditSuccess}
+                                  onCancel={() => setEditingRentalRate(false)}
+                                />
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-neutral-medium">No rental rate information has been set for this property.</p>
+                            <Button 
+                              onClick={() => setEditingRentalRate(true)}
+                              variant="outline"
+                              size="sm"
+                              className="mt-2"
+                            >
+                              <span className="mr-2">+</span> Add Initial Rental Rate
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
