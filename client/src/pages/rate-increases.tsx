@@ -26,9 +26,7 @@ import { useAppContext } from "@/providers/app-provider";
 
 export default function RateIncreases() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedMonth, setSelectedMonth] = useState(
-    (new Date().getMonth() + 1).toString()
-  );
+  const [selectedMonth, setSelectedMonth] = useState("0");
   const [minMonths, setMinMonths] = useState("0");
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   const [showRateIncreaseDialog, setShowRateIncreaseDialog] = useState(false);

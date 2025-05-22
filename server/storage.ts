@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, isNull, desc, not as notOp, or, gt, lte } from "drizzle-orm";
+import { eq, and, isNull, desc, not as notOp, or, sql } from "drizzle-orm";
 import { format, addMonths, addDays } from "date-fns";
 import { 
   landlords,
@@ -543,8 +543,9 @@ export class DatabaseStorage implements IStorage {
     // Get all rental increases
     const increases = await db.select().from(rentalRateIncreases);
     
-    // Filter by month if specified
-    const filteredIncreases = month 
+    // Filter by month if specified and not zero
+    // Month value of 0 means "show all months" (no filtering)
+    const filteredIncreases = (month && month > 0) 
       ? increases.filter(increase => {
           const reminderDate = new Date(increase.reminderDate);
           return reminderDate.getMonth() + 1 === month;
@@ -689,9 +690,12 @@ export class DatabaseStorage implements IStorage {
           eq(tenants.propertyAddress, propertyAddress),
           or(
             isNull(tenants.moveOutDate),
-            gt(tenants.moveOutDate, increaseDate)
+            and(
+              notOp(isNull(tenants.moveOutDate)), 
+              sql`${tenants.moveOutDate} > ${increaseDate}`
+            )
           ),
-          lte(tenants.moveInDate, increaseDate)
+          sql`${tenants.moveInDate} <= ${increaseDate}`
         )
       )
       .orderBy(desc(tenants.isPrimary));
