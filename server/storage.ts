@@ -310,12 +310,17 @@ export class DatabaseStorage implements IStorage {
         .from(landlordOwners)
         .where(eq(landlordOwners.landlordId, property.id));
         
-      // Get the tenant for this property without filtering by moveOutDate
-      // This ensures all tenants show up in the properties list
-      const [tenant] = await db
+      // Get all tenants for this property
+      const allTenants = await db
         .select()
         .from(tenants)
-        .where(eq(tenants.propertyAddress, property.propertyAddress));
+        .where(eq(tenants.propertyAddress, property.propertyAddress))
+        .orderBy(desc(tenants.moveInDate));
+      
+      // Get current active tenant (without moveOutDate) or most recent tenant
+      const [tenant] = allTenants.filter(t => !t.moveOutDate).length > 0 
+        ? allTenants.filter(t => !t.moveOutDate) 
+        : (allTenants.length > 0 ? [allTenants[0]] : []);
         
       const [rentalIncrease] = await db
         .select()
@@ -427,7 +432,8 @@ export class DatabaseStorage implements IStorage {
       email: t.email || undefined,
       birthday: t.birthday ? new Date(t.birthday) : undefined,
       moveInDate: new Date(t.moveInDate),
-      moveOutDate: t.moveOutDate ? new Date(t.moveOutDate) : undefined
+      moveOutDate: t.moveOutDate ? new Date(t.moveOutDate) : undefined,
+      serviceType: t.serviceType
     }));
     
     if (rentalIncrease) {

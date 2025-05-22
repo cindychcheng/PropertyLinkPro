@@ -212,22 +212,20 @@ export function PropertyDialog({
                           )}
                           
                           {/* Tenant History Section */}
-                          {property.tenantHistory && property.tenantHistory.length > 1 && (
+                          {property.tenantHistory && property.tenantHistory.length > 0 && (
                             <>
                               <h4 className="font-medium mb-2 mt-6">Tenant History</h4>
                               <div className="space-y-4">
-                                {property.tenantHistory
-                                  .filter(t => t.id !== property.tenant?.id) // Don't show current tenant twice
-                                  .map((tenant, index) => (
-                                    <div key={index} className="border-l-2 border-neutral-lighter pl-3 py-1">
-                                      <p className="font-medium">{tenant.name}</p>
-                                      <p className="text-xs text-neutral-medium">
-                                        {formatDisplayDate(tenant.moveInDate)} - {tenant.moveOutDate ? formatDisplayDate(tenant.moveOutDate) : 'Present'}
-                                      </p>
-                                      <p className="text-xs">{tenant.contactNumber || 'No contact number'}</p>
-                                      <p className="text-xs">{tenant.email || 'No email'}</p>
-                                    </div>
-                                  ))}
+                                {property.tenantHistory.map((tenant, index) => (
+                                  <div key={index} className="border-l-2 border-neutral-lighter pl-3 py-1">
+                                    <p className="font-medium">{tenant.name}</p>
+                                    <p className="text-xs text-neutral-medium">
+                                      {formatDisplayDate(tenant.moveInDate)} - {tenant.moveOutDate ? formatDisplayDate(tenant.moveOutDate) : 'Present'}
+                                    </p>
+                                    <p className="text-xs">{tenant.contactNumber || 'No contact number'}</p>
+                                    <p className="text-xs">{tenant.email || 'No email'}</p>
+                                  </div>
+                                ))}
                               </div>
                             </>
                           )}
