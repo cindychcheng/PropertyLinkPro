@@ -254,19 +254,27 @@ export function PropertyDialog({
                               <p><strong>Months Since Increase:</strong> {getMonthsSince(property.rentalInfo.latestRateIncreaseDate)}</p>
                               
                               <div className="mt-4">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    if (propertyAddress) {
-                                      onProcessRateIncrease(propertyAddress);
-                                      onClose();
-                                    }
-                                  }}
-                                >
-                                  <TrendingUp className="h-4 w-4 mr-1" />
-                                  Process Rate Increase
-                                </Button>
+                                {property.tenant && hasTenantLivedForMinimumPeriod(property.tenant.moveInDate) ? (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      if (propertyAddress) {
+                                        onProcessRateIncrease(propertyAddress);
+                                        onClose();
+                                      }
+                                    }}
+                                  >
+                                    <TrendingUp className="h-4 w-4 mr-1" />
+                                    Process Rate Increase
+                                  </Button>
+                                ) : (
+                                  <div className="text-warning text-sm italic mt-2">
+                                    {property.tenant ? 
+                                      "Tenant must live in property for at least 12 months before processing a rate increase" : 
+                                      "No tenant currently in property"}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ) : (
