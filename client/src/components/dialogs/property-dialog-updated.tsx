@@ -535,23 +535,31 @@ export function PropertyDialog({
                     onCancel={() => setEditingTenant(false)}
                   />
                 ) : (
-                  property && property.tenant ? (
-                    <div>
-                      <p className="font-medium">{property.tenant.name}</p>
-                      <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
-                      <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
-                      <p className="text-sm text-neutral-medium">
-                        Birthday: {property.tenant.birthday 
-                          ? formatDisplayDate(property.tenant.birthday) 
-                          : 'Not provided'}
-                      </p>
-                      <p className="mt-4"><strong>Move-in Date:</strong> {property.tenant.moveInDate 
-                        ? formatDisplayDate(property.tenant.moveInDate) 
-                        : 'Not specified'}</p>
-                      
-                      {property.tenant.moveOutDate && (
-                        <p><strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}</p>
-                      )}
+                  property && property.tenantHistory && property.tenantHistory.length > 0 ? (
+                    <div className="space-y-4">
+                      {property.tenantHistory.map((tenant, index) => (
+                        <div key={index} className={index > 0 ? "border-t pt-4" : ""}>
+                          <p className="font-medium">
+                            {tenant.name}
+                            {tenant.moveOutDate ? " (Previous)" : ""}
+                            {!tenant.moveOutDate && index === 0 ? " (Primary)" : ""}
+                          </p>
+                          <p className="text-sm">{tenant.contactNumber || 'No contact number'}</p>
+                          <p className="text-sm">{tenant.email || 'No email provided'}</p>
+                          <p className="text-sm text-neutral-medium">
+                            Birthday: {tenant.birthday 
+                              ? formatDisplayDate(tenant.birthday).split(',')[0] 
+                              : 'Not provided'}
+                          </p>
+                          <p className="mt-2"><strong>Move-in Date:</strong> {tenant.moveInDate 
+                            ? formatDisplayDate(tenant.moveInDate).split(',')[0] 
+                            : 'Not specified'}</p>
+                          
+                          {tenant.moveOutDate && (
+                            <p><strong>Move-out Date:</strong> {formatDisplayDate(tenant.moveOutDate).split(',')[0]}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-warning italic">Vacant</p>
