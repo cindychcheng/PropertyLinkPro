@@ -338,7 +338,16 @@ export function PropertyDialog({
                   </div>
                 </div>
                 
-                {editingRentalRate ? (
+                {addingNewTenantRate ? (
+                  property?.tenant ? (
+                    <NewTenantRateForm 
+                      propertyAddress={property.propertyAddress}
+                      tenantName={property.tenant.name}
+                      onSuccess={handleEditSuccess}
+                      onCancel={() => setAddingNewTenantRate(false)}
+                    />
+                  ) : null
+                ) : editingRentalRate ? (
                   property?.rentalInfo ? (
                     <RateIncreaseForm 
                       propertyData={{
