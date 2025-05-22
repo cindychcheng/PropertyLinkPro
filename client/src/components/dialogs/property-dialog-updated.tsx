@@ -37,7 +37,8 @@ import { TenantForm } from "@/components/forms/tenant-form";
 import { LandlordForm } from "@/components/forms/landlord-form";
 import { RateIncreaseForm } from "@/components/forms/rate-increase-form";
 import { InitialRentalRateForm } from "@/components/forms/initial-rental-rate-form";
-import { Pencil, TrendingUp } from "lucide-react";
+import { NewTenantRateForm } from "@/components/forms/new-tenant-rate-form";
+import { Pencil, TrendingUp, UserPlus } from "lucide-react";
 import { PropertyWithDetails } from "@shared/schema";
 
 type PropertyDialogProps = {
@@ -62,6 +63,7 @@ export function PropertyDialog({
   const [editingTenant, setEditingTenant] = useState(false);
   const [editingLandlord, setEditingLandlord] = useState(false);
   const [editingRentalRate, setEditingRentalRate] = useState(false);
+  const [addingNewTenantRate, setAddingNewTenantRate] = useState(false);
 
   // Query for property data
   const {
@@ -88,6 +90,7 @@ export function PropertyDialog({
     setEditingTenant(false);
     setEditingLandlord(false);
     setEditingRentalRate(false);
+    setAddingNewTenantRate(false);
     
     // Invalidate queries to refresh data
     if (propertyAddress) {
@@ -309,17 +312,30 @@ export function PropertyDialog({
               <div className="bg-neutral-lightest p-4 rounded-lg">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">Rental History</h2>
-                  {property?.rentalInfo && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setEditingRentalRate(true)}
-                      className="h-8 px-2 text-neutral-medium hover:text-primary"
-                    >
-                      <Pencil className="h-4 w-4 mr-1" />
-                      Edit Rate
-                    </Button>
-                  )}
+                  <div className="space-x-2">
+                    {property?.tenant && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setAddingNewTenantRate(true)}
+                        className="h-8 px-2"
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        New Tenant Rate
+                      </Button>
+                    )}
+                    {property?.rentalInfo && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setEditingRentalRate(true)}
+                        className="h-8 px-2 text-neutral-medium hover:text-primary"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit Rate
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 {editingRentalRate ? (
