@@ -16,6 +16,17 @@ import {
   formatCurrency,
   getMonthsSince
 } from "@/lib/utils/date-utils";
+
+// Function to check if tenant has lived in property for at least 12 months
+function hasTenantLivedForMinimumPeriod(moveInDate: Date | undefined): boolean {
+  if (!moveInDate) return false;
+  
+  const today = new Date();
+  const diffInMonths = (today.getFullYear() - moveInDate.getFullYear()) * 12 + 
+    (today.getMonth() - moveInDate.getMonth());
+  
+  return diffInMonths >= 12;
+}
 import { PropertyForm } from "@/components/forms/property-form";
 import { TenantForm } from "@/components/forms/tenant-form";
 import { LandlordForm } from "@/components/forms/landlord-form";
