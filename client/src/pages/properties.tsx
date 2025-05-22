@@ -70,11 +70,13 @@ export default function Properties() {
     setShowRateIncreaseDialog(true);
   };
 
-  const totalItems = properties?.length || 0;
-  const paginatedData = properties?.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+  const totalItems = Array.isArray(properties) ? properties.length : 0;
+  const paginatedData = Array.isArray(properties) 
+    ? properties.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+      ) 
+    : [];
 
   const columns = [
     {

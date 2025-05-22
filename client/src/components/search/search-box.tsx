@@ -49,71 +49,99 @@ export function SearchBox({
 
   // Search function
   useEffect(() => {
-    if (!query) {
+    // Always set loading when query changes
+    setIsLoading(true);
+    
+    // Create a unique identifier for this search request
+    const searchId = Date.now();
+    const currentSearchId = searchId;
+    
+    // Clear results if query is empty
+    if (!query.trim()) {
       setResults([]);
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    const searchQuery = query.toLowerCase().trim();
     
-    const searchQuery = query.toLowerCase();
-    
-    // Fetch properties for search
-    fetch('/api/properties')
-      .then(res => res.json())
-      .then(properties => {
-        const searchResults: SearchResult[] = [];
-        
-        // Search property addresses
-        properties.forEach((property: any) => {
-          const propertyAddress = property.propertyAddress || '';
+    // Use a small timeout to prevent excessive API calls while typing
+    const timer = setTimeout(() => {
+      console.log('Searching for:', searchQuery);
+      
+      // Fetch properties for search
+      fetch('/api/properties')
+        .then(res => {
+          if (!res.ok) throw new Error('Network response was not ok');
+          return res.json();
+        })
+        .then(properties => {
+          // Only process if this is still the most recent search
+          if (currentSearchId !== searchId) return;
           
-          // Match property address
-          if (propertyAddress.toLowerCase().includes(searchQuery)) {
-            searchResults.push({
-              id: `property-${propertyAddress}`,
-              type: "property",
-              title: propertyAddress,
-              subtitle: property.serviceType || '',
-              propertyAddress
-            });
+          const searchResults: SearchResult[] = [];
+          
+          if (!Array.isArray(properties)) {
+            console.error('Expected properties to be an array but got:', typeof properties);
+            setIsLoading(false);
+            return;
           }
           
-          // Match landlord owners' names
-          if (property.landlordOwners && property.landlordOwners.length) {
-            property.landlordOwners.forEach((owner: any, index: number) => {
-              if (owner.name && owner.name.toLowerCase().includes(searchQuery)) {
-                searchResults.push({
-                  id: `landlord-${propertyAddress}-${index}`,
-                  type: "landlord",
-                  title: owner.name,
-                  subtitle: `Owner of ${propertyAddress}`,
-                  propertyAddress
-                });
-              }
-            });
-          }
+          // Search property addresses
+          properties.forEach((property: any) => {
+            const propertyAddress = property.propertyAddress || '';
+            
+            // Match property address
+            if (propertyAddress.toLowerCase().includes(searchQuery)) {
+              searchResults.push({
+                id: `property-${propertyAddress}`,
+                type: "property",
+                title: propertyAddress,
+                subtitle: property.serviceType || '',
+                propertyAddress
+              });
+            }
+            
+            // Match landlord owners' names
+            if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
+              property.landlordOwners.forEach((owner: any, index: number) => {
+                if (owner.name && owner.name.toLowerCase().includes(searchQuery)) {
+                  searchResults.push({
+                    id: `landlord-${propertyAddress}-${index}`,
+                    type: "landlord",
+                    title: owner.name,
+                    subtitle: `Owner of ${propertyAddress}`,
+                    propertyAddress
+                  });
+                }
+              });
+            }
+            
+            // Match tenant name
+            if (property.tenant && property.tenant.name && 
+                property.tenant.name.toLowerCase().includes(searchQuery)) {
+              searchResults.push({
+                id: `tenant-${property.tenant.id}`,
+                type: "tenant",
+                title: property.tenant.name,
+                subtitle: `Tenant at ${propertyAddress}`,
+                propertyAddress
+              });
+            }
+          });
           
-          // Match tenant name
-          if (property.tenant && property.tenant.name && 
-              property.tenant.name.toLowerCase().includes(searchQuery)) {
-            searchResults.push({
-              id: `tenant-${property.tenant.id}`,
-              type: "tenant",
-              title: property.tenant.name,
-              subtitle: `Tenant at ${propertyAddress}`,
-              propertyAddress
-            });
-          }
+          console.log(`Found ${searchResults.length} results for "${searchQuery}"`);
+          setResults(searchResults);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error('Search error:', err);
+          setIsLoading(false);
         });
-        
-        setResults(searchResults);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error('Search error:', err);
-        setIsLoading(false);
-      });
+    }, 300); // Small delay for better performance while typing
+    
+    // Cleanup function
+    return () => clearTimeout(timer);
   }, [query]);
 
   // Handle selection
