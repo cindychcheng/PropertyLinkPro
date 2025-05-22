@@ -210,6 +210,7 @@ export function TenantForm({
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={isEdit} // Disable editing service type when editing tenant
                       >
                         <FormControl>
                           <SelectTrigger>

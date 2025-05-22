@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const tenant of data.tenants) {
         const tenantData = {
           propertyAddress: data.propertyAddress,
-          serviceType: data.serviceType, // Make sure service type is passed along
+          serviceType: data.serviceType, // Service type from the property
           name: tenant.name,
           contactNumber: tenant.contactNumber,
           email: tenant.email,
