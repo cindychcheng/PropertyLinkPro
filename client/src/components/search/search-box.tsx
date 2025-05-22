@@ -47,102 +47,94 @@ export function SearchBox({
     return () => document.removeEventListener("keydown", down);
   }, [open, setOpen]);
 
-  // Search function
-  useEffect(() => {
-    // Always set loading when query changes
-    setIsLoading(true);
-    
-    // Create a unique identifier for this search request
-    const searchId = Date.now();
-    const currentSearchId = searchId;
-    
-    // Clear results if query is empty
-    if (!query.trim()) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
+  // Cache for properties data to reduce API calls
+  const [propertiesData, setPropertiesData] = useState<any[]>([]);
 
-    const searchQuery = query.toLowerCase().trim();
-    
-    // Use a small timeout to prevent excessive API calls while typing
-    const timer = setTimeout(() => {
-      console.log('Searching for:', searchQuery);
-      
-      // Fetch properties for search
+  // Load properties data once when component mounts or when dialog opens
+  useEffect(() => {
+    if (open && propertiesData.length === 0) {
+      setIsLoading(true);
       fetch('/api/properties')
-        .then(res => {
-          if (!res.ok) throw new Error('Network response was not ok');
-          return res.json();
-        })
-        .then(properties => {
-          // Only process if this is still the most recent search
-          if (currentSearchId !== searchId) return;
-          
-          const searchResults: SearchResult[] = [];
-          
-          if (!Array.isArray(properties)) {
-            console.error('Expected properties to be an array but got:', typeof properties);
-            setIsLoading(false);
-            return;
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setPropertiesData(data);
+          } else {
+            console.error('Expected array of properties but got:', typeof data);
+            setPropertiesData([]);
           }
-          
-          // Search property addresses
-          properties.forEach((property: any) => {
-            const propertyAddress = property.propertyAddress || '';
-            
-            // Match property address
-            if (propertyAddress.toLowerCase().includes(searchQuery)) {
-              searchResults.push({
-                id: `property-${propertyAddress}`,
-                type: "property",
-                title: propertyAddress,
-                subtitle: property.serviceType || '',
-                propertyAddress
-              });
-            }
-            
-            // Match landlord owners' names
-            if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
-              property.landlordOwners.forEach((owner: any, index: number) => {
-                if (owner.name && owner.name.toLowerCase().includes(searchQuery)) {
-                  searchResults.push({
-                    id: `landlord-${propertyAddress}-${index}`,
-                    type: "landlord",
-                    title: owner.name,
-                    subtitle: `Owner of ${propertyAddress}`,
-                    propertyAddress
-                  });
-                }
-              });
-            }
-            
-            // Match tenant name
-            if (property.tenant && property.tenant.name && 
-                property.tenant.name.toLowerCase().includes(searchQuery)) {
-              searchResults.push({
-                id: `tenant-${property.tenant.id}`,
-                type: "tenant",
-                title: property.tenant.name,
-                subtitle: `Tenant at ${propertyAddress}`,
-                propertyAddress
-              });
-            }
-          });
-          
-          console.log(`Found ${searchResults.length} results for "${searchQuery}"`);
-          setResults(searchResults);
           setIsLoading(false);
         })
         .catch(err => {
-          console.error('Search error:', err);
+          console.error('Failed to load properties:', err);
           setIsLoading(false);
         });
-    }, 300); // Small delay for better performance while typing
+    }
+  }, [open, propertiesData.length]);
+
+  // Perform search when query changes
+  useEffect(() => {
+    // No need to search if query is empty
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    setIsLoading(true);
+    const searchQuery = query.toLowerCase().trim();
+    const searchResults: SearchResult[] = [];
     
-    // Cleanup function
-    return () => clearTimeout(timer);
-  }, [query]);
+    // Search through cached properties data
+    propertiesData.forEach((property: any) => {
+      const propertyAddress = property.propertyAddress || '';
+      let matchFound = false;
+      
+      // Match property address
+      if (propertyAddress.toLowerCase().includes(searchQuery)) {
+        searchResults.push({
+          id: `property-${propertyAddress}`,
+          type: "property",
+          title: propertyAddress,
+          subtitle: property.serviceType || '',
+          propertyAddress
+        });
+        matchFound = true;
+      }
+      
+      // Match landlord owners' names
+      if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
+        property.landlordOwners.forEach((owner: any, index: number) => {
+          if (owner.name && owner.name.toLowerCase().includes(searchQuery)) {
+            searchResults.push({
+              id: `landlord-${propertyAddress}-${index}`,
+              type: "landlord",
+              title: owner.name,
+              subtitle: `Owner of ${propertyAddress}`,
+              propertyAddress
+            });
+            matchFound = true;
+          }
+        });
+      }
+      
+      // Match tenant name
+      if (property.tenant && property.tenant.name && 
+          property.tenant.name.toLowerCase().includes(searchQuery)) {
+        searchResults.push({
+          id: `tenant-${property.tenant.id}`,
+          type: "tenant",
+          title: property.tenant.name,
+          subtitle: `Tenant at ${propertyAddress}`,
+          propertyAddress
+        });
+        matchFound = true;
+      }
+    });
+
+    console.log(`Found ${searchResults.length} results for "${searchQuery}"`);
+    setResults(searchResults);
+    setIsLoading(false);
+  }, [query, propertiesData]);
 
   // Handle selection
   const handleSelect = (result: SearchResult) => {
