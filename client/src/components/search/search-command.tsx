@@ -77,71 +77,81 @@ export function SearchCommand({
 
     const searchLower = debouncedValue.toLowerCase();
     const results: SearchResult[] = [];
+    
+    // Add debug logging
+    console.log("Search input:", searchLower);
+    console.log("Properties data:", properties);
+    console.log("Landlords data:", landlords);
+    console.log("Tenants data:", tenants);
 
     // Search in properties
     if (Array.isArray(properties)) {
       properties.forEach((property: any) => {
-        if (property.propertyAddress && property.propertyAddress.toLowerCase().includes(searchLower)) {
+        // Search in property address
+        if (property.propertyAddress && 
+            property.propertyAddress.toLowerCase().includes(searchLower)) {
           results.push({
             id: `property-${property.propertyAddress}`,
             type: "property",
             title: property.propertyAddress,
-            subtitle: property.serviceType,
+            subtitle: property.serviceType || "Property",
+            propertyAddress: property.propertyAddress
+          });
+        }
+        
+        // Search in landlord owners within property data (since they're nested)
+        if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
+          property.landlordOwners.forEach((owner: any, index: number) => {
+            if (owner.name && owner.name.toLowerCase().includes(searchLower)) {
+              results.push({
+                id: `landlord-owner-${property.propertyAddress}-${index}`,
+                type: "landlord",
+                title: owner.name,
+                subtitle: `Owner of ${property.propertyAddress}`,
+                propertyAddress: property.propertyAddress
+              });
+            }
+          });
+        }
+        
+        // Search in tenant info within property data
+        if (property.tenant && property.tenant.name && 
+            property.tenant.name.toLowerCase().includes(searchLower)) {
+          results.push({
+            id: `tenant-${property.tenant.id || 'unknown'}`,
+            type: "tenant",
+            title: property.tenant.name,
+            subtitle: `Tenant at ${property.propertyAddress}`,
             propertyAddress: property.propertyAddress
           });
         }
       });
     }
 
-    // Search in landlords (including owners)
-    if (Array.isArray(landlords)) {
-      landlords.forEach((landlord: any) => {
-        // Search in the primary property address/info
-        if (landlord.propertyAddress && landlord.propertyAddress.toLowerCase().includes(searchLower)) {
-          results.push({
-            id: `landlord-${landlord.propertyAddress}`,
-            type: "landlord",
-            title: landlord.propertyAddress,
-            subtitle: "Property (landlord)",
-            propertyAddress: landlord.propertyAddress
-          });
-        }
-
-        // Search in landlord owners
-        if (landlord.landlordOwners && Array.isArray(landlord.landlordOwners)) {
-          landlord.landlordOwners.forEach((owner: any, index: number) => {
-            if (owner.name && owner.name.toLowerCase().includes(searchLower)) {
-              results.push({
-                id: `landlord-owner-${landlord.propertyAddress}-${index}`,
-                type: "landlord",
-                title: owner.name,
-                subtitle: `Owner of ${landlord.propertyAddress}`,
-                propertyAddress: landlord.propertyAddress
-              });
-            }
-          });
-        }
-      });
-    }
-
-    // Search in tenants
+    // Also search independent tenant records (for current and past tenants)
     if (Array.isArray(tenants)) {
       tenants.forEach((tenant: any) => {
         if (
           (tenant.name && tenant.name.toLowerCase().includes(searchLower)) ||
           (tenant.email && tenant.email.toLowerCase().includes(searchLower))
         ) {
-          results.push({
-            id: `tenant-${tenant.id}`,
-            type: "tenant",
-            title: tenant.name || "Unknown tenant",
-            subtitle: `Tenant at ${tenant.propertyAddress}`,
-            propertyAddress: tenant.propertyAddress
-          });
+          // Avoid duplicates by creating a unique ID
+          const id = `tenant-${tenant.id}-${tenant.propertyAddress}`;
+          // Check if this result already exists
+          if (!results.some(r => r.id === id)) {
+            results.push({
+              id,
+              type: "tenant",
+              title: tenant.name || "Unknown tenant",
+              subtitle: `Tenant at ${tenant.propertyAddress}`,
+              propertyAddress: tenant.propertyAddress
+            });
+          }
         }
       });
     }
 
+    console.log("Search results:", results);
     return results;
   };
 
