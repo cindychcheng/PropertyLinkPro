@@ -6,7 +6,7 @@ import {
   HelpCircle,
   Command,
 } from "lucide-react";
-import { QuickSearch } from "@/components/search/quick-search";
+import { SearchDialog } from "@/components/search-dialog";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -36,7 +36,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               <span className="text-xs">⌘</span>K
             </kbd>
           </button>
-          <QuickSearch open={searchOpen} setOpen={setSearchOpen} />
+          <SearchDialog open={searchOpen} setOpen={setSearchOpen} />
         </div>
         <div className="flex items-center">
           <button className="p-2 rounded-full hover:bg-neutral-lightest" aria-label="Notifications">
