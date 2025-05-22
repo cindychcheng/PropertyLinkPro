@@ -291,10 +291,74 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRentalRateHistory(historyData: InsertRentalRateHistory): Promise<RentalRateHistory> {
+    // Import normalize function directly to prevent circular dependencies
+    const { normalizeDate } = await import('./date-utils');
+    
+    // Make a copy of the data to avoid modifying the original
+    const safeData = {...historyData};
+    
+    // Handle date fields - normalize before storing in db
+    if (safeData.increaseDate) {
+      // Cast to any to allow assignment, then the db typing will handle it correctly
+      (safeData as any).increaseDate = normalizeDate(safeData.increaseDate);
+    }
+    
     const [newHistory] = await db
       .insert(rentalRateHistory)
-      .values(historyData)
+      .values(safeData)
       .returning();
+    
+    // After creating a rental history entry, we need to update the rental increase record
+    // to keep the overview tab and edit rate dialog in sync
+    const increaseDate = new Date(safeData.increaseDate);
+    
+    // Calculate next allowable date (1 year from current date)
+    const nextAllowableDate = new Date(increaseDate);
+    nextAllowableDate.setFullYear(nextAllowableDate.getFullYear() + 1);
+    
+    // Calculate reminder date (8 months from current date)
+    const reminderDate = new Date(increaseDate);
+    reminderDate.setMonth(reminderDate.getMonth() + 8);
+    
+    // Calculate next allowable rate (3% increase)
+    const nextAllowableRate = safeData.newRate * 1.03;
+    
+    // Update the rental rate increase record
+    const [existingIncrease] = await db
+      .select()
+      .from(rentalRateIncreases)
+      .where(eq(rentalRateIncreases.propertyAddress, safeData.propertyAddress));
+    
+    // Format dates as strings for database storage
+    const formattedIncreaseDate = increaseDate.toISOString().split('T')[0];
+    const formattedNextAllowableDate = nextAllowableDate.toISOString().split('T')[0];
+    const formattedReminderDate = reminderDate.toISOString().split('T')[0];
+    
+    if (existingIncrease) {
+      await db
+        .update(rentalRateIncreases)
+        .set({
+          latestRateIncreaseDate: formattedIncreaseDate,
+          latestRentalRate: safeData.newRate,
+          nextAllowableRentalIncreaseDate: formattedNextAllowableDate,
+          nextAllowableRentalRate: nextAllowableRate,
+          reminderDate: formattedReminderDate
+        })
+        .where(eq(rentalRateIncreases.propertyAddress, safeData.propertyAddress));
+    } else {
+      // If no record exists, create one
+      await db
+        .insert(rentalRateIncreases)
+        .values({
+          propertyAddress: safeData.propertyAddress,
+          latestRateIncreaseDate: formattedIncreaseDate,
+          latestRentalRate: safeData.newRate,
+          nextAllowableRentalIncreaseDate: formattedNextAllowableDate,
+          nextAllowableRentalRate: nextAllowableRate,
+          reminderDate: formattedReminderDate
+        });
+    }
+    
     return newHistory;
   }
 

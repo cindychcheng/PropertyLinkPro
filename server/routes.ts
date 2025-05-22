@@ -415,32 +415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const historyData = insertRentalRateHistorySchema.parse(req.body);
       const history = await storage.createRentalRateHistory(historyData);
       
-      // After creating rental history, update the rental rate increases table
-      // to ensure Edit Rate shows the correct current values
-      const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(historyData.propertyAddress);
-      
-      if (existingIncrease) {
-        // Calculate next allowable increase date (1 year from current date)
-        const increaseDate = new Date(historyData.increaseDate);
-        const nextAllowableDate = new Date(increaseDate);
-        nextAllowableDate.setFullYear(nextAllowableDate.getFullYear() + 1);
-        
-        // Calculate reminder date (8 months from current date)
-        const reminderDate = new Date(increaseDate);
-        reminderDate.setMonth(reminderDate.getMonth() + 8);
-        
-        // Calculate next allowable rate (3% increase)
-        const nextAllowableRate = historyData.newRate * 1.03;
-        
-        // Update the rental rate increase record
-        await storage.updateRentalRateIncrease(historyData.propertyAddress, {
-          latestRateIncreaseDate: increaseDate,
-          latestRentalRate: historyData.newRate,
-          nextAllowableRentalIncreaseDate: nextAllowableDate,
-          nextAllowableRentalRate: nextAllowableRate,
-          reminderDate: reminderDate
-        });
-      }
+      // We've moved the update logic to the createRentalRateHistory method
+      // This ensures the rental rate increases table is always updated correctly
+      // and that the overview tab and Edit Rate dialog show the latest information
       
       res.status(201).json(history);
     } catch (err) {
