@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -35,6 +36,20 @@ export default function Properties() {
   
   const rowsPerPage = 10;
   const { toast } = useToast();
+  const [location] = useLocation();
+  
+  // Check for address query parameter for search functionality
+  useEffect(() => {
+    // Get the current URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const addressParam = params.get('address');
+    
+    // If there's an address parameter, open the property dialog
+    if (addressParam) {
+      setSelectedProperty(decodeURIComponent(addressParam));
+      setShowPropertyDialog(true);
+    }
+  }, [location]);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ['/api/properties'],

@@ -4,15 +4,17 @@ import {
   Search,
   Bell,
   HelpCircle,
+  Command,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SearchCommand } from "@/components/search/search-command";
 
 type HeaderProps = {
   onMenuClick: () => void;
 };
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <header className="bg-white shadow-sm z-10">
@@ -25,18 +27,17 @@ export function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="text-neutral-dark" />
           </button>
-          <div className="relative w-64">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-2">
-              <Search className="text-neutral-medium h-5 w-5" />
-            </span>
-            <Input
-              type="text"
-              placeholder="Search properties, tenants..."
-              className="w-full pl-10 pr-4 py-2"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="relative flex w-64 items-center border border-input rounded-md bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground"
+          >
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <span className="text-neutral-medium">Search properties, tenants...</span>
+            <kbd className="pointer-events-none absolute right-1.5 top-[50%] -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 md:flex">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </button>
+          <SearchCommand open={searchOpen} setOpen={setSearchOpen} />
         </div>
         <div className="flex items-center">
           <button className="p-2 rounded-full hover:bg-neutral-lightest" aria-label="Notifications">
