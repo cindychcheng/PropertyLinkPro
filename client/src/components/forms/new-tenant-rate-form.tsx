@@ -56,7 +56,17 @@ export function NewTenantRateForm({
         notes: `New tenant - Current tenant: ${tenantName}`
       };
       
-      await apiRequest(`/api/rental-history`, "POST", payload);
+      const response = await fetch('/api/rental-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
       
       toast({
         title: "Success",
