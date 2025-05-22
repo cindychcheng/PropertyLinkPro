@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   CommandDialog,
   CommandEmpty,
@@ -44,21 +43,107 @@ export function SearchCommand({
 }) {
   const [inputValue, setInputValue] = useState("");
   const debouncedValue = useDebounce(inputValue, 300);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
-  const { data: properties = [] } = useQuery({
-    queryKey: ["/api/properties"],
-    staleTime: 60000,
-  });
+  // Add effect to handle searching when the input changes
+  useEffect(() => {
+    if (!debouncedValue) {
+      setSearchResults([]);
+      return;
+    }
 
-  const { data: landlords = [] } = useQuery({
-    queryKey: ["/api/landlords"],
-    staleTime: 60000,
-  });
+    const searchData = async () => {
+      try {
+        // Fetch data directly when needed for search
+        const [propertiesRes, tenantsRes] = await Promise.all([
+          fetch('/api/properties'),
+          fetch('/api/tenants')
+        ]);
 
-  const { data: tenants = [] } = useQuery({
-    queryKey: ["/api/tenants"],
-    staleTime: 60000,
-  });
+        if (!propertiesRes.ok || !tenantsRes.ok) {
+          console.error("Failed to fetch search data");
+          return;
+        }
+
+        const properties = await propertiesRes.json();
+        const tenants = await tenantsRes.json();
+        
+        const searchLower = debouncedValue.toLowerCase();
+        const results: SearchResult[] = [];
+        
+        // Search in properties
+        if (Array.isArray(properties)) {
+          properties.forEach((property: any) => {
+            // Search in property address
+            if (property.propertyAddress && 
+                property.propertyAddress.toLowerCase().includes(searchLower)) {
+              results.push({
+                id: `property-${property.propertyAddress}`,
+                type: "property",
+                title: property.propertyAddress,
+                subtitle: property.serviceType || "Property",
+                propertyAddress: property.propertyAddress
+              });
+            }
+            
+            // Search in landlord owners within property data
+            if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
+              property.landlordOwners.forEach((owner: any, index: number) => {
+                if (owner.name && owner.name.toLowerCase().includes(searchLower)) {
+                  results.push({
+                    id: `landlord-owner-${property.propertyAddress}-${index}`,
+                    type: "landlord",
+                    title: owner.name,
+                    subtitle: `Owner of ${property.propertyAddress}`,
+                    propertyAddress: property.propertyAddress
+                  });
+                }
+              });
+            }
+            
+            // Search in tenant info within property data
+            if (property.tenant && property.tenant.name && 
+                property.tenant.name.toLowerCase().includes(searchLower)) {
+              results.push({
+                id: `tenant-property-${property.tenant.id || 'unknown'}`,
+                type: "tenant",
+                title: property.tenant.name,
+                subtitle: `Tenant at ${property.propertyAddress}`,
+                propertyAddress: property.propertyAddress
+              });
+            }
+          });
+        }
+
+        // Search in all tenants
+        if (Array.isArray(tenants)) {
+          tenants.forEach((tenant: any) => {
+            if (tenant.name && tenant.name.toLowerCase().includes(searchLower)) {
+              // Check if this tenant result already exists
+              const id = `tenant-${tenant.id}`;
+              if (!results.some(r => r.id === id)) {
+                results.push({
+                  id,
+                  type: "tenant",
+                  title: tenant.name,
+                  subtitle: `Tenant at ${tenant.propertyAddress}`,
+                  propertyAddress: tenant.propertyAddress
+                });
+              }
+            }
+          });
+        }
+
+        console.log("Search results:", results);
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Error during search:", error);
+        setSearchResults([]);
+      }
+    };
+
+    searchData();
+  }, [debouncedValue]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -71,100 +156,13 @@ export function SearchCommand({
     return () => document.removeEventListener("keydown", down);
   }, [open, setOpen]);
 
-  // Create search results based on the input
-  const getSearchResults = () => {
-    if (!debouncedValue) return [];
-
-    const searchLower = debouncedValue.toLowerCase();
-    const results: SearchResult[] = [];
-    
-    // Add debug logging
-    console.log("Search input:", searchLower);
-    console.log("Properties data:", properties);
-    console.log("Landlords data:", landlords);
-    console.log("Tenants data:", tenants);
-
-    // Search in properties
-    if (Array.isArray(properties)) {
-      properties.forEach((property: any) => {
-        // Search in property address
-        if (property.propertyAddress && 
-            property.propertyAddress.toLowerCase().includes(searchLower)) {
-          results.push({
-            id: `property-${property.propertyAddress}`,
-            type: "property",
-            title: property.propertyAddress,
-            subtitle: property.serviceType || "Property",
-            propertyAddress: property.propertyAddress
-          });
-        }
-        
-        // Search in landlord owners within property data (since they're nested)
-        if (property.landlordOwners && Array.isArray(property.landlordOwners)) {
-          property.landlordOwners.forEach((owner: any, index: number) => {
-            if (owner.name && owner.name.toLowerCase().includes(searchLower)) {
-              results.push({
-                id: `landlord-owner-${property.propertyAddress}-${index}`,
-                type: "landlord",
-                title: owner.name,
-                subtitle: `Owner of ${property.propertyAddress}`,
-                propertyAddress: property.propertyAddress
-              });
-            }
-          });
-        }
-        
-        // Search in tenant info within property data
-        if (property.tenant && property.tenant.name && 
-            property.tenant.name.toLowerCase().includes(searchLower)) {
-          results.push({
-            id: `tenant-${property.tenant.id || 'unknown'}`,
-            type: "tenant",
-            title: property.tenant.name,
-            subtitle: `Tenant at ${property.propertyAddress}`,
-            propertyAddress: property.propertyAddress
-          });
-        }
-      });
-    }
-
-    // Also search independent tenant records (for current and past tenants)
-    if (Array.isArray(tenants)) {
-      tenants.forEach((tenant: any) => {
-        if (
-          (tenant.name && tenant.name.toLowerCase().includes(searchLower)) ||
-          (tenant.email && tenant.email.toLowerCase().includes(searchLower))
-        ) {
-          // Avoid duplicates by creating a unique ID
-          const id = `tenant-${tenant.id}-${tenant.propertyAddress}`;
-          // Check if this result already exists
-          if (!results.some(r => r.id === id)) {
-            results.push({
-              id,
-              type: "tenant",
-              title: tenant.name || "Unknown tenant",
-              subtitle: `Tenant at ${tenant.propertyAddress}`,
-              propertyAddress: tenant.propertyAddress
-            });
-          }
-        }
-      });
-    }
-
-    console.log("Search results:", results);
-    return results;
-  };
-
-  const searchResults = getSearchResults();
-
   const handleSelect = (result: SearchResult) => {
     setOpen(false);
     setInputValue(""); // Clear the input
     
     if (result.propertyAddress) {
-      // Use window.location approach instead of wouter's navigate
-      const url = `/properties?address=${encodeURIComponent(result.propertyAddress)}`;
-      window.location.href = url;
+      // Navigate to the property page with the address as a parameter
+      window.location.href = `/properties?address=${encodeURIComponent(result.propertyAddress)}`;
     }
   };
 

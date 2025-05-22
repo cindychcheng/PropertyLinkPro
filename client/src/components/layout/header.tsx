@@ -7,7 +7,7 @@ import {
   Command,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { SearchCommand } from "@/components/search/search-command";
+import { SimpleSearch } from "@/components/search/simple-search";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -37,7 +37,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               <span className="text-xs">⌘</span>K
             </kbd>
           </button>
-          <SearchCommand open={searchOpen} setOpen={setSearchOpen} />
+          <SimpleSearch open={searchOpen} setOpen={setSearchOpen} />
         </div>
         <div className="flex items-center">
           <button className="p-2 rounded-full hover:bg-neutral-lightest" aria-label="Notifications">
