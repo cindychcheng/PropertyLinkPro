@@ -526,7 +526,7 @@ export function PropertyDialog({
                       birthday: property.tenant?.birthday,
                       moveInDate: property.tenant?.moveInDate || new Date(),
                       moveOutDate: property.tenant?.moveOutDate,
-                      serviceType: property.serviceType || ""
+                      serviceType: property.serviceType || "Full-Service Management"
                     }}
                     isEdit={!!property.tenant}
                     onSuccess={handleEditSuccess}
