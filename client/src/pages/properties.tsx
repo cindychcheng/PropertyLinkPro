@@ -10,6 +10,17 @@ import { AddPropertyDialog } from "@/components/dialogs/add-property-dialog";
 import { Plus, TrendingUp } from "lucide-react";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils/date-utils";
 
+// Function to check if tenant has lived in property for at least 12 months
+function hasTenantLivedLongEnough(moveInDate: Date | undefined): boolean {
+  if (!moveInDate) return false;
+  
+  const today = new Date();
+  const diffInMonths = (today.getFullYear() - moveInDate.getFullYear()) * 12 + 
+    (today.getMonth() - moveInDate.getMonth());
+  
+  return diffInMonths >= 12;
+}
+
 export default function Properties() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
@@ -131,7 +142,7 @@ export default function Properties() {
           >
             View
           </Button>
-          {row.rentalInfo && (
+          {row.rentalInfo && row.tenant && hasTenantLivedLongEnough(row.tenant.moveInDate) && (
             <Button 
               variant="outline" 
               size="sm"
