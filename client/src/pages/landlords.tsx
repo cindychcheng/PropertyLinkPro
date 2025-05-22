@@ -173,7 +173,9 @@ export default function Landlords() {
               propertyAddress: editLandlord.propertyAddress,
               keyNumber: editLandlord.keyNumber,
               strataContactNumber: editLandlord.strataContactNumber,
-              owner: editLandlord.landlordOwners?.[0]
+              strataManagementCompany: editLandlord.strataManagementCompany,
+              strataContactPerson: editLandlord.strataContactPerson,
+              landlordOwners: editLandlord.landlordOwners
             } : undefined}
             isEdit={!!editLandlord}
           />
