@@ -188,19 +188,23 @@ export function PropertyDialog({
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <h4 className="font-medium mb-4">Current Owner</h4>
+                          <h4 className="font-medium mb-4">Owners</h4>
                           {property.landlordOwners && property.landlordOwners.length > 0 ? (
-                            <div>
-                              <p className="font-medium">{property.landlordOwners[0].name}</p>
-                              <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
-                              <p className="text-sm">
-                                {property.landlordOwners[0].residentialAddress || 'No residential address'}
-                              </p>
-                              <p className="text-sm text-neutral-medium">
-                                Birthday: {property.landlordOwners[0].birthday 
-                                  ? formatDisplayDate(property.landlordOwners[0].birthday).split(',')[0] 
-                                  : 'Not provided'}
-                              </p>
+                            <div className="space-y-4">
+                              {property.landlordOwners.map((owner, index) => (
+                                <div key={index} className={index > 0 ? "border-t pt-4" : ""}>
+                                  <p className="font-medium">{owner.name}</p>
+                                  <p className="text-sm">{owner.contactNumber || 'No contact number'}</p>
+                                  <p className="text-sm">
+                                    {owner.residentialAddress || 'No residential address'}
+                                  </p>
+                                  <p className="text-sm text-neutral-medium">
+                                    Birthday: {owner.birthday 
+                                      ? formatDisplayDate(owner.birthday).split(',')[0] 
+                                      : 'Not provided'}
+                                  </p>
+                                </div>
+                              ))}
                               <div className="mt-2">
                                 <a href="#" className="text-primary text-sm hover:underline">View details</a>
                               </div>
@@ -473,13 +477,7 @@ export function PropertyDialog({
                       strataContactNumber: property.strataContactNumber,
                       strataManagementCompany: property.strataManagementCompany,
                       strataContactPerson: property.strataContactPerson,
-                      owner: property.landlordOwners && property.landlordOwners.length > 0 
-                        ? {
-                            name: property.landlordOwners[0].name,
-                            contactNumber: property.landlordOwners[0].contactNumber,
-                            birthday: property.landlordOwners[0].birthday
-                          }
-                        : undefined
+                      landlordOwners: property.landlordOwners
                     }}
                     isEdit={true}
                     onSuccess={handleEditSuccess}
@@ -487,14 +485,21 @@ export function PropertyDialog({
                   />
                 ) : (
                   property && property.landlordOwners && property.landlordOwners.length > 0 ? (
-                    <div>
-                      <p className="font-medium">{property.landlordOwners[0].name}</p>
-                      <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
-                      <p className="text-sm text-neutral-medium">
-                        Birthday: {property.landlordOwners[0].birthday 
-                          ? formatDisplayDate(property.landlordOwners[0].birthday) 
-                          : 'Not provided'}
-                      </p>
+                    <div className="space-y-4">
+                      {property.landlordOwners.map((owner, index) => (
+                        <div key={index} className={index > 0 ? "border-t pt-4" : ""}>
+                          <p className="font-medium">{owner.name}</p>
+                          <p className="text-sm">{owner.contactNumber || 'No contact number'}</p>
+                          <p className="text-sm">
+                            {owner.residentialAddress || 'No residential address'}
+                          </p>
+                          <p className="text-sm text-neutral-medium">
+                            Birthday: {owner.birthday 
+                              ? formatDisplayDate(owner.birthday).split(',')[0] 
+                              : 'Not provided'}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-neutral-medium">No landlord information available</p>
