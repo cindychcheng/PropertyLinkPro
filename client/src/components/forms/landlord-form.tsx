@@ -51,6 +51,7 @@ type LandlordFormProps = {
       name: string;
       contactNumber?: string;
       birthday?: Date;
+      residentialAddress?: string;
     }>;
   };
   isEdit?: boolean;
@@ -71,9 +72,10 @@ export function LandlordForm({
       id: owner.id,
       name: owner.name,
       contactNumber: owner.contactNumber || "",
-      birthday: owner.birthday ? formatInputDate(owner.birthday) : ""
+      birthday: owner.birthday ? formatInputDate(owner.birthday) : "",
+      residentialAddress: owner.residentialAddress || ""
     })) : 
-    [{ name: "", contactNumber: "", birthday: "" }];
+    [{ name: "", contactNumber: "", birthday: "", residentialAddress: "" }];
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -131,6 +133,7 @@ export function LandlordForm({
           name: owner.name,
           contactNumber: owner.contactNumber || undefined,
           birthday: formattedBirthday,
+          residentialAddress: owner.residentialAddress || undefined,
         };
         
         if (isEdit && owner.id) {
@@ -294,7 +297,7 @@ export function LandlordForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ name: "", contactNumber: "", birthday: "" })}
+                  onClick={() => append({ name: "", contactNumber: "", birthday: "", residentialAddress: "" })}
                 >
                   <Plus className="h-4 w-4 mr-1" /> Add Owner
                 </Button>
@@ -337,6 +340,20 @@ export function LandlordForm({
                           <FormLabel>Contact Number (Optional)</FormLabel>
                           <FormControl>
                             <Input placeholder="e.g. (555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`owners.${index}.residentialAddress`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Residential Address (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 123 Main St, City" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
