@@ -37,6 +37,7 @@ export interface IStorage {
   // Tenant operations
   getTenants(): Promise<Tenant[]>;
   getTenantByPropertyAddress(propertyAddress: string): Promise<Tenant | undefined>;
+  getTenantsByPropertyAddress(propertyAddress: string): Promise<Tenant[]>; // Added for multiple tenants
   createTenant(tenant: InsertTenant): Promise<Tenant>;
   updateTenant(id: number, tenant: Partial<InsertTenant>): Promise<Tenant | undefined>;
   deleteTenant(id: number): Promise<boolean>;

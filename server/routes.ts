@@ -181,35 +181,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Special routes with specific path patterns must be before generic ones
-  // Property-based tenant update
+  // Property-based tenant update (handles multiple tenants)
   app.put("/api/tenants/property/:address", async (req, res) => {
     try {
-      console.log("Tenant update by property address endpoint called");
+      console.log("Multiple tenants update by property address endpoint called");
       const address = decodeURIComponent(req.params.address);
-      console.log(`Looking up tenant for address: ${address}`);
-      const tenantData = insertTenantSchema.partial().parse(req.body);
+      console.log(`Handling tenants for address: ${address}`);
       
-      // Get the tenant first by property address
-      const existingTenant = await storage.getTenantByPropertyAddress(address);
+      // Accept the new schema with multiple tenants
+      const multiTenantSchema = z.object({
+        propertyAddress: z.string(),
+        serviceType: z.string(),
+        tenants: z.array(
+          z.object({
+            id: z.number().optional(),
+            name: z.string(),
+            contactNumber: z.string().optional(),
+            email: z.string().optional(),
+            birthday: z.string().optional(),
+            moveInDate: z.string(),
+            moveOutDate: z.string().optional(),
+            isPrimary: z.boolean().default(false)
+          })
+        )
+      });
       
-      if (!existingTenant) {
-        console.log("No tenant found for this property address");
-        return res.status(404).json({ message: "Tenant not found for this property" });
+      const data = multiTenantSchema.parse(req.body);
+      console.log("Validated tenant data:", data);
+      
+      // Process each tenant individually
+      const results = [];
+      
+      for (const tenant of data.tenants) {
+        const tenantData = {
+          propertyAddress: data.propertyAddress,
+          serviceType: data.serviceType, // Make sure service type is passed along
+          name: tenant.name,
+          contactNumber: tenant.contactNumber,
+          email: tenant.email,
+          birthday: tenant.birthday,
+          moveInDate: tenant.moveInDate,
+          moveOutDate: tenant.moveOutDate,
+          isPrimary: tenant.isPrimary
+        };
+        
+        // If tenant has ID, update it, otherwise create new
+        if (tenant.id) {
+          console.log(`Updating existing tenant with ID: ${tenant.id}`);
+          const updatedTenant = await storage.updateTenant(tenant.id, tenantData);
+          if (updatedTenant) {
+            results.push(updatedTenant);
+          }
+        } else {
+          console.log(`Creating new tenant for property ${data.propertyAddress}`);
+          const newTenant = await storage.createTenant(tenantData);
+          results.push(newTenant);
+        }
       }
       
-      console.log(`Found tenant with ID: ${existingTenant.id}`);
-      
-      // Update using the ID we retrieved
-      const updatedTenant = await storage.updateTenant(existingTenant.id, tenantData);
-      
-      if (!updatedTenant) {
-        return res.status(404).json({ message: "Failed to update tenant" });
+      if (results.length === 0) {
+        return res.status(404).json({ message: "No tenants were updated or created" });
       }
       
-      console.log("Tenant updated successfully");
-      res.json(updatedTenant);
+      console.log(`Successfully updated/created ${results.length} tenants`);
+      res.json(results);
     } catch (err) {
-      console.error("Error updating tenant by address:", err);
+      console.error("Error updating tenants by address:", err);
       res.status(400).json(handleZodError(err));
     }
   });
@@ -218,13 +255,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tenants/:address", async (req, res) => {
     try {
       const address = decodeURIComponent(req.params.address);
-      const tenant = await storage.getTenantByPropertyAddress(address);
+      const tenants = await storage.getTenantsByPropertyAddress(address);
       
-      if (!tenant) {
-        return res.status(404).json({ message: "Tenant not found" });
+      if (!tenants || tenants.length === 0) {
+        return res.status(404).json({ message: "No tenants found for this property" });
       }
       
-      res.json(tenant);
+      res.json(tenants);
     } catch (err) {
       res.status(500).json(handleZodError(err));
     }
@@ -232,17 +269,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tenants", async (req, res) => {
     try {
-      const tenantData = insertTenantSchema.parse(req.body);
+      console.log("Creating new tenants");
       
-      // Check if a tenant already exists for this property
-      const existingTenant = await storage.getTenantByPropertyAddress(tenantData.propertyAddress);
-      if (existingTenant) {
-        return res.status(400).json({ message: "A tenant already exists for this property" });
+      // Accept the new schema with multiple tenants
+      const multiTenantSchema = z.object({
+        propertyAddress: z.string(),
+        serviceType: z.string(),
+        tenants: z.array(
+          z.object({
+            name: z.string(),
+            contactNumber: z.string().optional(),
+            email: z.string().optional(),
+            birthday: z.string().optional(),
+            moveInDate: z.string(),
+            moveOutDate: z.string().optional(),
+            isPrimary: z.boolean().default(false)
+          })
+        )
+      });
+      
+      const data = multiTenantSchema.parse(req.body);
+      console.log("Validated new tenant data:", data);
+      
+      // Process each tenant individually
+      const results = [];
+      
+      for (const tenant of data.tenants) {
+        const tenantData = {
+          propertyAddress: data.propertyAddress,
+          serviceType: data.serviceType, // Make sure service type is included
+          name: tenant.name,
+          contactNumber: tenant.contactNumber,
+          email: tenant.email,
+          birthday: tenant.birthday,
+          moveInDate: tenant.moveInDate,
+          moveOutDate: tenant.moveOutDate,
+          isPrimary: tenant.isPrimary
+        };
+        
+        console.log(`Creating new tenant for property ${data.propertyAddress}`);
+        const newTenant = await storage.createTenant(tenantData);
+        results.push(newTenant);
       }
       
-      const tenant = await storage.createTenant(tenantData);
-      res.status(201).json(tenant);
+      res.status(201).json(results);
     } catch (err) {
+      console.error("Error creating tenants:", err);
       res.status(400).json(handleZodError(err));
     }
   });

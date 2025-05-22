@@ -40,6 +40,7 @@ export const tenants = pgTable("tenants", {
   contactNumber: text("contact_number"),
   email: text("email"),
   birthday: date("birthday"),
+  isPrimary: boolean("is_primary").default(false), // To indicate primary tenant
 });
 
 // Rental rate increase tracker
