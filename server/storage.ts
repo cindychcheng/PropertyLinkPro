@@ -420,7 +420,7 @@ export class DatabaseStorage implements IStorage {
         strataContactNumber: property.strataContactNumber || undefined,
         strataManagementCompany: property.strataManagementCompany || undefined,
         strataContactPerson: property.strataContactPerson || undefined,
-        serviceType: tenant?.serviceType || '',
+        serviceType: property.serviceType || tenant?.serviceType || '',
         landlordOwners: owners.map(owner => ({
           name: owner.name,
           contactNumber: owner.contactNumber || undefined,
@@ -490,7 +490,7 @@ export class DatabaseStorage implements IStorage {
       strataContactNumber: property.strataContactNumber || undefined,
       strataManagementCompany: property.strataManagementCompany || undefined,
       strataContactPerson: property.strataContactPerson || undefined,
-      serviceType: tenant?.serviceType || '',
+      serviceType: property.serviceType || tenant?.serviceType || '',
       landlordOwners: owners.map(owner => ({
         name: owner.name,
         contactNumber: owner.contactNumber || undefined,
