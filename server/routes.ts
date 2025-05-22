@@ -363,13 +363,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reminderDate: reminderDate.toISOString().split('T')[0]
       });
       
-      // Also create a history entry for the initial rate
+      // Get tenant information to include in the history entry
+      const tenant = await storage.getTenantByPropertyAddress(data.propertyAddress);
+      const tenantName = tenant ? tenant.name : "No tenant";
+      
+      // Create a history entry for the initial rate with tenant information
       await storage.createRentalRateHistory({
         propertyAddress: data.propertyAddress,
         increaseDate: data.startDate,
         previousRate: 0, // No previous rate for initial entry
         newRate: data.initialRentalRate,
-        notes: "Initial rental rate"
+        notes: `Initial rental rate - Current tenant: ${tenantName}`
       });
       
       res.status(201).json(increase);

@@ -565,13 +565,17 @@ export class DatabaseStorage implements IStorage {
     const nextAllowableRate = Math.round(newRate * 1.03 * 100) / 100; // 3% increase
     const reminderDate = addDays(addMonths(increaseDate, 8), 0); // 8 months from increase date
     
-    // Record history entry
+    // Get tenant information to include in the history entry
+    const tenant = await this.getTenantByPropertyAddress(propertyAddress);
+    const tenantName = tenant ? tenant.name : "No tenant";
+    
+    // Record history entry with tenant information
     await this.createRentalRateHistory({
       propertyAddress,
       increaseDate: format(increaseDate, 'yyyy-MM-dd'),
       previousRate: currentRateInfo.latestRentalRate,
       newRate,
-      notes: notes || null
+      notes: notes ? `${notes} - Current tenant: ${tenantName}` : `Rate increase - Current tenant: ${tenantName}`
     });
     
     // Update the rental rate increase info
