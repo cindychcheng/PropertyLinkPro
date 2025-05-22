@@ -193,6 +193,9 @@ export function PropertyDialog({
                             <div>
                               <p className="font-medium">{property.landlordOwners[0].name}</p>
                               <p className="text-sm">{property.landlordOwners[0].contactNumber || 'No contact number'}</p>
+                              <p className="text-sm">
+                                {property.landlordOwners[0].residentialAddress || 'No residential address'}
+                              </p>
                               <p className="text-sm text-neutral-medium">
                                 Birthday: {property.landlordOwners[0].birthday 
                                   ? formatDisplayDate(property.landlordOwners[0].birthday).split(',')[0] 
