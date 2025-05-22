@@ -422,7 +422,26 @@ export function PropertyDialog({
                                 {previousRate === 0 ? 'N/A' : `+${percentageIncrease.toFixed(1)}%`}
                               </td>
                               <td className="px-6 py-4 text-sm">
-                                {history.notes || 'No notes'}
+                                <div>
+                                  {property.tenantHistory && property.tenantHistory.length > 0 && (
+                                    <div className="font-medium mb-1">
+                                      Tenants: {property.tenantHistory
+                                        .filter(t => {
+                                          // Show tenant if they were active during this rental history date
+                                          const historyDate = new Date(history.increaseDate);
+                                          const moveInDate = new Date(t.moveInDate);
+                                          const moveOutDate = t.moveOutDate ? new Date(t.moveOutDate) : null;
+                                          
+                                          return moveInDate <= historyDate && 
+                                                (!moveOutDate || moveOutDate >= historyDate);
+                                        })
+                                        .map(t => t.name)
+                                        .join(', ')
+                                      }
+                                    </div>
+                                  )}
+                                  {history.notes ? <div>{history.notes}</div> : 'No additional notes'}
+                                </div>
                               </td>
                             </tr>
                           );
