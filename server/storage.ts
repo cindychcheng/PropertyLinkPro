@@ -680,13 +680,34 @@ export class DatabaseStorage implements IStorage {
     const tenant = await this.getTenantByPropertyAddress(propertyAddress);
     const tenantName = tenant ? tenant.name : "No tenant";
     
-    // Record history entry with tenant information
+    // Get all active tenants for this property at the time of increase
+    const activeTenants = await db
+      .select()
+      .from(tenants)
+      .where(
+        and(
+          eq(tenants.propertyAddress, propertyAddress),
+          or(
+            isNull(tenants.moveOutDate),
+            gt(tenants.moveOutDate, increaseDate)
+          ),
+          lte(tenants.moveInDate, increaseDate)
+        )
+      );
+    
+    const tenantsList = activeTenants.length > 0 
+      ? activeTenants.map(t => t.name).join(", ") 
+      : "No active tenants";
+    
+    // Record history entry with all tenant information
     await this.createRentalRateHistory({
       propertyAddress,
       increaseDate: format(increaseDate, 'yyyy-MM-dd'),
       previousRate: currentRateInfo.latestRentalRate,
       newRate,
-      notes: notes ? `${notes} - Current tenant: ${tenantName}` : `Rate increase - Current tenant: ${tenantName}`
+      notes: notes 
+        ? `${notes}\n\nActive tenants: ${tenantsList}` 
+        : `Rate increase\n\nActive tenants: ${tenantsList}`
     });
     
     // Update the rental rate increase info
