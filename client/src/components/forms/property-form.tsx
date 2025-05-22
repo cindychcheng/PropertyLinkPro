@@ -295,7 +295,6 @@ export function PropertyForm({
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        disabled={isEdit}
                       >
                         <FormControl>
                           <SelectTrigger>
