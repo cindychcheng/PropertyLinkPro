@@ -90,6 +90,7 @@ export const insertTenantSchema = createInsertSchema(tenants).pick({
   contactNumber: true,
   email: true,
   birthday: true,
+  isPrimary: true,
 });
 
 export const insertRentalRateIncreaseSchema = createInsertSchema(rentalRateIncreases).pick({

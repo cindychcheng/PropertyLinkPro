@@ -175,6 +175,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTenantByPropertyAddress(propertyAddress: string): Promise<Tenant | undefined> {
+    // Try to find primary tenant first
+    const [primaryTenant] = await db
+      .select()
+      .from(tenants)
+      .where(and(
+        eq(tenants.propertyAddress, propertyAddress),
+        eq(tenants.isPrimary, true),
+        isNull(tenants.moveOutDate)
+      ));
+    
+    if (primaryTenant) return primaryTenant;
+    
+    // If no primary tenant, return any active tenant
     const [tenant] = await db
       .select()
       .from(tenants)
@@ -182,7 +195,16 @@ export class DatabaseStorage implements IStorage {
         eq(tenants.propertyAddress, propertyAddress),
         isNull(tenants.moveOutDate)
       ));
+    
     return tenant || undefined;
+  }
+  
+  async getTenantsByPropertyAddress(propertyAddress: string): Promise<Tenant[]> {
+    return await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.propertyAddress, propertyAddress))
+      .orderBy(desc(tenants.isPrimary)); // Primary tenants first
   }
 
   async createTenant(tenantData: InsertTenant): Promise<Tenant> {
@@ -696,6 +718,7 @@ export class MemStorage implements IStorage {
   async deleteLandlordOwner() { return false; }
   async getTenants() { return []; }
   async getTenantByPropertyAddress() { return undefined; }
+  async getTenantsByPropertyAddress() { return []; }
   async createTenant(tenant: InsertTenant) { 
     return { 
       id: 0, 
@@ -703,7 +726,8 @@ export class MemStorage implements IStorage {
       contactNumber: null, 
       birthday: null, 
       moveOutDate: null, 
-      email: null 
+      email: null,
+      isPrimary: tenant.isPrimary ?? false
     }; 
   }
   async updateTenant() { return undefined; }
