@@ -604,21 +604,22 @@ export class DatabaseStorage implements IStorage {
         isNull(tenants.moveOutDate)
       ));
     
-    // Filter owners by month if specified
-    const filteredOwners = month
-      ? ownersWithBirthdays.filter(owner => {
-          const birthday = new Date(owner.birthday!);
-          return birthday.getMonth() + 1 === month;
-        })
-      : ownersWithBirthdays;
+    // Get current month if not specified
+    const currentMonth = month || new Date().getMonth() + 1;
     
-    // Filter tenants by month if specified
-    const filteredTenants = month
-      ? tenantsWithBirthdays.filter(tenant => {
-          const birthday = new Date(tenant.birthday!);
-          return birthday.getMonth() + 1 === month;
-        })
-      : tenantsWithBirthdays;
+    // Filter owners by specified month (or current month)
+    const filteredOwners = ownersWithBirthdays.filter(owner => {
+      if (!owner.birthday) return false;
+      const birthday = new Date(owner.birthday);
+      return birthday.getMonth() + 1 === currentMonth;
+    });
+    
+    // Filter tenants by specified month (or current month)
+    const filteredTenants = tenantsWithBirthdays.filter(tenant => {
+      if (!tenant.birthday) return false;
+      const birthday = new Date(tenant.birthday);
+      return birthday.getMonth() + 1 === currentMonth;
+    });
     
     // Format owner birthdays
     const ownerBirthdays = await Promise.all(filteredOwners.map(async owner => {
