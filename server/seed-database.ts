@@ -46,6 +46,14 @@ export async function seedDatabase() {
       strataContactNumber: "555-444-9999"
     }).returning();
 
+    const [property5] = await db.insert(landlords).values({
+      propertyAddress: "202 Cedar Lane, Suite 5A",
+      keyNumber: "K-5005",
+      strataContactNumber: "555-666-7777",
+      strataManagementCompany: "Pacific Property Management",
+      strataContactPerson: "Alice Thompson"
+    }).returning();
+
     // Landlord Owners
     console.log("Seeding landlord owners...");
     await db.insert(landlordOwners).values({
@@ -81,6 +89,13 @@ export async function seedDatabase() {
       name: "Michael Brown",
       contactNumber: "555-999-1111",
       birthday: "1972-11-05"
+    });
+
+    await db.insert(landlordOwners).values({
+      landlordId: property5.id,
+      name: "Patricia Evans",
+      contactNumber: "555-888-2222",
+      birthday: "1983-04-12"
     });
 
     // Tenants
