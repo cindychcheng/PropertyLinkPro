@@ -15,6 +15,7 @@ export const landlords = pgTable("landlords", {
   id: serial("id").primaryKey(),
   propertyAddress: text("property_address").notNull().unique(),
   keyNumber: text("key_number").notNull(),
+  serviceType: text("service_type").notNull().default(ServiceType.FULL_SERVICE),
   strataContactNumber: text("strata_contact_number"),
   strataManagementCompany: text("strata_management_company"),
   strataContactPerson: text("strata_contact_person"),
@@ -69,6 +70,7 @@ export const rentalRateHistory = pgTable("rental_rate_history", {
 export const insertLandlordSchema = createInsertSchema(landlords).pick({
   propertyAddress: true,
   keyNumber: true,
+  serviceType: true,
   strataContactNumber: true,
   strataManagementCompany: true,
   strataContactPerson: true,
