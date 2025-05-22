@@ -78,6 +78,7 @@ export default function RateIncreases() {
   );
 
   const months = [
+    { value: "0", label: "All Months" },
     { value: "1", label: "January" },
     { value: "2", label: "February" },
     { value: "3", label: "March" },
