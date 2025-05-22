@@ -11,12 +11,17 @@ import { Plus, TrendingUp } from "lucide-react";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils/date-utils";
 
 // Function to check if tenant has lived in property for at least 12 months
-function hasTenantLivedLongEnough(moveInDate: Date | undefined): boolean {
+function hasTenantLivedLongEnough(moveInDate: Date | string | undefined): boolean {
   if (!moveInDate) return false;
   
   const today = new Date();
-  const diffInMonths = (today.getFullYear() - moveInDate.getFullYear()) * 12 + 
-    (today.getMonth() - moveInDate.getMonth());
+  const moveInDateObj = moveInDate instanceof Date ? moveInDate : new Date(moveInDate);
+  
+  // Ensure we have a valid date
+  if (isNaN(moveInDateObj.getTime())) return false;
+  
+  const diffInMonths = (today.getFullYear() - moveInDateObj.getFullYear()) * 12 + 
+    (today.getMonth() - moveInDateObj.getMonth());
   
   return diffInMonths >= 12;
 }
