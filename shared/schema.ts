@@ -28,6 +28,7 @@ export const landlordOwners = pgTable("landlord_owners", {
   name: text("name").notNull(),
   contactNumber: text("contact_number"),
   birthday: date("birthday"),
+  residentialAddress: text("residential_address"),
 });
 
 // Tenants table
@@ -81,6 +82,7 @@ export const insertLandlordOwnerSchema = createInsertSchema(landlordOwners).pick
   name: true,
   contactNumber: true,
   birthday: true,
+  residentialAddress: true,
 });
 
 export const insertTenantSchema = createInsertSchema(tenants).pick({

@@ -32,6 +32,7 @@ const formSchema = z.object({
       name: z.string().min(1, "Owner name is required"),
       contactNumber: z.string().optional(),
       birthday: z.string().optional(),
+      residentialAddress: z.string().optional(),
     })
   ).min(1, "At least one owner is required"),
 });

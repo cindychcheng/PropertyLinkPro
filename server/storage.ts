@@ -724,7 +724,7 @@ export class MemStorage implements IStorage {
   async updateLandlord() { return undefined; }
   async deleteLandlord() { return false; }
   async getLandlordOwners() { return []; }
-  async createLandlordOwner(owner: InsertLandlordOwner) { return { id: 0, ...owner, contactNumber: null, birthday: null }; }
+  async createLandlordOwner(owner: InsertLandlordOwner) { return { id: 0, ...owner, contactNumber: null, birthday: null, residentialAddress: null }; }
   async updateLandlordOwner() { return undefined; }
   async deleteLandlordOwner() { return false; }
   async getTenants() { return []; }
