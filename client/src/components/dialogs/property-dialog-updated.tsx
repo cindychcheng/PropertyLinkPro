@@ -198,12 +198,38 @@ export function PropertyDialog({
                                   ? formatDisplayDate(property.tenant.birthday).split(',')[0] 
                                   : 'Not provided'}
                               </p>
-                              <div className="mt-2">
-                                <a href="#" className="text-primary text-sm hover:underline">View details</a>
-                              </div>
+                              <p className="text-sm">
+                                <strong>Move-in Date:</strong> {formatDisplayDate(property.tenant.moveInDate)}
+                              </p>
+                              {property.tenant.moveOutDate && (
+                                <p className="text-sm text-warning">
+                                  <strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}
+                                </p>
+                              )}
                             </div>
                           ) : (
                             <p className="text-sm text-warning italic">Vacant</p>
+                          )}
+                          
+                          {/* Tenant History Section */}
+                          {property.tenantHistory && property.tenantHistory.length > 1 && (
+                            <>
+                              <h4 className="font-medium mb-2 mt-6">Tenant History</h4>
+                              <div className="space-y-4">
+                                {property.tenantHistory
+                                  .filter(t => t.id !== property.tenant?.id) // Don't show current tenant twice
+                                  .map((tenant, index) => (
+                                    <div key={index} className="border-l-2 border-neutral-lighter pl-3 py-1">
+                                      <p className="font-medium">{tenant.name}</p>
+                                      <p className="text-xs text-neutral-medium">
+                                        {formatDisplayDate(tenant.moveInDate)} - {tenant.moveOutDate ? formatDisplayDate(tenant.moveOutDate) : 'Present'}
+                                      </p>
+                                      <p className="text-xs">{tenant.contactNumber || 'No contact number'}</p>
+                                      <p className="text-xs">{tenant.email || 'No email'}</p>
+                                    </div>
+                                  ))}
+                              </div>
+                            </>
                           )}
                         </div>
                         

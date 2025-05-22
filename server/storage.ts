@@ -377,12 +377,15 @@ export class DatabaseStorage implements IStorage {
       .from(landlordOwners)
       .where(eq(landlordOwners.landlordId, property.id));
       
-    // Get the latest tenant for this property without filtering by moveOutDate
-    // This ensures all tenants appear in property details, even if added through the Tenants page
-    const [tenant] = await db
+    // Get ALL tenants for this property (both current and past)
+    const allTenants = await db
       .select()
       .from(tenants)
-      .where(eq(tenants.propertyAddress, propertyAddress));
+      .where(eq(tenants.propertyAddress, propertyAddress))
+      .orderBy(desc(tenants.moveInDate));
+    
+    // The current active tenant (without moveOutDate) or the most recent one
+    const [tenant] = allTenants.filter(t => !t.moveOutDate) || [allTenants[0]];
       
     const [rentalIncrease] = await db
       .select()
@@ -403,6 +406,7 @@ export class DatabaseStorage implements IStorage {
       }))
     };
     
+    // Add current active tenant
     if (tenant) {
       propertyDetails.tenant = {
         id: tenant.id,
@@ -414,6 +418,17 @@ export class DatabaseStorage implements IStorage {
         moveOutDate: tenant.moveOutDate ? new Date(tenant.moveOutDate) : undefined
       };
     }
+    
+    // Add tenant history (all tenants including past ones)
+    propertyDetails.tenantHistory = allTenants.map(t => ({
+      id: t.id,
+      name: t.name,
+      contactNumber: t.contactNumber || undefined,
+      email: t.email || undefined,
+      birthday: t.birthday ? new Date(t.birthday) : undefined,
+      moveInDate: new Date(t.moveInDate),
+      moveOutDate: t.moveOutDate ? new Date(t.moveOutDate) : undefined
+    }));
     
     if (rentalIncrease) {
       propertyDetails.rentalInfo = {

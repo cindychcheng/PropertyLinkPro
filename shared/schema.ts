@@ -137,6 +137,7 @@ export type PropertyWithDetails = {
     contactNumber?: string;
     birthday?: Date;
   }>;
+  // Current active tenant (the one without a moveOutDate)
   tenant?: {
     id: number;
     name: string;
@@ -146,6 +147,16 @@ export type PropertyWithDetails = {
     moveInDate: Date;
     moveOutDate?: Date;
   };
+  // All tenants for this property, including past tenants
+  tenantHistory?: Array<{
+    id: number;
+    name: string;
+    contactNumber?: string;
+    email?: string;
+    birthday?: Date;
+    moveInDate: Date;
+    moveOutDate?: Date;
+  }>;
   rentalInfo?: {
     latestRentalRate: number;
     latestRateIncreaseDate: Date;
