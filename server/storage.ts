@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, isNull, desc, not as notOp } from "drizzle-orm";
+import { eq, and, isNull, desc, not as notOp, or, gt, lte } from "drizzle-orm";
 import { format, addMonths, addDays } from "date-fns";
 import { 
   landlords,
@@ -693,7 +693,8 @@ export class DatabaseStorage implements IStorage {
           ),
           lte(tenants.moveInDate, increaseDate)
         )
-      );
+      )
+      .orderBy(desc(tenants.isPrimary));
     
     const tenantsList = activeTenants.length > 0 
       ? activeTenants.map(t => t.name).join(", ") 
