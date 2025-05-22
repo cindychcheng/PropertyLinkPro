@@ -42,32 +42,38 @@ export default function Tenants() {
   };
 
   const handleEditTenant = async (property: any) => {
-    console.log("Editing tenant for property:", property);
+    console.log("Editing tenants for property:", property);
 
     try {
-      // Get actual tenant data from the database to ensure we have the correct ID
-      const tenantFromDb = await fetchTenantForProperty(property.propertyAddress);
-      console.log("Tenant data from database:", tenantFromDb);
+      // Get tenant(s) data from the database
+      const tenantsFromDb = await fetchTenantForProperty(property.propertyAddress);
+      console.log("Tenants data from database:", tenantsFromDb);
       
-      if (tenantFromDb) {
-        // Create tenant data with the confirmed ID from database
+      if (tenantsFromDb) {
+        // Support for both single tenant and multiple tenants
+        const tenants = Array.isArray(tenantsFromDb) ? tenantsFromDb : [tenantsFromDb];
+        
+        // Create tenant data for form
         const tenantData = {
-          id: tenantFromDb.id, // Use the ID from database query
           propertyAddress: property.propertyAddress,
           serviceType: property.serviceType,
-          moveInDate: tenantFromDb.moveInDate,
-          moveOutDate: tenantFromDb.moveOutDate,
-          name: tenantFromDb.name,
-          contactNumber: tenantFromDb.contactNumber,
-          email: tenantFromDb.email,
-          birthday: tenantFromDb.birthday
+          tenants: tenants.map((tenant: any) => ({
+            id: tenant.id,
+            name: tenant.name,
+            contactNumber: tenant.contactNumber,
+            email: tenant.email,
+            birthday: tenant.birthday,
+            moveInDate: tenant.moveInDate,
+            moveOutDate: tenant.moveOutDate,
+            isPrimary: tenant.isPrimary || false
+          }))
         };
         
-        console.log("Tenant data for edit with confirmed ID:", tenantData);
+        console.log("Tenant data for edit with multiple tenants support:", tenantData);
         setEditTenant(tenantData);
         setActiveTab("add");
       } else {
-        // Handle case where tenant isn't found
+        // Handle case where tenants aren't found
         toast({
           title: "Error",
           description: "Could not retrieve tenant information for this property.",
