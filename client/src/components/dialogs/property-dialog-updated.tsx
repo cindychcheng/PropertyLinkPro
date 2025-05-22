@@ -526,15 +526,9 @@ export function PropertyDialog({
                 {editingTenant && property ? (
                   <TenantForm 
                     tenantData={{
-                      id: property.tenant?.id,
                       propertyAddress: property.propertyAddress,
-                      name: property.tenant?.name || "",
-                      contactNumber: property.tenant?.contactNumber,
-                      email: property.tenant?.email,
-                      birthday: property.tenant?.birthday,
-                      moveInDate: property.tenant?.moveInDate || new Date(),
-                      moveOutDate: property.tenant?.moveOutDate,
-                      serviceType: property.serviceType || "Full-Service Management"
+                      serviceType: property.serviceType || "Full-Service Management",
+                      tenants: property.tenantHistory || []
                     }}
                     isEdit={!!property.tenant}
                     onSuccess={handleEditSuccess}
