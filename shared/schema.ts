@@ -142,6 +142,7 @@ export type PropertyWithDetails = {
     name: string;
     contactNumber?: string;
     birthday?: Date;
+    residentialAddress?: string;
   }>;
   // Current active tenant (the one without a moveOutDate)
   tenant?: {

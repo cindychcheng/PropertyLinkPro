@@ -424,7 +424,8 @@ export class DatabaseStorage implements IStorage {
         landlordOwners: owners.map(owner => ({
           name: owner.name,
           contactNumber: owner.contactNumber || undefined,
-          birthday: owner.birthday ? new Date(owner.birthday) : undefined
+          birthday: owner.birthday ? new Date(owner.birthday) : undefined,
+          residentialAddress: owner.residentialAddress || undefined
         }))
       };
       
@@ -494,7 +495,8 @@ export class DatabaseStorage implements IStorage {
       landlordOwners: owners.map(owner => ({
         name: owner.name,
         contactNumber: owner.contactNumber || undefined,
-        birthday: owner.birthday ? new Date(owner.birthday) : undefined
+        birthday: owner.birthday ? new Date(owner.birthday) : undefined,
+        residentialAddress: owner.residentialAddress || undefined
       }))
     };
     
