@@ -75,12 +75,16 @@ export function PropertyDialog({
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    onSuccess: (data) => {
-      console.log("Client received property data:", data);
-      console.log("Tenant data:", data?.tenant);
-      console.log("Has tenant?", !!data?.tenant);
-    },
   });
+
+  // Debug what data the client receives
+  useEffect(() => {
+    if (property) {
+      console.log("Client received property data:", property);
+      console.log("Tenant data:", property?.tenant);
+      console.log("Has tenant?", !!property?.tenant);
+    }
+  }, [property]);
 
   // Query for rental history
   const {

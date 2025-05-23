@@ -53,6 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tenantName: property.tenant?.name,
         hasRentalInfo: !!property.rentalInfo
       });
+      console.log("Full property object being sent:", JSON.stringify(property, null, 2));
       
       // Prevent caching to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
