@@ -413,6 +413,7 @@ export function PropertyDialog({
                   ) : property ? (
                     <InitialRentalRateForm 
                       propertyAddress={property.propertyAddress}
+                      defaultStartDate={property.tenant?.moveInDate}
                       onSuccess={handleEditSuccess}
                       onCancel={() => setEditingRentalRate(false)}
                     />

@@ -26,24 +26,39 @@ const formSchema = z.object({
 
 type InitialRentalRateFormProps = {
   propertyAddress: string;
+  defaultStartDate?: Date | string;
   onSuccess?: () => void;
   onCancel?: () => void;
 };
 
 export function InitialRentalRateForm({
   propertyAddress,
+  defaultStartDate,
   onSuccess,
   onCancel,
 }: InitialRentalRateFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Helper function to format date for input
+  const formatDateForInput = (date: Date | string | undefined): string => {
+    if (!date) {
+      return new Date().toISOString().split('T')[0];
+    }
+    
+    if (typeof date === 'string') {
+      return new Date(date).toISOString().split('T')[0];
+    }
+    
+    return date.toISOString().split('T')[0];
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       propertyAddress: propertyAddress,
       initialRentalRate: "",
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: formatDateForInput(defaultStartDate),
     },
   });
 
