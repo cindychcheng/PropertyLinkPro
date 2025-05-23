@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
@@ -74,8 +75,8 @@ export function TenantForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Default tenant if none provided
-  const defaultTenants = tenantData?.tenants?.length ? 
+  // Default tenant if none provided - only use existing data when editing
+  const defaultTenants = (isEdit && tenantData?.tenants?.length) ? 
     tenantData.tenants.map(tenant => ({
       id: tenant.id,
       name: tenant.name,
@@ -91,11 +92,33 @@ export function TenantForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      propertyAddress: tenantData?.propertyAddress || "",
-      serviceType: tenantData?.serviceType || "",
+      propertyAddress: isEdit ? (tenantData?.propertyAddress || "") : "",
+      serviceType: isEdit ? (tenantData?.serviceType || "") : "",
       tenants: defaultTenants
     },
   });
+
+  // Reset form when switching between edit and add modes
+  useEffect(() => {
+    const resetDefaults = (isEdit && tenantData?.tenants?.length) ? 
+      tenantData.tenants.map(tenant => ({
+        id: tenant.id,
+        name: tenant.name,
+        contactNumber: tenant.contactNumber || "",
+        email: tenant.email || "",
+        birthday: tenant.birthday ? formatInputDate(tenant.birthday) : "",
+        moveInDate: tenant.moveInDate ? formatInputDate(tenant.moveInDate) : "",
+        moveOutDate: tenant.moveOutDate ? formatInputDate(tenant.moveOutDate) : "",
+        isPrimary: tenant.isPrimary || false
+      })) : 
+      [{ name: "", contactNumber: "", email: "", birthday: "", moveInDate: "", moveOutDate: "", isPrimary: true }];
+    
+    form.reset({
+      propertyAddress: isEdit ? (tenantData?.propertyAddress || "") : "",
+      serviceType: isEdit ? (tenantData?.serviceType || "") : "",
+      tenants: resetDefaults
+    });
+  }, [isEdit, tenantData, form]);
   
   // Setup field array for dynamic tenant inputs
   const { fields, append, remove } = useFieldArray({
@@ -149,7 +172,7 @@ export function TenantForm({
           : "A new tenant has been added to the system.",
       });
       
-      // Invalidate related queries
+      // Invalidate ALL related queries to ensure dashboard updates
       queryClient.invalidateQueries({
         queryKey: ['/api/tenants'],
       });
@@ -165,6 +188,16 @@ export function TenantForm({
         queryKey: ['/api/reminders/rental-increases']
       });
       queryClient.invalidateQueries({
+        queryKey: ['/api/reminders/birthdays']
+      });
+      // Force refetch all data immediately for instant UI update
+      queryClient.refetchQueries({
+        queryKey: ['/api/properties']
+      });
+      queryClient.refetchQueries({
+        queryKey: ['/api/reminders/rental-increases']
+      });
+      queryClient.refetchQueries({
         queryKey: ['/api/reminders/birthdays']
       });
       
