@@ -51,7 +51,7 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
               <TabsTrigger value="rental">Rental Rate</TabsTrigger>
             </TabsList>
             
-            <div className="flex-1 overflow-y-auto py-4">
+            <div className="flex-1 overflow-y-scroll py-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
               <TabsContent value="property" className="mt-0">
                 <PropertyForm 
                   onSuccess={handleSuccess}
