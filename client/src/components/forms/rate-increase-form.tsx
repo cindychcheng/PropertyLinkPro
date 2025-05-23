@@ -99,10 +99,12 @@ export function RateIncreaseForm({
       const maxRate = property.rentalInfo.nextAllowableRentalRate;
       form.setValue("latestRentalRate", maxRate.toString());
       
-      // Update the increase date to one year from last increase
-      const lastIncreaseDate = new Date(property.rentalInfo.latestRateIncreaseDate);
-      lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
-      form.setValue("latestRateIncreaseDate", formatInputDate(lastIncreaseDate));
+      // Only update date if there's a previous increase date
+      if (property.rentalInfo.latestRateIncreaseDate) {
+        const lastIncreaseDate = new Date(property.rentalInfo.latestRateIncreaseDate);
+        lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
+        form.setValue("latestRateIncreaseDate", formatInputDate(lastIncreaseDate));
+      }
     }
   }, [property, form]);
 
