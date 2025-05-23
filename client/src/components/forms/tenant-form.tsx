@@ -92,8 +92,8 @@ export function TenantForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      propertyAddress: isEdit ? (tenantData?.propertyAddress || "") : "",
-      serviceType: isEdit ? (tenantData?.serviceType || "") : "",
+      propertyAddress: tenantData?.propertyAddress || "",
+      serviceType: tenantData?.serviceType || "",
       tenants: defaultTenants
     },
   });
@@ -114,8 +114,8 @@ export function TenantForm({
       [{ name: "", contactNumber: "", email: "", birthday: "", moveInDate: "", moveOutDate: "", isPrimary: true }];
     
     form.reset({
-      propertyAddress: isEdit ? (tenantData?.propertyAddress || "") : "",
-      serviceType: isEdit ? (tenantData?.serviceType || "") : "",
+      propertyAddress: tenantData?.propertyAddress || "",
+      serviceType: tenantData?.serviceType || "",
       tenants: resetDefaults
     });
   }, [isEdit, tenantData, form]);
