@@ -480,6 +480,11 @@ export class DatabaseStorage implements IStorage {
     // The current active tenant (without moveOutDate) or the most recent one
     const activeTenants = allTenants.filter(t => !t.moveOutDate);
     const tenant = activeTenants.length > 0 ? activeTenants[0] : allTenants[0];
+    
+    // Debug: Log tenant detection
+    console.log(`Property ${propertyAddress} - All tenants:`, allTenants.length);
+    console.log('Active tenants:', activeTenants.length);
+    console.log('Selected tenant:', tenant ? tenant.name : 'none');
       
     const [rentalIncrease] = await db
       .select()

@@ -72,6 +72,9 @@ export function PropertyDialog({
   } = useQuery({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Query for rental history
