@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -82,6 +82,13 @@ export function PropertyDialog({
     queryKey: [`/api/rental-history/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
   });
+
+  // Reset to overview tab when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab("overview");
+    }
+  }, [isOpen, propertyAddress]);
 
   // Handle success of edit operations
   const handleEditSuccess = () => {
