@@ -213,7 +213,11 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button 
                         variant="link" 
-                        onClick={() => onViewProperty(property.propertyAddress)}
+                        onClick={() => {
+                          console.log("=== VIEW BUTTON CLICKED ===");
+                          console.log("Property address:", property.propertyAddress);
+                          onViewProperty(property.propertyAddress);
+                        }}
                         className="text-primary hover:text-primary-dark"
                       >
                         View
