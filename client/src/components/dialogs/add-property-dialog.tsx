@@ -7,12 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyForm } from "@/components/forms/property-form";
-import { LandlordForm } from "@/components/forms/landlord-form";
-import { TenantForm } from "@/components/forms/tenant-form";
-import { RateIncreaseForm } from "@/components/forms/rate-increase-form";
-import { useState } from "react";
 
 type AddPropertyDialogProps = {
   isOpen: boolean;
@@ -20,16 +15,8 @@ type AddPropertyDialogProps = {
 };
 
 export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
-  const [activeTab, setActiveTab] = useState("property");
-  const [propertyAddress, setPropertyAddress] = useState<string | undefined>();
-  
   const handleSuccess = () => {
     onClose();
-  };
-  
-  const handlePropertySuccess = (address: string) => {
-    setPropertyAddress(address);
-    setActiveTab("tenant");
   };
 
   return (
@@ -42,47 +29,11 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
-              <TabsTrigger value="property">Property</TabsTrigger>
-              <TabsTrigger value="landlord">Landlord</TabsTrigger>
-              <TabsTrigger value="tenant">Tenant</TabsTrigger>
-              <TabsTrigger value="rental">Rental Rate</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex-1 overflow-y-scroll py-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
-              <TabsContent value="property" className="mt-0">
-                <PropertyForm 
-                  onSuccess={handleSuccess}
-                  onCancel={onClose}
-                />
-              </TabsContent>
-              
-              <TabsContent value="landlord" className="mt-0">
-                <LandlordForm 
-                  onSuccess={handleSuccess}
-                  onCancel={onClose}
-                />
-              </TabsContent>
-              
-              <TabsContent value="tenant" className="mt-0">
-                <TenantForm 
-                  onSuccess={handleSuccess}
-                  onCancel={onClose}
-                  propertyAddress={propertyAddress}
-                />
-              </TabsContent>
-              
-              <TabsContent value="rental" className="mt-0">
-                <RateIncreaseForm 
-                  onSuccess={handleSuccess}
-                  onCancel={onClose}
-                  propertyAddress={propertyAddress}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
+        <div className="flex-1 overflow-y-scroll py-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+          <PropertyForm 
+            onSuccess={handleSuccess}
+            onCancel={onClose}
+          />
         </div>
         
         <DialogFooter className="flex-shrink-0">
