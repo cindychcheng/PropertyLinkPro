@@ -21,23 +21,11 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Add New Property</DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex-1 overflow-y-scroll py-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
-          <PropertyForm 
-            onSuccess={handleSuccess}
-            onCancel={onClose}
-          />
-        </div>
-        
-        <DialogFooter className="flex-shrink-0">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </DialogFooter>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <PropertyForm 
+          onSuccess={handleSuccess}
+          onCancel={onClose}
+        />
       </DialogContent>
     </Dialog>
   );
