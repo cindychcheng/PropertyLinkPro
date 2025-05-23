@@ -51,8 +51,14 @@ export default function Dashboard() {
   }, [birthdayReminders, rateIncreaseReminders, setActiveBirthdayCount, setActiveRateIncreaseCount]);
   
   const handleViewProperty = (address: string) => {
+    console.log("=== OPENING PROPERTY DIALOG ===");
+    console.log("Setting property address to:", address);
     setSelectedProperty(address);
-    setShowPropertyDialog(true);
+    // Use setTimeout to ensure state is updated before opening dialog
+    setTimeout(() => {
+      console.log("Opening dialog for address:", address);
+      setShowPropertyDialog(true);
+    }, 0);
   };
   
   const handleEditProperty = (address: string) => {
