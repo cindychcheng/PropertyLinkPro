@@ -65,7 +65,7 @@ export function PropertyDialog({
   const [editingRentalRate, setEditingRentalRate] = useState(false);
   const [addingNewTenantRate, setAddingNewTenantRate] = useState(false);
 
-  // Query for property data
+  // Query for property data - simplified approach
   const {
     data: property,
     isLoading: isLoadingProperty,
@@ -73,19 +73,11 @@ export function PropertyDialog({
   } = useQuery<PropertyWithDetails>({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
-    staleTime: 0, // Always fetch fresh data
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
     retry: false,
-    onSuccess: (data) => {
-      console.log("=== QUERY SUCCESS ===");
-      console.log("Received data:", data);
-      console.log("Tenant in data:", data?.tenant);
-    },
-    onError: (error) => {
-      console.log("=== QUERY ERROR ===");
-      console.log("Error:", error);
-    },
   });
 
   // Debug what data the client receives
