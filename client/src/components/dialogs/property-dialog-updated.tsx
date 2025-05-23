@@ -81,23 +81,19 @@ export function PropertyDialog({
 
   // Debug what data the client receives
   useEffect(() => {
-    console.log("=== REACT QUERY DEBUG ===");
-    console.log("Property state changed. Property:", property);
-    console.log("Property type:", typeof property);
-    console.log("Property keys:", property ? Object.keys(property) : 'none');
-    console.log("Loading state:", isLoadingProperty);
-    console.log("Error state:", propertyError);
-    console.log("Enabled:", isOpen && !!propertyAddress);
-    console.log("Property address for query:", propertyAddress);
+    if (isOpen && propertyAddress) {
+      console.log("=== DIALOG OPENED WITH ADDRESS ===");
+      console.log("Property address:", propertyAddress);
+      console.log("Dialog open:", isOpen);
+    }
     
     if (property) {
-      console.log("=== CLIENT DEBUG ===");
+      console.log("=== CLIENT RECEIVED DATA ===");
       console.log("Full property object:", JSON.stringify(property, null, 2));
       console.log("Tenant data:", property?.tenant);
       console.log("Has tenant?", !!property?.tenant);
-      console.log("Property address:", property?.propertyAddress);
     }
-  }, [property, isLoadingProperty, propertyError, isOpen, propertyAddress]);
+  }, [property, isOpen, propertyAddress]);
 
   // Query for rental history
   const {
