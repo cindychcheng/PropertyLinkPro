@@ -34,54 +34,58 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Property</DialogTitle>
           <DialogDescription>
             Enter the property details, landlord, tenant, and rental information.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="property">Property</TabsTrigger>
-            <TabsTrigger value="landlord">Landlord</TabsTrigger>
-            <TabsTrigger value="tenant">Tenant</TabsTrigger>
-            <TabsTrigger value="rental">Rental Rate</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="property">
-            <PropertyForm 
-              onSuccess={handleSuccess}
-              onCancel={onClose}
-            />
-          </TabsContent>
-          
-          <TabsContent value="landlord">
-            <LandlordForm 
-              onSuccess={handleSuccess}
-              onCancel={onClose}
-            />
-          </TabsContent>
-          
-          <TabsContent value="tenant">
-            <TenantForm 
-              onSuccess={handleSuccess}
-              onCancel={onClose}
-              propertyAddress={propertyAddress}
-            />
-          </TabsContent>
-          
-          <TabsContent value="rental">
-            <RateIncreaseForm 
-              onSuccess={handleSuccess}
-              onCancel={onClose}
-              propertyAddress={propertyAddress}
-            />
-          </TabsContent>
-        </Tabs>
+        <div className="flex-1 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
+              <TabsTrigger value="property">Property</TabsTrigger>
+              <TabsTrigger value="landlord">Landlord</TabsTrigger>
+              <TabsTrigger value="tenant">Tenant</TabsTrigger>
+              <TabsTrigger value="rental">Rental Rate</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex-1 overflow-y-auto py-4">
+              <TabsContent value="property" className="mt-0">
+                <PropertyForm 
+                  onSuccess={handleSuccess}
+                  onCancel={onClose}
+                />
+              </TabsContent>
+              
+              <TabsContent value="landlord" className="mt-0">
+                <LandlordForm 
+                  onSuccess={handleSuccess}
+                  onCancel={onClose}
+                />
+              </TabsContent>
+              
+              <TabsContent value="tenant" className="mt-0">
+                <TenantForm 
+                  onSuccess={handleSuccess}
+                  onCancel={onClose}
+                  propertyAddress={propertyAddress}
+                />
+              </TabsContent>
+              
+              <TabsContent value="rental" className="mt-0">
+                <RateIncreaseForm 
+                  onSuccess={handleSuccess}
+                  onCancel={onClose}
+                  propertyAddress={propertyAddress}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
         
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
