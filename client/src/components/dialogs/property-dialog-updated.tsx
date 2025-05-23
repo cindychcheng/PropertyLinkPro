@@ -302,14 +302,6 @@ export function PropertyDialog({
                           ) : (
                             <div>
                               <p className="text-warning italic">No rental information available</p>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="mt-2"
-                                onClick={() => setEditingRentalRate(true)}
-                              >
-                                <span className="mr-2">+</span> Add Initial Rental Rate
-                              </Button>
                             </div>
                           )}
                         </div>
