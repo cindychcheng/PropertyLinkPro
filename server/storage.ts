@@ -531,21 +531,14 @@ export class DatabaseStorage implements IStorage {
       serviceType: t.serviceType
     }));
     
-    // Only show rental info if we have both a current tenant AND rental increase data
-    // This ensures new tenants see "Add Initial Rental Rate" instead of "Set Rate for Existing Tenant"
+    // For new tenants like Kiki, don't show old rental info from previous tenants
+    // This ensures they see "Add Initial Rental Rate" instead of "Set Rate for Existing Tenant"
     if (rentalIncrease && tenant && !tenant.moveOutDate) {
-      // Check if the rental increase was set after the current tenant moved in
       const tenantMoveInDate = new Date(tenant.moveInDate);
       const rateIncreaseDate = new Date(rentalIncrease.latestRateIncreaseDate);
       
-      console.log(`=== RENTAL INFO DEBUG ===`);
-      console.log(`Tenant ${tenant.name} moved in:`, tenantMoveInDate.toISOString());
-      console.log(`Rate increase date:`, rateIncreaseDate.toISOString());
-      console.log(`Rate increase is after move-in:`, rateIncreaseDate >= tenantMoveInDate);
-      
-      // Only show rental info if the rate was set for the current tenant
+      // Only include rental info if it was set after the current tenant moved in
       if (rateIncreaseDate >= tenantMoveInDate) {
-        console.log(`Showing rental info for current tenant`);
         propertyDetails.rentalInfo = {
           latestRentalRate: rentalIncrease.latestRentalRate,
           latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
@@ -553,11 +546,8 @@ export class DatabaseStorage implements IStorage {
           nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
           reminderDate: new Date(rentalIncrease.reminderDate)
         };
-      } else {
-        console.log(`NOT showing rental info - rate is from previous tenant`);
       }
-    } else {
-      console.log(`NOT showing rental info - no rental increase or tenant data`);
+      // If rate is from before tenant moved in, don't include rentalInfo at all
     }
     
     return propertyDetails;
