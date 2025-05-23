@@ -538,8 +538,14 @@ export class DatabaseStorage implements IStorage {
       const tenantMoveInDate = new Date(tenant.moveInDate);
       const rateIncreaseDate = new Date(rentalIncrease.latestRateIncreaseDate);
       
+      console.log(`=== RENTAL INFO DEBUG ===`);
+      console.log(`Tenant ${tenant.name} moved in:`, tenantMoveInDate.toISOString());
+      console.log(`Rate increase date:`, rateIncreaseDate.toISOString());
+      console.log(`Rate increase is after move-in:`, rateIncreaseDate >= tenantMoveInDate);
+      
       // Only show rental info if the rate was set for the current tenant
       if (rateIncreaseDate >= tenantMoveInDate) {
+        console.log(`Showing rental info for current tenant`);
         propertyDetails.rentalInfo = {
           latestRentalRate: rentalIncrease.latestRentalRate,
           latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
@@ -547,7 +553,11 @@ export class DatabaseStorage implements IStorage {
           nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
           reminderDate: new Date(rentalIncrease.reminderDate)
         };
+      } else {
+        console.log(`NOT showing rental info - rate is from previous tenant`);
       }
+    } else {
+      console.log(`NOT showing rental info - no rental increase or tenant data`);
     }
     
     return propertyDetails;
