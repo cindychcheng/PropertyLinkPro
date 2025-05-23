@@ -140,6 +140,12 @@ export function PropertyDialog({
     }
   };
 
+  // Debug at render time
+  console.log("=== DIALOG RENDER ===");
+  console.log("isOpen:", isOpen);
+  console.log("propertyAddress prop:", propertyAddress);
+  console.log("property data:", property);
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
@@ -148,7 +154,7 @@ export function PropertyDialog({
             {isLoadingProperty ? (
               <Skeleton className="h-8 w-64" />
             ) : (
-              property?.propertyAddress || "Property Details"
+              property?.propertyAddress || propertyAddress || "Property Details"
             )}
           </DialogTitle>
         </DialogHeader>
