@@ -351,11 +351,11 @@ export function PropertyDialog({
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setAddingNewTenantRate(true)}
+                            onClick={() => setEditingRentalRate(true)}
                             className="h-8 px-2"
                           >
                             <UserPlus className="h-4 w-4 mr-1" />
-                            Add Tenant Rate
+                            Add Initial Rental Rate
                           </Button>
                         );
                       }
@@ -482,19 +482,7 @@ export function PropertyDialog({
                     {property?.rentalInfo ? (
                       <p className="text-neutral-medium">No rental increase history available</p>
                     ) : (
-                      <div className="space-y-4">
-                        <p className="text-neutral-medium">No rental rate information has been set for this property.</p>
-                        {!editingRentalRate && property && (
-                          <Button 
-                            onClick={() => setEditingRentalRate(true)}
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                          >
-                            <span className="mr-2">+</span> Add Initial Rental Rate
-                          </Button>
-                        )}
-                      </div>
+                      <p className="text-neutral-medium">No rental rate information has been set for this property.</p>
                     )}
                   </div>
                 )}
