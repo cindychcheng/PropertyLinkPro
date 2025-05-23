@@ -531,14 +531,23 @@ export class DatabaseStorage implements IStorage {
       serviceType: t.serviceType
     }));
     
-    if (rentalIncrease) {
-      propertyDetails.rentalInfo = {
-        latestRentalRate: rentalIncrease.latestRentalRate,
-        latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
-        nextAllowableRentalIncreaseDate: new Date(rentalIncrease.nextAllowableRentalIncreaseDate),
-        nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
-        reminderDate: new Date(rentalIncrease.reminderDate)
-      };
+    // Only show rental info if we have both a current tenant AND rental increase data
+    // This ensures new tenants see "Add Initial Rental Rate" instead of "Set Rate for Existing Tenant"
+    if (rentalIncrease && tenant && !tenant.moveOutDate) {
+      // Check if the rental increase was set after the current tenant moved in
+      const tenantMoveInDate = new Date(tenant.moveInDate);
+      const rateIncreaseDate = new Date(rentalIncrease.latestRateIncreaseDate);
+      
+      // Only show rental info if the rate was set for the current tenant
+      if (rateIncreaseDate >= tenantMoveInDate) {
+        propertyDetails.rentalInfo = {
+          latestRentalRate: rentalIncrease.latestRentalRate,
+          latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
+          nextAllowableRentalIncreaseDate: new Date(rentalIncrease.nextAllowableRentalIncreaseDate),
+          nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
+          reminderDate: new Date(rentalIncrease.reminderDate)
+        };
+      }
     }
     
     return propertyDetails;
