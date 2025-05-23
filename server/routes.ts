@@ -40,14 +40,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/properties/:address", async (req, res) => {
     try {
       const address = decodeURIComponent(req.params.address);
+      console.log(`API call for property: ${address}`);
       const property = await storage.getPropertyDetailsByAddress(address);
       
       if (!property) {
+        console.log(`Property not found: ${address}`);
         return res.status(404).json({ message: "Property not found" });
       }
       
+      console.log(`Returning property data for ${address}:`, {
+        hasTenant: !!property.tenant,
+        tenantName: property.tenant?.name,
+        hasRentalInfo: !!property.rentalInfo
+      });
+      
       res.json(property);
     } catch (err) {
+      console.error(`Error fetching property ${req.params.address}:`, err);
       res.status(500).json(handleZodError(err));
     }
   });
