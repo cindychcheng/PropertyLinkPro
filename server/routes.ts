@@ -54,6 +54,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasRentalInfo: !!property.rentalInfo
       });
       
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       res.json(property);
     } catch (err) {
       console.error(`Error fetching property ${req.params.address}:`, err);

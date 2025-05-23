@@ -86,12 +86,18 @@ export function PropertyDialog({
     enabled: isOpen && !!propertyAddress,
   });
 
-  // Reset to overview tab when dialog opens
+  // Reset to overview tab when dialog opens and force fresh data
   useEffect(() => {
     if (isOpen) {
       setActiveTab("overview");
+      // Force fresh data by invalidating cache
+      if (propertyAddress) {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
+        });
+      }
     }
-  }, [isOpen, propertyAddress]);
+  }, [isOpen, propertyAddress, queryClient]);
 
   // Handle success of edit operations
   const handleEditSuccess = () => {
