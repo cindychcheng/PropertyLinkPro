@@ -316,278 +316,108 @@ export function PropertyForm({
                 />
               </div>
             ) : (
-              // Add mode - show tabs for property, tenant, rental
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="property">Property Details</TabsTrigger>
-                  <TabsTrigger value="tenant">Tenant Information</TabsTrigger>
-                  <TabsTrigger value="rental">Rental Information</TabsTrigger>
-                </TabsList>
+              // Add mode - show only property fields, no tabs
+              <div className="space-y-4 py-4">
                 
-                <TabsContent value="property" className="space-y-4 py-4">
-                  <FormField
-                    control={form.control}
-                    name="propertyAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Property Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 123 Main St, Unit 4B" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="keyNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Key Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. K-1234" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="strataManagementCompany"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Strata Management Company (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. ABC Property Management" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="strataContactPerson"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Strata Contact Person (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. John Smith" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="strataContactNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Strata Contact Number (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. (555) 123-4567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="serviceType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Service Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select service type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={ServiceType.FULL_SERVICE}>
-                              Full-Service Management
-                            </SelectItem>
-                            <SelectItem value={ServiceType.TENANT_REPLACEMENT}>
-                              Tenant Replacement Service
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="tenant" className="space-y-4 py-4">
-                  <div className="flex items-center space-x-2 pb-4">
-                    <input
-                      type="checkbox"
-                      id="includeTenant"
-                      checked={includeTenant}
-                      onChange={handleTenantToggle}
-                      className="rounded border-gray-300"
-                    />
-                    <label htmlFor="includeTenant" className="text-sm font-medium">
-                      Include tenant information
-                    </label>
-                  </div>
-                  
-                  {includeTenant && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="tenantName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tenant Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. John Smith" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="tenantContactNumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Contact Number (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g. (555) 123-4567" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="tenantEmail"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email Address (Optional)</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="email" 
-                                  placeholder="e.g. john.smith@example.com" 
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="tenantBirthday"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Birthday (Optional)</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="moveInDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Move-in Date</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="moveOutDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Move-out Date (Optional)</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </>
+                <FormField
+                  control={form.control}
+                  name="propertyAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 123 Main St, Unit 4B" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </TabsContent>
+                />
                 
-                <TabsContent value="rental" className="space-y-4 py-4">
-                  <div className="flex items-center space-x-2 pb-4">
-                    <input
-                      type="checkbox"
-                      id="includeRentalRate"
-                      checked={includeRentalRate}
-                      onChange={handleRentalRateToggle}
-                      className="rounded border-gray-300"
-                    />
-                    <label htmlFor="includeRentalRate" className="text-sm font-medium">
-                      Include rental rate information
-                    </label>
-                  </div>
-                  
-                  {includeRentalRate && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="currentRentalRate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Current Rental Rate ($)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="e.g. 1500.00" 
-                                {...field} 
-                                type="number"
-                                step="0.01" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="lastIncreaseDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Increase Date</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
+                <FormField
+                  control={form.control}
+                  name="keyNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Key Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. K-1234" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </TabsContent>
-              </Tabs>
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="strataManagementCompany"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strata Management Company (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. ABC Property Management" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="strataContactPerson"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strata Contact Person (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. John Smith" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="strataContactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strata Contact Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="serviceType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select service type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={ServiceType.FULL_SERVICE}>
+                            Full-Service Management
+                          </SelectItem>
+                          <SelectItem value={ServiceType.TENANT_REPLACEMENT}>
+                            Tenant Replacement Service
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
             
             <div className="flex justify-end space-x-2">
