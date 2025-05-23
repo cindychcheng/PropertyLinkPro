@@ -79,10 +79,15 @@ export function PropertyDialog({
 
   // Debug what data the client receives
   useEffect(() => {
+    console.log("Property state changed. Property:", property);
+    console.log("Property type:", typeof property);
+    console.log("Property keys:", property ? Object.keys(property) : 'none');
     if (property) {
-      console.log("Client received property data:", property);
+      console.log("=== CLIENT DEBUG ===");
+      console.log("Full property object:", JSON.stringify(property, null, 2));
       console.log("Tenant data:", property?.tenant);
       console.log("Has tenant?", !!property?.tenant);
+      console.log("Property address:", property?.propertyAddress);
     }
   }, [property]);
 
