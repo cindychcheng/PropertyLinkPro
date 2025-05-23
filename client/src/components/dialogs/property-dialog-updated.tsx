@@ -362,7 +362,7 @@ export function PropertyDialog({
                       }
                       
                       // Case 3: Tenant exists but no rental rate has been set
-                      if (property?.tenant && !property?.rentalInfo) {
+                      if (property?.tenant && (!property?.rentalInfo || !property?.rentalInfo?.latestRentalRate)) {
                         return (
                           <Button 
                             variant="outline" 
