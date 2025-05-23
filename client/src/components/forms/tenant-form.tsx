@@ -156,6 +156,17 @@ export function TenantForm({
       queryClient.invalidateQueries({
         queryKey: ['/api/properties'],
       });
+      // Also invalidate the specific property to force refresh
+      queryClient.invalidateQueries({
+        queryKey: [`/api/properties/${encodeURIComponent(values.propertyAddress)}`]
+      });
+      // Invalidate reminders since tenant status affects them
+      queryClient.invalidateQueries({
+        queryKey: ['/api/reminders/rental-increases']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/reminders/birthdays']
+      });
       
       // Run success callback
       if (onSuccess) {
