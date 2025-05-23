@@ -77,6 +77,15 @@ export function PropertyDialog({
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     retry: false,
+    onSuccess: (data) => {
+      console.log("=== QUERY SUCCESS ===");
+      console.log("Received data:", data);
+      console.log("Tenant in data:", data?.tenant);
+    },
+    onError: (error) => {
+      console.log("=== QUERY ERROR ===");
+      console.log("Error:", error);
+    },
   });
 
   // Debug what data the client receives
