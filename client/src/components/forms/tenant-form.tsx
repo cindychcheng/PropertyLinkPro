@@ -141,7 +141,7 @@ export function TenantForm({
       
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
         title: `Tenant ${isEdit ? "updated" : "created"} successfully`,
         description: isEdit
@@ -158,7 +158,7 @@ export function TenantForm({
       });
       // Also invalidate the specific property to force refresh
       queryClient.invalidateQueries({
-        queryKey: [`/api/properties/${encodeURIComponent(values.propertyAddress)}`]
+        queryKey: [`/api/properties/${encodeURIComponent(variables.propertyAddress)}`]
       });
       // Invalidate reminders since tenant status affects them
       queryClient.invalidateQueries({
