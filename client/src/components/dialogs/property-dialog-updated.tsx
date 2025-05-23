@@ -123,9 +123,9 @@ export function PropertyDialog({
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-5 mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="rental">Rental History</TabsTrigger>
               <TabsTrigger value="landlord">Landlord</TabsTrigger>
               <TabsTrigger value="tenant">Tenant</TabsTrigger>
+              <TabsTrigger value="rental">Rental History</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
             </TabsList>
             
