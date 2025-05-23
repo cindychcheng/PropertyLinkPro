@@ -21,7 +21,7 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden">
         <PropertyForm 
           onSuccess={handleSuccess}
           onCancel={onClose}
