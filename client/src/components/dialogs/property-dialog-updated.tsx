@@ -320,28 +320,65 @@ export function PropertyDialog({
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">Rental History</h2>
                   <div className="space-x-2">
-                    {property?.tenant && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setAddingNewTenantRate(true)}
-                        className="h-8 px-2"
-                      >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        New Tenant Rate
-                      </Button>
-                    )}
-                    {property?.rentalInfo && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setEditingRentalRate(true)}
-                        className="h-8 px-2 text-neutral-medium hover:text-primary"
-                      >
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Edit Rate
-                      </Button>
-                    )}
+                    {/* Conditional functions based on tenant status */}
+                    {(() => {
+                      // Case 1: Property is vacant (no tenant)
+                      if (!property?.tenant) {
+                        return (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setEditingTenant(true)}
+                            className="h-8 px-2"
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Add Tenants to the Property
+                          </Button>
+                        );
+                      }
+                      
+                      // Case 2: Tenant has lived for more than 6 months AND has rental info
+                      if (property?.tenant && property?.rentalInfo && 
+                          hasTenantLivedForMinimumPeriod(property.tenant.moveInDate)) {
+                        // Check if it's been at least 6 months (changing from 12 to 6 months)
+                        const today = new Date();
+                        const moveInDateObj = new Date(property.tenant.moveInDate);
+                        const diffInMonths = (today.getFullYear() - moveInDateObj.getFullYear()) * 12 + 
+                          (today.getMonth() - moveInDateObj.getMonth());
+                        
+                        if (diffInMonths >= 6) {
+                          return (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setEditingRentalRate(true)}
+                              className="h-8 px-2 text-neutral-medium hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Set New Rate for Existing Tenant
+                            </Button>
+                          );
+                        }
+                      }
+                      
+                      // Case 3: Tenant exists but no rental rate has been set
+                      if (property?.tenant && !property?.rentalInfo) {
+                        return (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setAddingNewTenantRate(true)}
+                            className="h-8 px-2"
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Add Tenant Rate
+                          </Button>
+                        );
+                      }
+                      
+                      // Case 4: Other situations - don't show any buttons
+                      return null;
+                    })()}
                   </div>
                 </div>
                 
