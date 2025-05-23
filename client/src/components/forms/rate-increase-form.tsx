@@ -70,10 +70,8 @@ export function RateIncreaseForm({
   });
 
   const currentDate = new Date();
-  // Use the date from propertyData if available, otherwise use current date
-  const currentFormattedDate = propertyData 
-    ? formatInputDate(propertyData.rateIncreaseDate) 
-    : formatInputDate(currentDate);
+  // Always use today's date for new rate increases
+  const currentFormattedDate = formatInputDate(currentDate);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
