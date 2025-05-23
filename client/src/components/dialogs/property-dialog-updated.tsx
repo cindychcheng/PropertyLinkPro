@@ -344,8 +344,8 @@ export function PropertyDialog({
                         );
                       }
                       
-                      // Case 3: Tenant exists but no rental rate has been set (check this before case 2)
-                      if (property?.tenant && (!property?.rentalInfo || !property?.rentalInfo?.latestRentalRate)) {
+                      // Case 2: Tenant exists but no rental rate has been set - PRIORITY
+                      if (property?.tenant && (!property?.rentalInfo || !property?.rentalInfo?.latestRentalRate || property?.rentalInfo?.latestRentalRate === 0)) {
                         return (
                           <Button 
                             variant="outline" 
@@ -359,8 +359,8 @@ export function PropertyDialog({
                         );
                       }
                       
-                      // Case 2: Tenant has lived for more than 6 months AND has rental info
-                      if (property?.tenant && property?.rentalInfo && property?.rentalInfo?.latestRentalRate) {
+                      // Case 3: Tenant has lived for more than 6 months AND has rental info set
+                      if (property?.tenant && property?.rentalInfo && property?.rentalInfo?.latestRentalRate && property?.rentalInfo?.latestRentalRate > 0) {
                         // Check if it's been at least 6 months
                         const today = new Date();
                         const moveInDateObj = new Date(property.tenant.moveInDate);
