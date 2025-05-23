@@ -70,8 +70,17 @@ export function RateIncreaseForm({
   });
 
   const currentDate = new Date();
-  // Always use today's date for new rate increases
-  const currentFormattedDate = formatInputDate(currentDate);
+  // Default to one year from last increase date, or today if no previous increase
+  const getDefaultIncreaseDate = () => {
+    if (propertyData?.rateIncreaseDate) {
+      const lastIncreaseDate = new Date(propertyData.rateIncreaseDate);
+      lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
+      return formatInputDate(lastIncreaseDate);
+    }
+    return formatInputDate(currentDate);
+  };
+  
+  const currentFormattedDate = getDefaultIncreaseDate();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,6 +98,11 @@ export function RateIncreaseForm({
       // Default to calculated max rate (3% increase)
       const maxRate = property.rentalInfo.nextAllowableRentalRate;
       form.setValue("latestRentalRate", maxRate.toString());
+      
+      // Update the increase date to one year from last increase
+      const lastIncreaseDate = new Date(property.rentalInfo.latestRateIncreaseDate);
+      lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
+      form.setValue("latestRateIncreaseDate", formatInputDate(lastIncreaseDate));
     }
   }, [property, form]);
 
