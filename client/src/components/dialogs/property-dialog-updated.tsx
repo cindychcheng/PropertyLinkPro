@@ -322,6 +322,14 @@ export function PropertyDialog({
                   <div className="space-x-2">
                     {/* Conditional functions based on tenant status */}
                     {(() => {
+                      // Debug: Let's see what we have
+                      console.log('Property data:', {
+                        hasTenant: !!property?.tenant,
+                        hasRentalInfo: !!property?.rentalInfo,
+                        latestRentalRate: property?.rentalInfo?.latestRentalRate,
+                        tenantName: property?.tenant?.name
+                      });
+                      
                       // Case 1: Property is vacant (no tenant)
                       if (!property?.tenant) {
                         return (
@@ -337,10 +345,24 @@ export function PropertyDialog({
                         );
                       }
                       
+                      // Case 3: Tenant exists but no rental rate has been set (check this before case 2)
+                      if (property?.tenant && (!property?.rentalInfo || !property?.rentalInfo?.latestRentalRate)) {
+                        return (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setAddingNewTenantRate(true)}
+                            className="h-8 px-2"
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Add Tenant Rate
+                          </Button>
+                        );
+                      }
+                      
                       // Case 2: Tenant has lived for more than 6 months AND has rental info
-                      if (property?.tenant && property?.rentalInfo && 
-                          hasTenantLivedForMinimumPeriod(property.tenant.moveInDate)) {
-                        // Check if it's been at least 6 months (changing from 12 to 6 months)
+                      if (property?.tenant && property?.rentalInfo && property?.rentalInfo?.latestRentalRate) {
+                        // Check if it's been at least 6 months
                         const today = new Date();
                         const moveInDateObj = new Date(property.tenant.moveInDate);
                         const diffInMonths = (today.getFullYear() - moveInDateObj.getFullYear()) * 12 + 
@@ -359,21 +381,6 @@ export function PropertyDialog({
                             </Button>
                           );
                         }
-                      }
-                      
-                      // Case 3: Tenant exists but no rental rate has been set
-                      if (property?.tenant && (!property?.rentalInfo || !property?.rentalInfo?.latestRentalRate)) {
-                        return (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setAddingNewTenantRate(true)}
-                            className="h-8 px-2"
-                          >
-                            <UserPlus className="h-4 w-4 mr-1" />
-                            Add Tenant Rate
-                          </Button>
-                        );
                       }
                       
                       // Case 4: Other situations - don't show any buttons
