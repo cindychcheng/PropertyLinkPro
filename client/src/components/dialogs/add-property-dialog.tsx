@@ -24,9 +24,6 @@ export function AddPropertyDialog({ isOpen, onClose }: AddPropertyDialogProps) {
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Property</DialogTitle>
-          <DialogDescription>
-            Enter the property details, landlord, tenant, and rental information.
-          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-scroll py-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
