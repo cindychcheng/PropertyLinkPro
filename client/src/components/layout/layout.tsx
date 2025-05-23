@@ -33,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <Sidebar />
+              <Sidebar isMobile={true} />
             </div>
           </div>
         </div>

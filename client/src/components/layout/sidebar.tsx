@@ -47,12 +47,14 @@ const NavLink = ({ href, icon, children, badge, badgeColor = "bg-primary" }: Nav
   );
 };
 
-export function Sidebar() {
+export function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
   return (
-    <div className="bg-white shadow-md z-20 w-64 flex-shrink-0 hidden md:block">
-      <div className="h-16 flex items-center justify-center border-b">
-        <h1 className="text-xl font-semibold text-primary">PropManager</h1>
-      </div>
+    <div className={`bg-white shadow-md z-20 w-64 flex-shrink-0 ${isMobile ? 'block' : 'hidden md:block'}`}>
+      {!isMobile && (
+        <div className="h-16 flex items-center justify-center border-b">
+          <h1 className="text-xl font-semibold text-primary">PropManager</h1>
+        </div>
+      )}
       <nav className="py-4">
         <div className="px-4 py-2 text-neutral-medium text-xs font-semibold uppercase tracking-wider">
           Main
