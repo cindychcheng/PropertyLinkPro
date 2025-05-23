@@ -322,11 +322,14 @@ export function PropertyDialog({
                     {/* Conditional functions based on tenant status */}
                     {(() => {
                       // Debug: Let's see what we have
-                      console.log('Property data:', {
+                      console.log('Property data details:', {
+                        propertyAddress: property?.propertyAddress,
                         hasTenant: !!property?.tenant,
                         hasRentalInfo: !!property?.rentalInfo,
                         latestRentalRate: property?.rentalInfo?.latestRentalRate,
-                        tenantName: property?.tenant?.name
+                        tenantName: property?.tenant?.name,
+                        tenantHistory: property?.tenantHistory?.length || 0,
+                        fullProperty: property
                       });
                       
                       // Case 1: Property is vacant (no tenant)
