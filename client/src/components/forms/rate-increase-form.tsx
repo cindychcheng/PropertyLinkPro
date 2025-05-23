@@ -12,7 +12,8 @@ import {
   formatCurrencyInput,
   calculateNextAllowableRate,
   calculateNextAllowableDate,
-  calculateReminderDate 
+  calculateReminderDate,
+  addOneYear
 } from "@/lib/utils/date-utils";
 
 import {
@@ -73,9 +74,7 @@ export function RateIncreaseForm({
   // Default to one year from last increase date, or today if no previous increase
   const getDefaultIncreaseDate = () => {
     if (propertyData?.rateIncreaseDate) {
-      const lastIncreaseDate = new Date(propertyData.rateIncreaseDate);
-      lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
-      return formatInputDate(lastIncreaseDate);
+      return addOneYear(propertyData.rateIncreaseDate);
     }
     return formatInputDate(currentDate);
   };
@@ -101,9 +100,7 @@ export function RateIncreaseForm({
       
       // Only update date if there's a previous increase date
       if (property.rentalInfo.latestRateIncreaseDate) {
-        const lastIncreaseDate = new Date(property.rentalInfo.latestRateIncreaseDate);
-        lastIncreaseDate.setFullYear(lastIncreaseDate.getFullYear() + 1);
-        form.setValue("latestRateIncreaseDate", formatInputDate(lastIncreaseDate));
+        form.setValue("latestRateIncreaseDate", addOneYear(property.rentalInfo.latestRateIncreaseDate));
       }
     }
   }, [property, form]);

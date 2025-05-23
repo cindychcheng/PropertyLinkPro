@@ -190,3 +190,51 @@ export function getMonthsSinceClass(months: number): string {
   if (months >= 8) return 'bg-warning text-white';
   return 'bg-info text-white';
 }
+
+// Add exactly one year to a date without timezone shifts
+export function addOneYear(date: Date | string | null | undefined): string {
+  if (!date) return '';
+  
+  let year: number;
+  let month: number;
+  let day: number;
+  
+  if (typeof date === 'string') {
+    // If it's a date-only string like "2023-05-15"
+    if (date.length === 10 && date.includes('-')) {
+      const parts = date.split('-').map(num => parseInt(num, 10));
+      year = parts[0];
+      month = parts[1] - 1;  // Months are 0-indexed in JS Date
+      day = parts[2];
+    } else {
+      // Parse other date formats
+      const dateObj = new Date(date);
+      // Use UTC methods to prevent timezone shifts
+      year = dateObj.getUTCFullYear();
+      month = dateObj.getUTCMonth();
+      day = dateObj.getUTCDate();
+    }
+  } else {
+    // If a Date object was provided
+    // Use UTC methods to prevent timezone shifts
+    year = date.getUTCFullYear();
+    month = date.getUTCMonth();
+    day = date.getUTCDate();
+  }
+  
+  // Add exactly one year to the year component
+  year = year + 1;
+  
+  // Create a new date set to noon UTC to avoid timezone boundary issues
+  const newDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  
+  if (!isValid(newDate)) return '';
+  
+  // Format as YYYY-MM-DD for input fields
+  const formattedYear = newDate.getUTCFullYear();
+  // Month is 0-indexed in JS Date, so add 1 for display
+  const formattedMonth = String(newDate.getUTCMonth() + 1).padStart(2, '0');
+  const formattedDay = String(newDate.getUTCDate()).padStart(2, '0');
+  
+  return `${formattedYear}-${formattedMonth}-${formattedDay}`;
+}
