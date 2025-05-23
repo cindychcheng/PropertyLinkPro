@@ -563,7 +563,16 @@ export function PropertyDialog({
                     tenantData={{
                       propertyAddress: property.propertyAddress,
                       serviceType: property.serviceType || "Full-Service Management",
-                      tenants: property.tenantHistory || []
+                      tenants: property.tenant ? [{
+                        id: property.tenant.id,
+                        name: property.tenant.name,
+                        contactNumber: property.tenant.contactNumber,
+                        email: property.tenant.email,
+                        birthday: property.tenant.birthday,
+                        moveInDate: property.tenant.moveInDate,
+                        moveOutDate: property.tenant.moveOutDate,
+                        isPrimary: true
+                      }] : []
                     }}
                     isEdit={!!property.tenant}
                     onSuccess={handleEditSuccess}
