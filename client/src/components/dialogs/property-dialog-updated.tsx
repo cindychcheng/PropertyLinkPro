@@ -328,7 +328,7 @@ export function PropertyDialog({
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setEditingTenant(true)}
+                            onClick={() => setActiveTab("tenant")}
                             className="h-8 px-2"
                           >
                             <UserPlus className="h-4 w-4 mr-1" />
