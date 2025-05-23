@@ -532,13 +532,22 @@ export class DatabaseStorage implements IStorage {
     }));
     
     // For new tenants like Kiki, don't show old rental info from previous tenants
-    // This ensures they see "Add Initial Rental Rate" instead of "Set Rate for Existing Tenant"
+    console.log("=== RENTAL INFO LOGIC ===");
+    console.log("Has rental increase:", !!rentalIncrease);
+    console.log("Has tenant:", !!tenant);
+    console.log("Tenant has moveOutDate:", tenant?.moveOutDate);
+    
     if (rentalIncrease && tenant && !tenant.moveOutDate) {
       const tenantMoveInDate = new Date(tenant.moveInDate);
       const rateIncreaseDate = new Date(rentalIncrease.latestRateIncreaseDate);
       
+      console.log("Tenant move-in date:", tenantMoveInDate.toISOString());
+      console.log("Rate increase date:", rateIncreaseDate.toISOString());
+      console.log("Rate is after move-in:", rateIncreaseDate >= tenantMoveInDate);
+      
       // Only include rental info if it was set after the current tenant moved in
       if (rateIncreaseDate >= tenantMoveInDate) {
+        console.log("Including rental info for current tenant");
         propertyDetails.rentalInfo = {
           latestRentalRate: rentalIncrease.latestRentalRate,
           latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
@@ -546,8 +555,11 @@ export class DatabaseStorage implements IStorage {
           nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
           reminderDate: new Date(rentalIncrease.reminderDate)
         };
+      } else {
+        console.log("NOT including rental info - rate is from previous tenant");
       }
-      // If rate is from before tenant moved in, don't include rentalInfo at all
+    } else {
+      console.log("NOT including rental info - missing data or tenant moved out");
     }
     
     return propertyDetails;
