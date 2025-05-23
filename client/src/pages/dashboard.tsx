@@ -53,12 +53,18 @@ export default function Dashboard() {
   const handleViewProperty = (address: string) => {
     console.log("=== OPENING PROPERTY DIALOG ===");
     console.log("Setting property address to:", address);
+    
+    // Close dialog first if it's open
+    setShowPropertyDialog(false);
+    
+    // Set the property address
     setSelectedProperty(address);
-    // Use setTimeout to ensure state is updated before opening dialog
+    
+    // Wait a moment then open dialog
     setTimeout(() => {
       console.log("Opening dialog for address:", address);
       setShowPropertyDialog(true);
-    }, 0);
+    }, 100);
   };
   
   const handleEditProperty = (address: string) => {

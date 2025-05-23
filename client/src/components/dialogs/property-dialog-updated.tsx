@@ -115,14 +115,20 @@ export function PropertyDialog({
 
   // Reset to overview tab when dialog opens and force fresh data
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && propertyAddress) {
+      console.log("=== DIALOG OPENING ===");
+      console.log("Property address:", propertyAddress);
       setActiveTab("overview");
-      // Force fresh data by invalidating cache
-      if (propertyAddress) {
-        queryClient.invalidateQueries({
-          queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
-        });
-      }
+      
+      // Force fresh data by invalidating cache and refetching
+      queryClient.invalidateQueries({
+        queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
+      });
+      
+      // Also force refetch
+      queryClient.refetchQueries({
+        queryKey: [`/api/properties/${encodeURIComponent(propertyAddress)}`],
+      });
     }
   }, [isOpen, propertyAddress, queryClient]);
 
