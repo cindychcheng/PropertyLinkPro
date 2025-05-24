@@ -53,9 +53,17 @@ export function RateIncreaseReminders({
 }) {
   const { toast } = useToast();
 
-  const { data: reminders = [], isLoading, error } = useQuery({
+  const { data: reminders = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/reminders/rental-increases'],
     staleTime: 60000, // 1 minute
+  });
+
+  // Debug logging
+  console.log("Rate Increase Reminders Debug:", {
+    reminders,
+    isLoading,
+    error,
+    hasData: reminders && reminders.length > 0
   });
 
   if (error) {

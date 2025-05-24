@@ -44,9 +44,17 @@ function BirthdayItem({
 export function BirthdayReminders() {
   const { toast } = useToast();
 
-  const { data: birthdays = [], isLoading, error } = useQuery({
+  const { data: birthdays = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/reminders/birthdays'],
     staleTime: 60000, // 1 minute
+  });
+
+  // Debug logging
+  console.log("Birthday Reminders Debug:", {
+    birthdays,
+    isLoading,
+    error,
+    hasData: birthdays && birthdays.length > 0
   });
 
   if (error) {
