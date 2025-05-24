@@ -222,7 +222,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {property.rentalInfo ? (
-                        <>
+                        <div>
                           <div className="text-sm font-medium text-neutral-darkest">
                             {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).toLocaleDateString('en-US', { 
                               month: 'short', 
@@ -230,10 +230,10 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                               timeZone: 'UTC' 
                             })}
                           </div>
-                          <div className="text-xs text-neutral-medium">
-                            {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).getFullYear()}
+                          <div className="text-xs text-neutral-medium font-medium">
+                            {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).getUTCFullYear()}
                           </div>
-                        </>
+                        </div>
                       ) : (
                         <span className="text-sm text-neutral-medium">N/A</span>
                       )}
