@@ -56,3 +56,44 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Ensure consistent date input format across all devices */
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Force consistent date display format on mobile devices */
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+input[type="date"]:before {
+  content: attr(data-placeholder);
+  color: #6b7280;
+}
+
+input[type="date"]:focus:before,
+input[type="date"]:valid:before {
+  display: none;
+}
+
+/* Mobile-specific date input styling */
+@media (max-width: 768px) {
+  input[type="date"] {
+    position: relative;
+  }
+  
+  input[type="date"]::-webkit-datetime-edit {
+    opacity: 0;
+  }
+  
+  input[type="date"]:focus::-webkit-datetime-edit,
+  input[type="date"]:valid::-webkit-datetime-edit {
+    opacity: 1;
+  }
+}
