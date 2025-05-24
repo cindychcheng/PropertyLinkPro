@@ -224,9 +224,14 @@ export default function RateIncreases() {
         </CardContent>
       </Card>
       
+      {/* Debug info */}
+      <div className="mb-4 p-3 bg-yellow-50 rounded text-sm">
+        Debug: {increasesList.length} items loaded, showing {paginatedData?.length || 0} on this page
+      </div>
+      
       <DataTable
         columns={columns}
-        data={paginatedData}
+        data={paginatedData || []}
         isLoading={isLoading}
         emptyMessage="No rental increases due with current filters."
         rowsPerPage={rowsPerPage}
