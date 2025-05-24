@@ -224,41 +224,16 @@ export default function RateIncreases() {
         </CardContent>
       </Card>
       
-      {/* Debug info */}
-      <div className="mb-4 p-3 bg-yellow-50 rounded text-sm">
-        Debug: {increasesList.length} items loaded, showing {paginatedData?.length || 0} on this page
-      </div>
-      
-      {/* Temporary simple table to test data display */}
-      <div className="bg-white rounded-lg border">
-        <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium">Property</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Last Increase</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Months Since</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Next Allowable</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(paginatedData || []).map((item: any, index: number) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{item.propertyAddress}</div>
-                  <div className="text-sm text-gray-500">{item.serviceType}</div>
-                </td>
-                <td className="px-4 py-3">{formatDisplayDate(item.latestRateIncreaseDate)}</td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-red-100 text-red-800">
-                    {item.monthsSinceIncrease} months
-                  </span>
-                </td>
-                <td className="px-4 py-3">{formatDisplayDate(item.nextAllowableRentalIncreaseDate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={paginatedData || []}
+        isLoading={isLoading}
+        emptyMessage="No rental increases due with current filters."
+        rowsPerPage={rowsPerPage}
+        currentPage={currentPage}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
+      />
       
       {/* Rate Increase Dialog */}
       <RateIncreaseDialog
