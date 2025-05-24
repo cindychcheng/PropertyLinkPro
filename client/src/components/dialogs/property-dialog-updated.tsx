@@ -399,15 +399,15 @@ export function PropertyDialog({
                         );
                       }
                       
-                      // Case 3: Tenant has lived for more than 6 months AND has rental info set
+                      // Case 3: Tenant has lived for more than 12 months AND has rental info set
                       if (property?.tenant && property?.rentalInfo && property?.rentalInfo?.latestRentalRate && property?.rentalInfo?.latestRentalRate > 0) {
-                        // Check if it's been at least 6 months
+                        // Check if it's been at least 12 months (required for rental increases)
                         const today = new Date();
                         const moveInDateObj = new Date(property.tenant.moveInDate);
                         const diffInMonths = (today.getFullYear() - moveInDateObj.getFullYear()) * 12 + 
                           (today.getMonth() - moveInDateObj.getMonth());
                         
-                        if (diffInMonths >= 6) {
+                        if (diffInMonths >= 12) {
                           return (
                             <Button 
                               variant="ghost" 
