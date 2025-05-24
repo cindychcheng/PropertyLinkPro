@@ -369,8 +369,8 @@ export function PropertyDialog({
                       console.log('Property tenant name:', property?.tenant?.name);
                       console.log('Raw property:', property);
                       
-                      // Case 1: Property is vacant (no tenant)
-                      if (!property?.tenant) {
+                      // Case 1: Property is vacant (no tenant OR tenant moved out)
+                      if (!property?.tenant || property?.tenant?.moveOutDate) {
                         return (
                           <Button 
                             variant="outline" 
