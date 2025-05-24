@@ -420,10 +420,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data = initialRateSchema.parse(req.body);
       
-      // Check if rental increase already exists for this property
+      // Check if rental increase already exists for the CURRENT tenant
+      const currentTenant = await storage.getTenantByPropertyAddress(data.propertyAddress);
       const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(data.propertyAddress);
-      if (existingIncrease) {
-        return res.status(400).json({ message: "Rental rate information already exists for this property" });
+      
+      if (existingIncrease && currentTenant) {
+        // Check if the existing rental info is for the current tenant
+        // If the rental rate date is after the current tenant's move-in date, then it belongs to current tenant
+        const tenantMoveInDate = new Date(currentTenant.moveInDate);
+        const existingRateDate = new Date(existingIncrease.latestRateIncreaseDate);
+        
+        if (existingRateDate >= tenantMoveInDate) {
+          return res.status(400).json({ message: "Rental rate information already exists for this tenant" });
+        }
+        
+        // If we get here, the existing rate is from a previous tenant, so we can create a new one
       }
       
       // Create initial rental rate with appropriate calculations
