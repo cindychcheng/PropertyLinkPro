@@ -226,33 +226,33 @@ export default function RateIncreases() {
       
       {/* Simple display of data */}
       <div className="bg-white rounded-lg border p-4">
-        <h3 className="text-lg font-medium mb-4">Rate Increase Reminders ({increasesList.length} total)</h3>
+        <h3 className="text-lg font-medium mb-4 text-black">Rate Increase Reminders ({increasesList.length} total)</h3>
         
         <div className="space-y-3">
           {(paginatedData || []).map((item: any, index: number) => (
             <div key={index} className="border rounded-lg p-4 bg-gray-50">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="font-semibold text-lg">{item.propertyAddress}</div>
-                  <div className="text-sm text-gray-600 mt-1">{item.serviceType}</div>
+                  <div className="font-semibold text-lg text-black">{item.propertyAddress}</div>
+                  <div className="text-sm text-gray-700 mt-1">{item.serviceType}</div>
                   <div className="mt-2 flex gap-4">
-                    <span className="text-sm">
+                    <span className="text-sm text-black">
                       <strong>Last Increase:</strong> {formatDisplayDate(item.latestRateIncreaseDate)}
                     </span>
-                    <span className="text-sm">
+                    <span className="text-sm text-black">
                       <strong>Next Allowable:</strong> {formatDisplayDate(item.nextAllowableRentalIncreaseDate)}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getMonthsSinceClass(item.monthsSinceIncrease)}`}>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                     {item.monthsSinceIncrease} months since
                   </span>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleProcessRateIncrease(item.propertyAddress)}
-                    className="text-primary hover:text-primary-dark"
+                    className="text-blue-600 hover:text-blue-800 border-blue-300"
                   >
                     <TrendingUp className="h-3 w-3 mr-1" />
                     Process
