@@ -404,10 +404,9 @@ export class DatabaseStorage implements IStorage {
         .where(eq(tenants.propertyAddress, property.propertyAddress))
         .orderBy(desc(tenants.moveInDate));
       
-      // Get current active tenant (without moveOutDate) or most recent tenant
-      const [tenant] = allTenants.filter(t => !t.moveOutDate).length > 0 
-        ? allTenants.filter(t => !t.moveOutDate) 
-        : (allTenants.length > 0 ? [allTenants[0]] : []);
+      // Get current active tenant (without moveOutDate) only
+      const activeTenants = allTenants.filter(t => !t.moveOutDate);
+      const tenant = activeTenants.length > 0 ? activeTenants[0] : undefined;
         
       const [rentalIncrease] = await db
         .select()
