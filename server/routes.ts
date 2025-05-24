@@ -424,16 +424,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentTenant = await storage.getTenantByPropertyAddress(data.propertyAddress);
       const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(data.propertyAddress);
       
+      console.log("=== INITIAL RATE CHECK ===");
+      console.log("Current tenant:", currentTenant?.name);
+      console.log("Current tenant move-in:", currentTenant?.moveInDate);
+      console.log("Existing rate date:", existingIncrease?.latestRateIncreaseDate);
+      
       if (existingIncrease && currentTenant) {
         // Check if the existing rental info is for the current tenant
         // If the rental rate date is after the current tenant's move-in date, then it belongs to current tenant
         const tenantMoveInDate = new Date(currentTenant.moveInDate);
         const existingRateDate = new Date(existingIncrease.latestRateIncreaseDate);
         
+        console.log("Tenant move-in date object:", tenantMoveInDate);
+        console.log("Existing rate date object:", existingRateDate);
+        console.log("Is existing rate >= move-in?", existingRateDate >= tenantMoveInDate);
+        
         if (existingRateDate >= tenantMoveInDate) {
+          console.log("BLOCKING: Rate belongs to current tenant");
           return res.status(400).json({ message: "Rental rate information already exists for this tenant" });
         }
         
+        console.log("ALLOWING: Rate is from previous tenant");
         // If we get here, the existing rate is from a previous tenant, so we can create a new one
       }
       
