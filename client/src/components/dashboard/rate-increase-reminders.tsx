@@ -61,12 +61,7 @@ export function RateIncreaseReminders({
   // Ensure reminders is always an array
   const reminderList = Array.isArray(reminders) ? reminders : [];
   
-  console.log("RENDER CHECK:", { 
-    isLoading, 
-    reminderListLength: reminderList.length, 
-    reminderListType: typeof reminderList,
-    firstItem: reminderList[0] 
-  });
+
 
 
 
@@ -128,14 +123,26 @@ export function RateIncreaseReminders({
               
               if (reminderList.length > 0) {
                 return reminderList.slice(0, 3).map((item: any, index: number) => (
-                  <RateIncreaseItem
-                    key={index}
-                    propertyAddress={item.propertyAddress}
-                    serviceType={item.serviceType}
-                    latestRateIncreaseDate={new Date(item.latestRateIncreaseDate)}
-                    monthsSinceIncrease={item.monthsSinceIncrease}
-                    onProcess={onProcessIncrease}
-                  />
+                  <tr key={index} className="border-b border-neutral-light hover:bg-neutral-50">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-neutral-dark">{item.propertyAddress}</div>
+                      <div className="text-sm text-neutral-medium">{item.serviceType}</div>
+                    </td>
+                    <td className="px-4 py-3 text-neutral-dark">
+                      ${item.latestRentalRate?.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-dark">
+                      {item.monthsSinceIncrease} months
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => onProcessIncrease(item.propertyAddress)}
+                        className="text-primary hover:text-primary-dark text-sm font-medium"
+                      >
+                        Process
+                      </button>
+                    </td>
+                  </tr>
                 ));
               }
               
