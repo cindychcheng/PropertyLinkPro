@@ -47,32 +47,30 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
     });
   }
 
-  // Filter and sort properties (most recent first)
-  const filteredProperties = properties 
-    ? properties.filter((property: any) => {
-        // Service type filter
-        if (serviceTypeFilter !== "all") {
-          if (property.serviceType !== serviceTypeFilter) {
-            return false;
-          }
-        }
-        
-        // Tenant status filter
-        if (tenantStatusFilter === "with-tenants" && !property.tenant) {
-          return false;
-        }
-        if (tenantStatusFilter === "vacant" && property.tenant) {
-          return false;
-        }
-        
-        return true;
-      }).sort((a: any, b: any) => {
-        // Sort by most recent rental info or tenant move-in date
-        const dateA = a.rentalInfo?.latestRateIncreaseDate || a.tenant?.moveInDate || '1900-01-01';
-        const dateB = b.rentalInfo?.latestRateIncreaseDate || b.tenant?.moveInDate || '1900-01-01';
-        return new Date(dateB).getTime() - new Date(dateA).getTime(); // Newest first
-      })
-    : [];
+  // Filter and sort properties (most recently added/edited first)
+  const filteredProperties = (properties || []).filter((property: any) => {
+    // Service type filter
+    if (serviceTypeFilter !== "all") {
+      if (property.serviceType !== serviceTypeFilter) {
+        return false;
+      }
+    }
+    
+    // Tenant status filter
+    if (tenantStatusFilter === "with-tenants" && !property.tenant) {
+      return false;
+    }
+    if (tenantStatusFilter === "vacant" && property.tenant) {
+      return false;
+    }
+    
+    return true;
+  }).sort((a: any, b: any) => {
+    // Sort by most recent activity (tenant move-in or rate increase date)
+    const dateA = a.rentalInfo?.latestRateIncreaseDate || a.tenant?.moveInDate || '1900-01-01';
+    const dateB = b.rentalInfo?.latestRateIncreaseDate || b.tenant?.moveInDate || '1900-01-01';
+    return new Date(dateB).getTime() - new Date(dateA).getTime(); // Newest first
+  });
   
   // Calculate pagination
   const totalItems = filteredProperties.length;
