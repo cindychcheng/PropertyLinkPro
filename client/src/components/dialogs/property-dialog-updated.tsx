@@ -247,7 +247,7 @@ export function PropertyDialog({
                                   </p>
                                   <p className="text-sm text-neutral-medium">
                                     Birthday: {owner.birthday 
-                                      ? formatDisplayDate(owner.birthday).split(',')[0] 
+                                      ? formatDisplayDate(owner.birthday) 
                                       : 'Not provided'}
                                   </p>
                                 </div>
@@ -268,7 +268,7 @@ export function PropertyDialog({
                               <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
                               <p className="text-sm text-neutral-medium">
                                 Birthday: {property.tenant.birthday 
-                                  ? formatDisplayDate(property.tenant.birthday).split(',')[0] 
+                                  ? formatDisplayDate(property.tenant.birthday) 
                                   : 'Not provided'}
                               </p>
                               <p className="text-sm">
@@ -570,7 +570,7 @@ export function PropertyDialog({
                           </p>
                           <p className="text-sm text-neutral-medium">
                             Birthday: {owner.birthday 
-                              ? formatDisplayDate(owner.birthday).split(',')[0] 
+                              ? formatDisplayDate(owner.birthday) 
                               : 'Not provided'}
                           </p>
                         </div>
@@ -645,15 +645,15 @@ export function PropertyDialog({
                           <p className="text-sm">{tenant.email || 'No email provided'}</p>
                           <p className="text-sm text-neutral-medium">
                             Birthday: {tenant.birthday 
-                              ? formatDisplayDate(tenant.birthday).split(',')[0] 
+                              ? formatDisplayDate(tenant.birthday) 
                               : 'Not provided'}
                           </p>
                           <p className="mt-2"><strong>Move-in Date:</strong> {tenant.moveInDate 
-                            ? formatDisplayDate(tenant.moveInDate).split(',')[0] 
+                            ? formatDisplayDate(tenant.moveInDate) 
                             : 'Not specified'}</p>
                           
                           {tenant.moveOutDate && (
-                            <p><strong>Move-out Date:</strong> {formatDisplayDate(tenant.moveOutDate).split(',')[0]}</p>
+                            <p><strong>Move-out Date:</strong> {formatDisplayDate(tenant.moveOutDate)}</p>
                           )}
                         </div>
                       ))}

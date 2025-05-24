@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { formatBirthday } from "@/lib/utils/date-utils";
+import { formatDisplayDate } from "@/lib/utils/date-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type BirthdayItemProps = {
@@ -33,7 +33,7 @@ function BirthdayItem({
           {role}
         </span>
       </td>
-      <td className="px-4 py-3 whitespace-nowrap text-sm">{formatBirthday(birthday)}</td>
+      <td className="px-4 py-3 whitespace-nowrap text-sm">{formatDisplayDate(birthday)}</td>
       <td className="px-4 py-3 whitespace-nowrap text-right text-sm truncate">
         {propertyAddress}
       </td>
