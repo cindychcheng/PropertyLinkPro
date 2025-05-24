@@ -197,9 +197,6 @@ export default function Tenants() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="list">Tenant List</TabsTrigger>
-          <TabsTrigger value="add">
-            {editTenant ? "Edit Tenant" : "Add Tenant"}
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="list">
@@ -212,18 +209,6 @@ export default function Tenants() {
             currentPage={currentPage}
             totalItems={totalItems}
             onPageChange={handlePageChange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="add">
-          <TenantForm 
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setActiveTab("list");
-              setEditTenant(null);
-            }}
-            tenantData={editTenant}
-            isEdit={!!editTenant}
           />
         </TabsContent>
       </Tabs>
