@@ -132,6 +132,9 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
                   Rental Rate
                 </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider">
+                  Next Increase
+                </th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-neutral-dark uppercase tracking-wider">
                   Actions
                 </th>
@@ -156,6 +159,10 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                     </td>
                     <td className="px-6 py-4"><Skeleton className="h-5 w-20" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-5 w-16" /></td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-5 w-16 mb-1" />
+                      <Skeleton className="h-3 w-12" />
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <Skeleton className="h-5 w-24 ml-auto" />
                     </td>
@@ -213,6 +220,24 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                         ? `${formatCurrency(property.rentalInfo.latestRentalRate)}/mo` 
                         : 'N/A'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {property.rentalInfo ? (
+                        <>
+                          <div className="text-sm font-medium text-neutral-darkest">
+                            {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              timeZone: 'UTC' 
+                            })}
+                          </div>
+                          <div className="text-xs text-neutral-medium">
+                            {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).getFullYear()}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-sm text-neutral-medium">N/A</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
                         onClick={(e) => {
@@ -240,7 +265,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-neutral-medium">
+                  <td colSpan={8} className="px-6 py-4 text-center text-neutral-medium">
                     No properties found.
                   </td>
                 </tr>
