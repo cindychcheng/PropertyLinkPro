@@ -245,7 +245,13 @@ export default function RateIncreases() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    item.monthsSinceIncrease <= 7 
+                      ? 'bg-green-100 text-green-800' 
+                      : item.monthsSinceIncrease <= 12 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : 'bg-red-100 text-red-800'
+                  }`}>
                     {item.monthsSinceIncrease} months since
                   </span>
                   <Button 
