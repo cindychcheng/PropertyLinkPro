@@ -35,20 +35,23 @@ export default function RateIncreases() {
   const { toast } = useToast();
   const { setActiveRateIncreaseCount } = useAppContext();
 
-  const { data: increases, isLoading, refetch } = useQuery({
+  const { data: increases = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: [`/api/reminders/rental-increases?month=${selectedMonth}&minMonths=${minMonths}`],
     staleTime: 60000, // 1 minute
   });
 
+  // Ensure increases is always an array
+  const increasesList = Array.isArray(increases) ? increases : [];
+
   // Update badge count
   useEffect(() => {
-    if (increases) {
+    if (increasesList) {
       // Only count current month for badge
       if (selectedMonth === (new Date().getMonth() + 1).toString()) {
-        setActiveRateIncreaseCount(increases.length);
+        setActiveRateIncreaseCount(increasesList.length);
       }
     }
-  }, [increases, selectedMonth, setActiveRateIncreaseCount]);
+  }, [increasesList, selectedMonth, setActiveRateIncreaseCount]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -69,8 +72,8 @@ export default function RateIncreases() {
     setShowRateIncreaseDialog(true);
   };
 
-  const totalItems = increases?.length || 0;
-  const paginatedData = increases?.slice(
+  const totalItems = increasesList.length || 0;
+  const paginatedData = increasesList.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
