@@ -64,28 +64,28 @@ input[type="date"] {
   appearance: none;
 }
 
-/* Force consistent date display format on mobile devices */
-input[type="date"]::-webkit-datetime-edit-text,
-input[type="date"]::-webkit-datetime-edit-month-field,
-input[type="date"]::-webkit-datetime-edit-day-field,
-input[type="date"]::-webkit-datetime-edit-year-field {
-  color: transparent;
-}
-
-input[type="date"]:before {
-  content: attr(data-placeholder);
-  color: #6b7280;
-}
-
-input[type="date"]:focus:before,
-input[type="date"]:valid:before {
-  display: none;
-}
-
-/* Mobile-specific date input styling */
+/* Mobile-specific date input styling for consistent format */
 @media (max-width: 768px) {
   input[type="date"] {
     position: relative;
+  }
+  
+  /* Only apply format override on mobile devices */
+  input[type="date"]::-webkit-datetime-edit-text,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-year-field {
+    color: transparent;
+  }
+  
+  input[type="date"]:before {
+    content: attr(data-placeholder);
+    color: #6b7280;
+  }
+
+  input[type="date"]:focus:before,
+  input[type="date"]:valid:before {
+    display: none;
   }
   
   input[type="date"]::-webkit-datetime-edit {
