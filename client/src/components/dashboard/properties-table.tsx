@@ -230,8 +230,13 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                               timeZone: 'UTC' 
                             })}
                           </div>
-                          <div className="text-xs text-neutral-medium font-medium">
-                            {new Date(property.rentalInfo.nextAllowableRentalIncreaseDate).getUTCFullYear()}
+                          <div className="text-xs text-gray-600 font-bold" style={{ color: 'red' }}>
+                            {(() => {
+                              const date = new Date(property.rentalInfo.nextAllowableRentalIncreaseDate);
+                              console.log('Date object:', date);
+                              console.log('Year:', date.getUTCFullYear());
+                              return date.getUTCFullYear();
+                            })()}
                           </div>
                         </div>
                       ) : (
