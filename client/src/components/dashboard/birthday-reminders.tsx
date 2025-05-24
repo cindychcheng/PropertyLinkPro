@@ -49,13 +49,7 @@ export function BirthdayReminders() {
     staleTime: 60000, // 1 minute
   });
 
-  // Debug logging
-  console.log("Birthday Reminders Debug:", {
-    birthdays,
-    isLoading,
-    error,
-    hasData: birthdays && birthdays.length > 0
-  });
+
 
   if (error) {
     toast({
@@ -110,7 +104,7 @@ export function BirthdayReminders() {
                   </td>
                 </tr>
               ))
-            ) : birthdays && birthdays.length > 0 ? (
+            ) : Array.isArray(birthdays) && birthdays.length > 0 ? (
               birthdays.slice(0, 3).map((item: any, index: number) => (
                 <BirthdayItem
                   key={index}

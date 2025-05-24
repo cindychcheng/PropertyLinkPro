@@ -58,13 +58,7 @@ export function RateIncreaseReminders({
     staleTime: 60000, // 1 minute
   });
 
-  // Debug logging
-  console.log("Rate Increase Reminders Debug:", {
-    reminders,
-    isLoading,
-    error,
-    hasData: reminders && reminders.length > 0
-  });
+
 
   if (error) {
     toast({
@@ -119,7 +113,7 @@ export function RateIncreaseReminders({
                   </td>
                 </tr>
               ))
-            ) : reminders && reminders.length > 0 ? (
+            ) : Array.isArray(reminders) && reminders.length > 0 ? (
               reminders.slice(0, 3).map((item: any, index: number) => (
                 <RateIncreaseItem
                   key={index}
