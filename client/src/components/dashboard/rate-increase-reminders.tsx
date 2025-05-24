@@ -81,8 +81,12 @@ export function RateIncreaseReminders({
           View All
         </a>
       </div>
+      {/* Debug info */}
+      <div className="px-4 py-2 bg-yellow-50 text-xs">
+        Data: {reminderList.length} items, Loading: {isLoading ? 'Yes' : 'No'}
+      </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full table-fixed">
+        <table className="min-w-full table-auto">
           <thead>
             <tr className="bg-neutral-lightest">
               <th className="px-4 py-2 text-left text-xs font-medium text-neutral-dark uppercase tracking-wider w-2/5">
