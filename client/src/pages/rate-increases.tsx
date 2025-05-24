@@ -72,8 +72,15 @@ export default function RateIncreases() {
     setShowRateIncreaseDialog(true);
   };
 
-  const totalItems = increasesList.length || 0;
-  const paginatedData = increasesList.slice(
+  // Sort by most recent rate increase date (newest first)
+  const sortedIncreases = increasesList.sort((a, b) => {
+    const dateA = new Date(a.latestRateIncreaseDate);
+    const dateB = new Date(b.latestRateIncreaseDate);
+    return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+  });
+
+  const totalItems = sortedIncreases.length || 0;
+  const paginatedData = sortedIncreases.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );

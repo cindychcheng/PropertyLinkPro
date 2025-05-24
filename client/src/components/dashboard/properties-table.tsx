@@ -47,7 +47,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
     });
   }
 
-  // Filter properties based on selected filters
+  // Filter and sort properties (most recent first)
   const filteredProperties = properties 
     ? properties.filter((property: any) => {
         // Service type filter
@@ -66,6 +66,11 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
         }
         
         return true;
+      }).sort((a: any, b: any) => {
+        // Sort by most recent rental info or tenant move-in date
+        const dateA = a.rentalInfo?.latestRateIncreaseDate || a.tenant?.moveInDate || '1900-01-01';
+        const dateB = b.rentalInfo?.latestRateIncreaseDate || b.tenant?.moveInDate || '1900-01-01';
+        return new Date(dateB).getTime() - new Date(dateA).getTime(); // Newest first
       })
     : [];
   
