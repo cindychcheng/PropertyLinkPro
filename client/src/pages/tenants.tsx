@@ -203,16 +203,6 @@ export default function Tenants() {
         </TabsList>
         
         <TabsContent value="list">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => {
-              setEditTenant(null);
-              setActiveTab("add");
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Tenant
-            </Button>
-          </div>
-          
           <DataTable
             columns={columns}
             data={paginatedData}
