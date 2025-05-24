@@ -410,6 +410,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add initial rental rate (first rental rate for a property)
   app.post("/api/rental-increases/initial", async (req, res) => {
+    console.log("=== INITIAL RENTAL RATE ENDPOINT HIT ===");
+    console.log("Request body:", req.body);
     try {
       // Validate request body with a custom schema
       const initialRateSchema = z.object({
