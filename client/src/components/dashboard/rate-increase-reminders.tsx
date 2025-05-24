@@ -58,6 +58,9 @@ export function RateIncreaseReminders({
     staleTime: 60000, // 1 minute
   });
 
+  // Ensure reminders is always an array
+  const reminderList = Array.isArray(reminders) ? reminders : [];
+
 
 
   if (error) {
@@ -113,8 +116,8 @@ export function RateIncreaseReminders({
                   </td>
                 </tr>
               ))
-            ) : Array.isArray(reminders) && reminders.length > 0 ? (
-              reminders.slice(0, 3).map((item: any, index: number) => (
+            ) : reminderList.length > 0 ? (
+              reminderList.slice(0, 3).map((item: any, index: number) => (
                 <RateIncreaseItem
                   key={index}
                   propertyAddress={item.propertyAddress}

@@ -49,6 +49,9 @@ export function BirthdayReminders() {
     staleTime: 60000, // 1 minute
   });
 
+  // Ensure birthdays is always an array
+  const birthdayList = Array.isArray(birthdays) ? birthdays : [];
+
 
 
   if (error) {
@@ -104,8 +107,8 @@ export function BirthdayReminders() {
                   </td>
                 </tr>
               ))
-            ) : Array.isArray(birthdays) && birthdays.length > 0 ? (
-              birthdays.slice(0, 3).map((item: any, index: number) => (
+            ) : birthdayList.length > 0 ? (
+              birthdayList.slice(0, 3).map((item: any, index: number) => (
                 <BirthdayItem
                   key={index}
                   name={item.name}
