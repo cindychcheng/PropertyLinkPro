@@ -105,42 +105,48 @@ export function RateIncreaseReminders({
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              Array(3).fill(0).map((_, i) => (
-                <tr key={i} className="border-b border-neutral-light">
-                  <td className="px-4 py-3">
-                    <Skeleton className="h-5 w-full mb-1" />
-                    <Skeleton className="h-3 w-3/4" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Skeleton className="h-5 w-20" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Skeleton className="h-5 w-16" />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Skeleton className="h-5 w-16 ml-auto" />
+            {(() => {
+              if (isLoading) {
+                return Array(3).fill(0).map((_, i) => (
+                  <tr key={i} className="border-b border-neutral-light">
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-5 w-full mb-1" />
+                      <Skeleton className="h-3 w-3/4" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-5 w-20" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-5 w-16" />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Skeleton className="h-5 w-16 ml-auto" />
+                    </td>
+                  </tr>
+                ));
+              }
+              
+              if (reminderList.length > 0) {
+                return reminderList.slice(0, 3).map((item: any, index: number) => (
+                  <RateIncreaseItem
+                    key={index}
+                    propertyAddress={item.propertyAddress}
+                    serviceType={item.serviceType}
+                    latestRateIncreaseDate={new Date(item.latestRateIncreaseDate)}
+                    monthsSinceIncrease={item.monthsSinceIncrease}
+                    onProcess={onProcessIncrease}
+                  />
+                ));
+              }
+              
+              return (
+                <tr>
+                  <td colSpan={4} className="px-4 py-3 text-center text-neutral-medium">
+                    No rate increases due for review
                   </td>
                 </tr>
-              ))
-            ) : reminderList.length > 0 ? (
-              reminderList.slice(0, 3).map((item: any, index: number) => (
-                <RateIncreaseItem
-                  key={index}
-                  propertyAddress={item.propertyAddress}
-                  serviceType={item.serviceType}
-                  latestRateIncreaseDate={new Date(item.latestRateIncreaseDate)}
-                  monthsSinceIncrease={item.monthsSinceIncrease}
-                  onProcess={onProcessIncrease}
-                />
-              ))
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-4 py-3 text-center text-neutral-medium">
-                  No rate increases due for review
-                </td>
-              </tr>
-            )}
+              );
+            })()}
           </tbody>
         </table>
       </div>
