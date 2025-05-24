@@ -189,7 +189,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
                         <>
                           <div className="text-sm">{property.tenant.name}</div>
                           <div className="text-xs text-neutral-medium">
-                            Since {new Date(property.tenant.moveInDate + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                            Since {new Date(property.tenant.moveInDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })}
                           </div>
                         </>
                       ) : (
