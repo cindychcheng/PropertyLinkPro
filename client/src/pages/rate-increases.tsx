@@ -72,11 +72,11 @@ export default function RateIncreases() {
     setShowRateIncreaseDialog(true);
   };
 
-  // Sort by most recent rate increase date (newest first)
+  // Sort by oldest rate increase date (oldest first) - properties needing attention appear at top
   const sortedIncreases = increasesList.sort((a, b) => {
     const dateA = new Date(a.latestRateIncreaseDate);
     const dateB = new Date(b.latestRateIncreaseDate);
-    return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+    return dateA.getTime() - dateB.getTime(); // Ascending order (oldest first)
   });
 
   const totalItems = sortedIncreases.length || 0;
