@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Returning property data for ${address}:`, {
-        hasTenant: !!property.tenant,
+        hasTenant: !!(property.tenant && !property.tenant.moveOutDate),
         tenantName: property.tenant?.name,
         hasRentalInfo: !!property.rentalInfo
       });
