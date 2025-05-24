@@ -587,15 +587,28 @@ export function PropertyDialog({
               <div className="bg-neutral-lightest p-4 rounded-lg">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">Tenant Details</h2>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setEditingTenant(true)}
-                    className="h-8 px-2 text-neutral-medium hover:text-primary"
-                  >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
+                  {/* Show different buttons based on property status */}
+                  {(!property?.tenant || property?.tenant?.moveOutDate) ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setEditingTenant(true)}
+                      className="h-8 px-2"
+                    >
+                      <UserPlus className="h-4 w-4 mr-1" />
+                      Add Tenants to the Property
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setEditingTenant(true)}
+                      className="h-8 px-2 text-neutral-medium hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
                 
                 {editingTenant && property ? (
@@ -603,7 +616,7 @@ export function PropertyDialog({
                     tenantData={{
                       propertyAddress: property.propertyAddress,
                       serviceType: property.serviceType || "Full-Service Management",
-                      tenants: property.tenant ? [{
+                      tenants: (property.tenant && !property.tenant.moveOutDate) ? [{
                         id: property.tenant.id,
                         name: property.tenant.name,
                         contactNumber: property.tenant.contactNumber,
@@ -614,7 +627,7 @@ export function PropertyDialog({
                         isPrimary: true
                       }] : []
                     }}
-                    isEdit={!!property.tenant}
+                    isEdit={!!(property.tenant && !property.tenant.moveOutDate)}
                     onSuccess={handleEditSuccess}
                     onCancel={() => setEditingTenant(false)}
                   />
