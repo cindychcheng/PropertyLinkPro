@@ -153,7 +153,11 @@ export default function Dashboard() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-4">Reminders & Actions</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RateIncreaseTest />
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h3 className="font-medium mb-4">Simple Test</h3>
+            <div className="text-green-600 font-semibold">This should be visible!</div>
+            <div className="text-blue-600">Testing basic component rendering</div>
+          </div>
           <BirthdayReminders />
         </div>
       </div>
