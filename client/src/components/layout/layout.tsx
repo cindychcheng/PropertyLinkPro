@@ -21,13 +21,13 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile sidebar */}
       {showMobileSidebar && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowMobileSidebar(false)}></div>
-          <div className="fixed left-0 top-0 flex flex-col w-full max-w-xs h-full bg-white shadow-lg">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Menu</h2>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileSidebar(false)}></div>
+          <div className="fixed left-0 top-0 flex flex-col w-full max-w-xs h-full bg-gradient-to-b from-slate-50 to-white shadow-xl border-r border-slate-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">PropManager</h1>
               <button 
                 onClick={() => setShowMobileSidebar(false)}
-                className="p-2 hover:bg-neutral-lightest rounded"
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 ✕
               </button>
