@@ -147,9 +147,20 @@ export default function Properties() {
     {
       header: "Next Increase",
       accessorKey: (row: any) => (
-        row.rentalInfo 
-          ? formatDisplayDate(row.rentalInfo.nextAllowableRentalIncreaseDate).split(',')[0]
-          : 'N/A'
+        row.rentalInfo ? (
+          <div>
+            <div className="text-sm font-medium">
+              {new Date(row.rentalInfo.nextAllowableRentalIncreaseDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                timeZone: 'UTC' 
+              })}
+            </div>
+            <div className="text-xs text-gray-600">
+              {new Date(row.rentalInfo.nextAllowableRentalIncreaseDate).getUTCFullYear()}
+            </div>
+          </div>
+        ) : 'N/A'
       ),
     },
     {
