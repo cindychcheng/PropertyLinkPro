@@ -224,16 +224,47 @@ export default function RateIncreases() {
         </CardContent>
       </Card>
       
-      <DataTable
-        columns={columns}
-        data={paginatedData || []}
-        isLoading={isLoading}
-        emptyMessage="No rental increases due with current filters."
-        rowsPerPage={rowsPerPage}
-        currentPage={currentPage}
-        totalItems={totalItems}
-        onPageChange={handlePageChange}
-      />
+      <div className="bg-white rounded-lg border">
+        <table className="min-w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium">Property</th>
+              <th className="px-4 py-2 text-left text-sm font-medium">Last Increase</th>
+              <th className="px-4 py-2 text-left text-sm font-medium">Months Since</th>
+              <th className="px-4 py-2 text-left text-sm font-medium">Next Allowable</th>
+              <th className="px-4 py-2 text-right text-sm font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(paginatedData || []).map((item: any, index: number) => (
+              <tr key={index} className="border-b hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <div className="font-medium">{item.propertyAddress}</div>
+                  <div className="text-sm text-gray-500">{item.serviceType}</div>
+                </td>
+                <td className="px-4 py-3">{formatDisplayDate(item.latestRateIncreaseDate)}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${getMonthsSinceClass(item.monthsSinceIncrease)}`}>
+                    {item.monthsSinceIncrease} months
+                  </span>
+                </td>
+                <td className="px-4 py-3">{formatDisplayDate(item.nextAllowableRentalIncreaseDate)}</td>
+                <td className="px-4 py-3 text-right">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleProcessRateIncrease(item.propertyAddress)}
+                    className="text-primary hover:text-primary-dark"
+                  >
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Process
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       
       {/* Rate Increase Dialog */}
       <RateIncreaseDialog
