@@ -60,6 +60,13 @@ export function RateIncreaseReminders({
 
   // Ensure reminders is always an array
   const reminderList = Array.isArray(reminders) ? reminders : [];
+  
+  console.log("RENDER CHECK:", { 
+    isLoading, 
+    reminderListLength: reminderList.length, 
+    reminderListType: typeof reminderList,
+    firstItem: reminderList[0] 
+  });
 
 
 
