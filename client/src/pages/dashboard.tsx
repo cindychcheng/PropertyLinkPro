@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { RateIncreaseReminders } from "@/components/dashboard/rate-increase-reminders";
+import { RateIncreaseTest } from "@/components/dashboard/rate-increase-test";
 import { BirthdayReminders } from "@/components/dashboard/birthday-reminders";
 import { PropertiesTable } from "@/components/dashboard/properties-table";
 import { PropertyDialog } from "@/components/dialogs/property-dialog-updated";
@@ -152,7 +153,7 @@ export default function Dashboard() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-4">Reminders & Actions</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RateIncreaseReminders onProcessIncrease={handleProcessRateIncrease} />
+          <RateIncreaseTest />
           <BirthdayReminders />
         </div>
       </div>
