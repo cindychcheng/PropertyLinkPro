@@ -412,6 +412,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/rental-increases/initial", async (req, res) => {
     console.log("=== INITIAL RENTAL RATE ENDPOINT HIT ===");
     console.log("Request body:", req.body);
+    
+    // Simply bypass the existing rental check entirely for initial rates
     try {
       // Validate request body with a custom schema
       const initialRateSchema = z.object({
@@ -422,33 +424,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data = initialRateSchema.parse(req.body);
       
-      // Check if rental increase already exists for the CURRENT tenant
-      const currentTenant = await storage.getTenantByPropertyAddress(data.propertyAddress);
+      // Get existing rental info to decide whether to create or update
       const existingIncrease = await storage.getRentalRateIncreaseByPropertyAddress(data.propertyAddress);
-      
-      console.log("=== INITIAL RATE CHECK ===");
-      console.log("Current tenant:", currentTenant?.name);
-      console.log("Current tenant move-in:", currentTenant?.moveInDate);
-      console.log("Existing rate date:", existingIncrease?.latestRateIncreaseDate);
-      
-      if (existingIncrease && currentTenant) {
-        // Check if the existing rental info is for the current tenant
-        // If the rental rate date is after the current tenant's move-in date, then it belongs to current tenant
-        const tenantMoveInDate = new Date(currentTenant.moveInDate);
-        const existingRateDate = new Date(existingIncrease.latestRateIncreaseDate);
-        
-        console.log("Tenant move-in date object:", tenantMoveInDate);
-        console.log("Existing rate date object:", existingRateDate);
-        console.log("Is existing rate >= move-in?", existingRateDate >= tenantMoveInDate);
-        
-        if (existingRateDate >= tenantMoveInDate) {
-          console.log("BLOCKING: Rate belongs to current tenant");
-          return res.status(400).json({ message: "Rental rate information already exists for this tenant" });
-        }
-        
-        console.log("ALLOWING: Rate is from previous tenant");
-        // If we get here, the existing rate is from a previous tenant, so we can create a new one
-      }
+      console.log("Existing rental data:", existingIncrease ? "Found" : "Not found");
       
       // Create initial rental rate with appropriate calculations
       const startDate = new Date(data.startDate);
