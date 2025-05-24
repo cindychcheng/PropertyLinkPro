@@ -224,32 +224,30 @@ export default function RateIncreases() {
         </CardContent>
       </Card>
       
-      <div className="bg-white rounded-lg border">
-        <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium">Property</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Last Increase</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Months Since</th>
-              <th className="px-4 py-2 text-left text-sm font-medium">Next Allowable</th>
-              <th className="px-4 py-2 text-right text-sm font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(paginatedData || []).map((item: any, index: number) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{item.propertyAddress}</div>
-                  <div className="text-sm text-gray-500">{item.serviceType}</div>
-                </td>
-                <td className="px-4 py-3">{formatDisplayDate(item.latestRateIncreaseDate)}</td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${getMonthsSinceClass(item.monthsSinceIncrease)}`}>
-                    {item.monthsSinceIncrease} months
+      {/* Simple display of data */}
+      <div className="bg-white rounded-lg border p-4">
+        <h3 className="text-lg font-medium mb-4">Rate Increase Reminders ({increasesList.length} total)</h3>
+        
+        <div className="space-y-3">
+          {(paginatedData || []).map((item: any, index: number) => (
+            <div key={index} className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="font-semibold text-lg">{item.propertyAddress}</div>
+                  <div className="text-sm text-gray-600 mt-1">{item.serviceType}</div>
+                  <div className="mt-2 flex gap-4">
+                    <span className="text-sm">
+                      <strong>Last Increase:</strong> {formatDisplayDate(item.latestRateIncreaseDate)}
+                    </span>
+                    <span className="text-sm">
+                      <strong>Next Allowable:</strong> {formatDisplayDate(item.nextAllowableRentalIncreaseDate)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getMonthsSinceClass(item.monthsSinceIncrease)}`}>
+                    {item.monthsSinceIncrease} months since
                   </span>
-                </td>
-                <td className="px-4 py-3">{formatDisplayDate(item.nextAllowableRentalIncreaseDate)}</td>
-                <td className="px-4 py-3 text-right">
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -259,11 +257,11 @@ export default function RateIncreases() {
                     <TrendingUp className="h-3 w-3 mr-1" />
                     Process
                   </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       
       {/* Rate Increase Dialog */}
