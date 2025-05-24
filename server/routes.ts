@@ -464,15 +464,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate next allowable rate (3% increase)
       const nextAllowableRate = Math.round(data.initialRentalRate * 1.03 * 100) / 100;
       
-      // Create the rental rate increase record
-      const increase = await storage.createRentalRateIncrease({
-        propertyAddress: data.propertyAddress,
-        latestRateIncreaseDate: data.startDate,
-        latestRentalRate: data.initialRentalRate,
-        nextAllowableRentalIncreaseDate: nextAllowableDate.toISOString().split('T')[0],
-        nextAllowableRentalRate: nextAllowableRate,
-        reminderDate: reminderDate.toISOString().split('T')[0]
-      });
+      // For new tenants, we need to either create or update the rental rate record
+      let increase;
+      if (existingIncrease) {
+        // Update the existing record with new tenant's information
+        console.log("UPDATING existing rental record for new tenant");
+        increase = await storage.updateRentalRateIncrease(data.propertyAddress, {
+          latestRateIncreaseDate: data.startDate,
+          latestRentalRate: data.initialRentalRate,
+          nextAllowableRentalIncreaseDate: nextAllowableDate.toISOString().split('T')[0],
+          nextAllowableRentalRate: nextAllowableRate,
+          reminderDate: reminderDate.toISOString().split('T')[0]
+        });
+      } else {
+        // Create new rental rate record
+        console.log("CREATING new rental record");
+        increase = await storage.createRentalRateIncrease({
+          propertyAddress: data.propertyAddress,
+          latestRateIncreaseDate: data.startDate,
+          latestRentalRate: data.initialRentalRate,
+          nextAllowableRentalIncreaseDate: nextAllowableDate.toISOString().split('T')[0],
+          nextAllowableRentalRate: nextAllowableRate,
+          reminderDate: reminderDate.toISOString().split('T')[0]
+        });
+      }
       
       // Get tenant information to include in the history entry
       const tenant = await storage.getTenantByPropertyAddress(data.propertyAddress);
