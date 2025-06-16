@@ -125,6 +125,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Approve pending user registration
+  app.post('/api/users/:id/approve', requireRole('super_admin'), async (req: any, res) => {
+    try {
+      const { role = 'read_only' } = req.body;
+      
+      const user = await storage.updateUser(req.params.id, {
+        status: 'active',
+        role: role,
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await storage.logUserAction({
+        actionType: 'approved',
+        targetUserId: req.params.id,
+        performedBy: req.currentUser?.id || "system",
+        details: { previousStatus: 'pending', newStatus: 'active', role }
+      });
+
+      res.json({ message: "User approved successfully", user });
+    } catch (error) {
+      console.error("Error approving user:", error);
+      res.status(500).json({ message: "Failed to approve user" });
+    }
+  });
+
+  // Reject pending user registration
+  app.post('/api/users/:id/reject', requireRole('super_admin'), async (req: any, res) => {
+    try {
+      const success = await storage.deactivateUser(req.params.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await storage.logUserAction({
+        actionType: 'rejected',
+        targetUserId: req.params.id,
+        performedBy: req.currentUser?.id || "system",
+        details: { previousStatus: 'pending', action: 'rejected' }
+      });
+
+      res.json({ message: "User registration rejected successfully" });
+    } catch (error) {
+      console.error("Error rejecting user:", error);
+      res.status(500).json({ message: "Failed to reject user" });
+    }
+  });
+
   app.get('/api/audit-log', requireRole('admin'), async (req, res) => {
     try {
       const userId = req.query.userId as string;
