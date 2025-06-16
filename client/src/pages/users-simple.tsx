@@ -113,9 +113,21 @@ export default function Users() {
       });
     },
     onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      console.error("Rejection error:", error);
       toast({
         title: "Error",
-        description: "Failed to reject user",
+        description: error.message || "Failed to reject user",
         variant: "destructive",
       });
     },
