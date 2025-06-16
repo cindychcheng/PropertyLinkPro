@@ -101,6 +101,7 @@ export async function setupAuth(app: Express) {
         
         if (userByEmail && userByEmail.status === 'active') {
           // Create new user record with actual Replit ID, preserving approval info
+          console.log(`Creating new user record for linking: ${userId} with email: ${userEmail}`);
           dbUser = await storage.createUser({
             id: userId,
             email: userEmail,
@@ -112,8 +113,11 @@ export async function setupAuth(app: Express) {
             createdBy: userByEmail.createdBy
           });
           
+          console.log(`Successfully created linked user: ${dbUser.id}`);
+          
           // Delete the old temporary registration record
           await storage.deleteUser(userByEmail.id);
+          console.log(`Deleted temporary user record: ${userByEmail.id}`);
           
           // Log the account linking
           await storage.logUserAction({
@@ -229,10 +233,12 @@ export const requireRole = (minRole: string): RequestHandler => {
       const dbUser = await storage.getUser(user.claims.sub);
       
       if (!dbUser) {
+        console.error(`User not found in database: ${user.claims.sub}, email: ${user.claims.email}`);
         return res.status(403).json({ message: "Access denied. Contact administrator." });
       }
 
       if (dbUser.status !== "active") {
+        console.error(`User account inactive: ${user.claims.sub}, status: ${dbUser.status}`);
         return res.status(403).json({ message: "Account inactive. Contact administrator." });
       }
 
