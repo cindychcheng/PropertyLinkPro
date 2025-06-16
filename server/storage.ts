@@ -38,6 +38,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: UpdateUser): Promise<User | undefined>;
   deactivateUser(id: string): Promise<boolean>;
+  deleteUser(id: string): Promise<boolean>;
   logUserAction(action: InsertUserAuditLog): Promise<void>;
   getUserAuditLog(userId?: string): Promise<UserAuditLog[]>;
   
@@ -184,6 +185,15 @@ export class DatabaseStorage implements IStorage {
     }
     
     return false;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const [user] = await db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning();
+    
+    return !!user;
   }
 
   async logUserAction(action: InsertUserAuditLog): Promise<void> {
@@ -953,6 +963,7 @@ export class MemStorage implements IStorage {
   }
   async updateUser() { return undefined; }
   async deactivateUser() { return false; }
+  async deleteUser() { return false; }
   async logUserAction() { return; }
   async getUserAuditLog() { return []; }
   

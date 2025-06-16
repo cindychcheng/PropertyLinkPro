@@ -170,17 +170,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reject pending user registration
   app.post('/api/users/:id/reject', requireRole('super_admin'), async (req: any, res) => {
     try {
-      const success = await storage.deactivateUser(req.params.id);
+      // Get user first to check if they exist and are pending
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.status !== 'pending') {
+        return res.status(400).json({ message: "Only pending registrations can be rejected" });
+      }
+
+      // Delete the pending user completely instead of deactivating
+      const success = await storage.deleteUser(req.params.id);
       
       if (!success) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(500).json({ message: "Failed to reject user registration" });
       }
 
       await storage.logUserAction({
         actionType: 'rejected',
         targetUserId: req.params.id,
         performedBy: req.currentUser?.id || "system",
-        details: { previousStatus: 'pending', action: 'rejected' }
+        details: { previousStatus: 'pending', action: 'rejected', email: user.email }
       });
 
       res.json({ message: "User registration rejected successfully" });
