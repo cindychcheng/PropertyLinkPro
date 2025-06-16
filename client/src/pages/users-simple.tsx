@@ -33,6 +33,10 @@ export default function Users() {
     retry: false,
   });
 
+  // Separate active and pending users
+  const activeUsers = users.filter(user => user.status === 'active');
+  const pendingUsers = users.filter(user => user.status === 'pending');
+
   const form = useForm<AddUserForm>({
     resolver: zodResolver(addUserSchema),
     defaultValues: {
@@ -72,6 +76,46 @@ export default function Users() {
       toast({
         title: "Error",
         description: "Failed to add user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
+      return apiRequest(`/api/users/${userId}/approve`, "POST", { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User approved successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to approve user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest(`/api/users/${userId}/reject`, "POST", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User registration rejected",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to reject user",
         variant: "destructive",
       });
     },
@@ -219,17 +263,67 @@ export default function Users() {
         </Dialog>
       </div>
       
+      {/* Pending Registrations Section */}
+      {pendingUsers.length > 0 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow mb-6">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4 text-yellow-800 dark:text-yellow-200">
+              Pending Registrations ({pendingUsers.length})
+            </h2>
+            <div className="space-y-4">
+              {pendingUsers.map((user: User) => (
+                <div key={user.id} className="border border-yellow-200 rounded-lg p-4 bg-white dark:bg-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">
+                        {user.firstName && user.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user.email || user.id}
+                      </h3>
+                      {user.email && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                        Requested: {new Date(user.createdAt!).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => approveMutation.mutate({ userId: user.id, role: 'read_only' })}
+                        disabled={approveMutation.isPending || rejectMutation.isPending}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => rejectMutation.mutate(user.id)}
+                        disabled={approveMutation.isPending || rejectMutation.isPending}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Users Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-6">
-          <h2 className="text-lg font-semibold mb-4">System Users ({users.length})</h2>
+          <h2 className="text-lg font-semibold mb-4">Active Users ({activeUsers.length})</h2>
           
-          {users.length === 0 ? (
+          {activeUsers.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No users found</p>
+              <p className="text-gray-500">No active users found</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {users.map((user: User) => (
+              {activeUsers.map((user: User) => (
                 <div key={user.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>

@@ -153,9 +153,12 @@ export default function Register() {
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
               Already have access?{" "}
-              <Link href="/api/login" className="text-primary hover:underline">
+              <button 
+                onClick={() => window.location.href = '/api/login'}
+                className="text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-inherit"
+              >
                 Sign in here
-              </Link>
+              </button>
             </p>
           </div>
         </CardContent>
