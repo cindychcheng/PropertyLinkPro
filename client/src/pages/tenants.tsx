@@ -17,7 +17,7 @@ export default function Tenants() {
   const rowsPerPage = 10;
   const { toast } = useToast();
 
-  const { data: properties, isLoading, refetch } = useQuery({
+  const { data: properties = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/properties'],
     staleTime: 60000, // 1 minute
   });
@@ -100,10 +100,10 @@ export default function Tenants() {
   console.log("Properties data for tenant display:", properties);
   
   // Filter only properties with tenants
-  const tenantProperties = properties?.filter((property: any) => property.tenant) || [];
+  const tenantProperties = properties.filter((property: any) => property.tenant);
   
   // Debug the tenant IDs to ensure they're properly set
-  console.log("Tenant properties:", tenantProperties.map(p => ({ 
+  console.log("Tenant properties:", tenantProperties.map((p: any) => ({ 
     address: p.propertyAddress, 
     tenantId: p.tenant?.id,
     tenantName: p.tenant?.name
