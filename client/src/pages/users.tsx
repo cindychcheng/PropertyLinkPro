@@ -153,7 +153,7 @@ export default function Users() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-            <UsersIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <UsersIcon size={24} />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>

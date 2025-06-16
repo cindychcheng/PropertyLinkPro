@@ -14,7 +14,7 @@ import Tenants from "@/pages/tenants";
 import Birthdays from "@/pages/birthdays";
 import RateIncreases from "@/pages/rate-increases";
 import Settings from "@/pages/settings";
-import Users from "@/pages/users";
+import Users from "@/pages/users-simple";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
