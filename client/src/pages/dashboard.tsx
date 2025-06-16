@@ -23,30 +23,25 @@ export default function Dashboard() {
     setActiveRateIncreaseCount 
   } = useAppContext();
   
-  const { data: properties, isLoading: isLoadingProperties } = useQuery({
+  const { data: properties = [], isLoading: isLoadingProperties } = useQuery<any[]>({
     queryKey: ['/api/properties'],
     staleTime: 60000, // 1 minute
   });
   
-  const { data: birthdayReminders } = useQuery({
+  const { data: birthdayReminders = [] } = useQuery<any[]>({
     queryKey: ['/api/reminders/birthdays'],
     staleTime: 60000, // 1 minute
   });
   
-  const { data: rateIncreaseReminders } = useQuery({
+  const { data: rateIncreaseReminders = [] } = useQuery<any[]>({
     queryKey: ['/api/reminders/rental-increases'],
     staleTime: 60000, // 1 minute
   });
   
   // Update badge counts
   useEffect(() => {
-    if (birthdayReminders) {
-      setActiveBirthdayCount(birthdayReminders.length);
-    }
-    
-    if (rateIncreaseReminders) {
-      setActiveRateIncreaseCount(rateIncreaseReminders.length);
-    }
+    setActiveBirthdayCount(birthdayReminders.length);
+    setActiveRateIncreaseCount(rateIncreaseReminders.length);
   }, [birthdayReminders, rateIncreaseReminders, setActiveBirthdayCount, setActiveRateIncreaseCount]);
   
   const handleViewProperty = (address: string) => {
