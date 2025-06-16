@@ -40,6 +40,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "First name, last name, and email are required" });
       }
 
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        if (existingUser.status === 'pending') {
+          return res.status(400).json({ 
+            message: "A registration request with this email is already pending approval." 
+          });
+        } else {
+          return res.status(400).json({ 
+            message: "An account with this email already exists. Please sign in instead." 
+          });
+        }
+      }
+
       // Create a pending user registration
       const registrationData = {
         id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Temporary ID for pending users

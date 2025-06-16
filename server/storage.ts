@@ -31,6 +31,7 @@ import {
 export interface IStorage {
   // User operations (for authentication)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserLastLogin(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
@@ -95,6 +96,11 @@ export class DatabaseStorage implements IStorage {
   
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
   }
 
@@ -912,6 +918,7 @@ export class DatabaseStorage implements IStorage {
 export class MemStorage implements IStorage {
   // User operations (for authentication)
   async getUser(id: string) { return undefined; }
+  async getUserByEmail(email: string) { return undefined; }
   async upsertUser(user: UpsertUser) { 
     return { 
       id: user.id!, 
