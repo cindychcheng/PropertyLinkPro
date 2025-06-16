@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Edit } from "lucide-react";
 
 const addUserSchema = z.object({
   id: z.string().min(1, "User ID is required"),
@@ -27,6 +27,7 @@ type AddUserForm = z.infer<typeof addUserSchema>;
 export default function Users() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const { data: users = [], isLoading, error } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -128,6 +129,38 @@ export default function Users() {
       toast({
         title: "Error",
         description: error.message || "Failed to reject user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
+      return apiRequest("PATCH", `/api/users/${userId}/role`, { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User role updated successfully",
+      });
+      setEditingUser(null);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
         variant: "destructive",
       });
     },
@@ -355,6 +388,15 @@ export default function Users() {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         {user.status || 'active'}
                       </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingUser(user)}
+                        disabled={updateRoleMutation.isPending}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit Role
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-gray-500">
@@ -366,6 +408,56 @@ export default function Users() {
           )}
         </div>
       </div>
+
+      {/* Edit Role Dialog */}
+      {editingUser && (
+        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User Role</DialogTitle>
+              <DialogDescription>
+                Change the access level for {editingUser.firstName && editingUser.lastName 
+                  ? `${editingUser.firstName} ${editingUser.lastName}` 
+                  : editingUser.email || editingUser.id}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Current Role</label>
+                <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                  {editingUser.role.replace('_', ' ')}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">New Role</label>
+                <Select 
+                  defaultValue={editingUser.role} 
+                  onValueChange={(role) => updateRoleMutation.mutate({ userId: editingUser.id, role })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="read_only">Read Only - View data only</SelectItem>
+                    <SelectItem value="standard">Standard - Edit properties, tenants, landlords</SelectItem>
+                    <SelectItem value="admin">Admin - Advanced features + audit logs</SelectItem>
+                    <SelectItem value="super_admin">Super Admin - Full system access</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingUser(null)}
+                  disabled={updateRoleMutation.isPending}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
