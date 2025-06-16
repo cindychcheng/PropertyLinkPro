@@ -31,6 +31,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Registration route - allows users to request access
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { firstName, lastName, email } = req.body;
+      
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ message: "First name, last name, and email are required" });
+      }
+
+      // Create a pending user registration
+      const registrationData = {
+        id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Temporary ID for pending users
+        email,
+        firstName,
+        lastName,
+        role: "read_only" as const,
+        status: "pending" as const,
+        createdBy: "self-registration",
+      };
+
+      await storage.createUser(registrationData);
+
+      res.json({ 
+        message: "Registration submitted successfully. Please wait for administrator approval.",
+        status: "pending" 
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Failed to submit registration" });
+    }
+  });
+
   // User management routes (Super Admin only)
   app.get('/api/users', requireRole('super_admin'), async (req, res) => {
     try {

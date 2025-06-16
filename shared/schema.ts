@@ -143,7 +143,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").notNull().default(UserRole.READ_ONLY),
-  status: varchar("status").notNull().default("active"), // active, inactive
+  status: varchar("status").notNull().default("pending"), // pending, active, inactive
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by"), // ID of user who added this user
@@ -170,7 +170,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   status: true,
   createdBy: true,
-}).omit({ id: true });
+});
 
 export const updateUserSchema = createInsertSchema(users).pick({
   role: true,

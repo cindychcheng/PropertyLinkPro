@@ -130,8 +130,9 @@ export default function Users() {
                     <FormItem>
                       <FormLabel>User ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter user ID (e.g., their Replit user ID)" {...field} />
+                        <Input placeholder="Enter user ID (e.g., 12345678)" {...field} />
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}
