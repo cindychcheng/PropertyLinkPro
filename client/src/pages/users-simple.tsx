@@ -50,7 +50,7 @@ export default function Users() {
 
   const addUserMutation = useMutation({
     mutationFn: async (userData: AddUserForm) => {
-      return apiRequest("/api/users", "POST", userData);
+      return apiRequest("POST", "/api/users", userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -83,7 +83,7 @@ export default function Users() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
-      return apiRequest(`/api/users/${userId}/approve`, "POST", { role });
+      return apiRequest("POST", `/api/users/${userId}/approve`, { role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -103,7 +103,7 @@ export default function Users() {
 
   const rejectMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return apiRequest(`/api/users/${userId}/reject`, "POST", {});
+      return apiRequest("POST", `/api/users/${userId}/reject`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
