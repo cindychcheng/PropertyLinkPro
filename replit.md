@@ -179,6 +179,16 @@ The application is configured to run in a Replit environment with the following 
 4. To build for production: `npm run build`
 5. To run production build: `npm run start`
 
+## Recent Changes
+
+**June 16, 2025:**
+- Enhanced search functionality with comprehensive co-tenant support
+- Fixed birthday reminders to display "N/A" for landlords without residential addresses  
+- Updated database schema to properly handle multiple active tenants per property
+- Restored prominent search bar in header with keyboard shortcuts (Cmd/Ctrl+K)
+- Implemented clickable search results that open specific property cards
+- Added User Management interface with role-based access control and "Add User" functionality
+
 ## Next Steps
 
 1. Complete the implementation of authentication and user management
