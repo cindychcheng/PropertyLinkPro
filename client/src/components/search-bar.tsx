@@ -59,7 +59,7 @@ export function SearchBar() {
         });
       }
 
-      // Add tenant if name matches
+      // Add current tenant if name matches
       if (property.tenant?.name?.toLowerCase().includes(searchLower)) {
         searchResults.push({
           type: "tenant",
@@ -67,6 +67,30 @@ export function SearchBar() {
           name: property.tenant.name,
           details: property.tenant.contactNumber || property.tenant.email || "No contact",
           address: property.propertyAddress,
+        });
+      }
+
+      // Add all tenants from tenant history if name matches
+      if (property.tenantHistory) {
+        property.tenantHistory.forEach((tenant: any) => {
+          if (tenant.name?.toLowerCase().includes(searchLower)) {
+            // Check if this tenant is not already added (avoid duplicates)
+            const alreadyAdded = searchResults.some(result => 
+              result.type === "tenant" && 
+              result.name === tenant.name && 
+              result.address === property.propertyAddress
+            );
+            
+            if (!alreadyAdded) {
+              searchResults.push({
+                type: "tenant",
+                id: `${property.propertyAddress}-${tenant.name}`,
+                name: tenant.name,
+                details: tenant.contactNumber || tenant.email || "No contact",
+                address: property.propertyAddress,
+              });
+            }
+          }
         });
       }
     });
