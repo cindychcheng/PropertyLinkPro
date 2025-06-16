@@ -79,7 +79,8 @@ export function SearchBar() {
     // Navigate based on result type
     switch (result.type) {
       case "property":
-        setLocation("/properties");
+        // Navigate to properties page with address parameter to open the property card
+        setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
         break;
       case "landlord":
         setLocation("/landlords");
