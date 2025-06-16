@@ -1,0 +1,111 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck } from "lucide-react";
+
+export default function Landing() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="container mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+              <Building2 className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Property Management System
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Streamline your rental property management with comprehensive tracking, 
+            automated reminders, and powerful analytics.
+          </p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <Users className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <CardTitle className="text-gray-900 dark:text-white">Tenant Management</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Track tenant information, lease dates, and contact details with ease.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <TrendingUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <CardTitle className="text-gray-900 dark:text-white">Rental Tracking</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Monitor rental rates, increases, and generate automated reminders.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                <CardTitle className="text-gray-900 dark:text-white">Smart Reminders</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Never miss important dates with birthday and rental increase alerts.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Authentication Section */}
+        <div className="max-w-md mx-auto">
+          <Card className="border-0 shadow-xl bg-white dark:bg-gray-800">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                  <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl text-gray-900 dark:text-white">Secure Access</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Sign in to access your property management dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                <UserCheck className="h-4 w-4" />
+                <span>Role-based access control</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                <Shield className="h-4 w-4" />
+                <span>Secure authentication system</span>
+              </div>
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                size="lg"
+              >
+                Sign In to Continue
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-16 text-gray-500 dark:text-gray-400">
+          <p>© 2025 Property Management System. Secure and reliable property management.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
