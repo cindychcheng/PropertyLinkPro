@@ -7,6 +7,8 @@ import {
   tenants,
   rentalRateIncreases,
   rentalRateHistory,
+  users,
+  userAuditLog,
   type Landlord,
   type LandlordOwner,
   type Tenant,
@@ -17,10 +19,27 @@ import {
   type InsertTenant,
   type InsertRentalRateIncrease,
   type InsertRentalRateHistory,
-  type PropertyWithDetails
+  type PropertyWithDetails,
+  type User,
+  type UpsertUser,
+  type InsertUser,
+  type UpdateUser,
+  type UserAuditLog,
+  type InsertUserAuditLog
 } from "@shared/schema";
 
 export interface IStorage {
+  // User operations (for authentication)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  updateUserLastLogin(id: string): Promise<void>;
+  getAllUsers(): Promise<User[]>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: UpdateUser): Promise<User | undefined>;
+  deactivateUser(id: string): Promise<boolean>;
+  logUserAction(action: InsertUserAuditLog): Promise<void>;
+  getUserAuditLog(userId?: string): Promise<UserAuditLog[]>;
+  
   // Landlord operations
   getLandlords(): Promise<Landlord[]>;
   getLandlordByPropertyAddress(propertyAddress: string): Promise<Landlord | undefined>;

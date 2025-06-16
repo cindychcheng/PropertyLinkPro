@@ -1,4 +1,4 @@
-import { pgTable, text, serial, date, boolean, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, date, boolean, integer, real, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -114,6 +114,71 @@ export const insertRentalRateHistorySchema = createInsertSchema(rentalRateHistor
   notes: true,
 });
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User roles enum
+export const UserRole = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin", 
+  STANDARD: "standard",
+  READ_ONLY: "read_only",
+} as const;
+
+export type UserRoleEnum = typeof UserRole[keyof typeof UserRole];
+
+// Users table for authentication and authorization
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(), // Replit user ID
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").notNull().default(UserRole.READ_ONLY),
+  status: varchar("status").notNull().default("active"), // active, inactive
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"), // ID of user who added this user
+  lastLoginAt: timestamp("last_login_at"),
+});
+
+// User audit log for tracking user management actions
+export const userAuditLog = pgTable("user_audit_log", {
+  id: serial("id").primaryKey(),
+  actionType: varchar("action_type").notNull(), // created, updated, deleted, login, logout
+  targetUserId: varchar("target_user_id").notNull(),
+  performedBy: varchar("performed_by").notNull(),
+  details: jsonb("details"), // Additional details about the action
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Validation schemas for user management
+export const insertUserSchema = createInsertSchema(users).pick({
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+  role: true,
+  status: true,
+  createdBy: true,
+});
+
+export const updateUserSchema = createInsertSchema(users).pick({
+  role: true,
+  status: true,
+  firstName: true,
+  lastName: true,
+}).partial();
+
 // Type interfaces
 export type Landlord = typeof landlords.$inferSelect;
 export type InsertLandlord = z.infer<typeof insertLandlordSchema>;
@@ -129,6 +194,14 @@ export type InsertRentalRateIncrease = z.infer<typeof insertRentalRateIncreaseSc
 
 export type RentalRateHistory = typeof rentalRateHistory.$inferSelect;
 export type InsertRentalRateHistory = z.infer<typeof insertRentalRateHistorySchema>;
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUser = z.infer<typeof updateUserSchema>;
+export type UpsertUser = typeof users.$inferInsert;
+
+export type UserAuditLog = typeof userAuditLog.$inferSelect;
+export type InsertUserAuditLog = typeof userAuditLog.$inferInsert;
 
 // Combined types for frontend use
 export type PropertyWithDetails = {
