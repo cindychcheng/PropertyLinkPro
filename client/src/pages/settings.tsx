@@ -1,4 +1,4 @@
-import { Layout } from "@/components/layout/layout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Settings, BellRing, Lock, User, Mail } from "lucide-react";
 
 export default function SettingsPage() {
   return (
-    <Layout>
+    <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Settings</h1>
       </div>
@@ -195,6 +195,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </Layout>
+    </div>
   );
 }

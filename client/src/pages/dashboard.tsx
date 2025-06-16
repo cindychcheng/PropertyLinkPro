@@ -10,7 +10,6 @@ import { PropertiesTable } from "@/components/dashboard/properties-table";
 import { PropertyDialog } from "@/components/dialogs/property-dialog-updated";
 import { RateIncreaseDialog } from "@/components/dialogs/rate-increase-dialog";
 import { AddPropertyDialog } from "@/components/dialogs/add-property-dialog";
-import { Layout } from "@/components/layout/layout";
 import { useAppContext } from "@/providers/app-provider";
 
 export default function Dashboard() {
@@ -89,7 +88,7 @@ export default function Dashboard() {
   const birthdaysThisMonth = birthdayReminders?.length || 0;
 
   return (
-    <Layout>
+    <div className="p-6 space-y-6">
       {/* Dashboard Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Dashboard</h1>
@@ -183,6 +182,6 @@ export default function Dashboard() {
         isOpen={showAddPropertyDialog}
         onClose={() => setShowAddPropertyDialog(false)}
       />
-    </Layout>
+    </div>
   );
 }

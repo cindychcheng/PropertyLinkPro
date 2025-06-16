@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Layout } from "@/components/layout/layout";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TenantForm } from "@/components/forms/tenant-form";
 import { Cake, Plus, Building } from "lucide-react";
@@ -189,7 +189,7 @@ export default function Tenants() {
   ];
 
   return (
-    <Layout>
+    <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Tenants</h1>
       </div>
@@ -212,6 +212,6 @@ export default function Tenants() {
           />
         </TabsContent>
       </Tabs>
-    </Layout>
+    </div>
   );
 }

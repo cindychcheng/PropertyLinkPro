@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Layout } from "@/components/layout/layout";
+
 import { PropertyDialog } from "@/components/dialogs/property-dialog-updated";
 import { RateIncreaseDialog } from "@/components/dialogs/rate-increase-dialog";
 import { AddPropertyDialog } from "@/components/dialogs/add-property-dialog";
@@ -193,7 +193,7 @@ export default function Properties() {
   ];
 
   return (
-    <Layout>
+    <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Properties</h1>
         <Button onClick={() => setShowAddPropertyDialog(true)}>
@@ -233,6 +233,6 @@ export default function Properties() {
         isOpen={showAddPropertyDialog}
         onClose={() => setShowAddPropertyDialog(false)}
       />
-    </Layout>
+    </div>
   );
 }

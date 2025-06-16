@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Layout } from "@/components/layout/layout";
+
 import { formatBirthday, formatDisplayDate } from "@/lib/utils/date-utils";
 import { 
   Card, 
@@ -142,7 +142,7 @@ export default function Birthdays() {
   ];
 
   return (
-    <Layout>
+    <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Birthday Reminders</h1>
       </div>
@@ -192,6 +192,6 @@ export default function Birthdays() {
         totalItems={totalItems}
         onPageChange={handlePageChange}
       />
-    </Layout>
+    </div>
   );
 }
