@@ -2,11 +2,51 @@
 
 ## Overview
 
-This is a property management application designed to help manage landlords, tenants, properties, rental rate increases, and other aspects of property management. The application follows a modern stack with a React frontend and an Express backend, utilizing Drizzle ORM for database operations.
+This is a comprehensive property management application with a secure authentication system designed to help manage landlords, tenants, properties, rental rate increases, and other aspects of property management. The application features role-based access control, Replit OAuth integration, and a complete user management interface. It follows a modern stack with a React frontend and an Express backend, utilizing Drizzle ORM for database operations.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Authentication System
+
+### Architecture Overview
+
+The application implements a comprehensive 5-part authentication and authorization system:
+
+1. **Replit OAuth Integration**: Uses OpenID Connect for secure user authentication
+2. **Whitelist-Based Authorization**: Only explicitly added users can access the system
+3. **Role-Based Access Control**: Four permission levels (Read-Only, Standard, Admin, Super Admin)
+4. **Hybrid User Management**: System owner creates initial super admins, who then manage other users
+5. **Built-in Admin Interface**: Complete user management dashboard for super administrators
+
+### User Roles and Permissions
+
+- **Read-Only**: View all data, cannot make changes
+- **Standard**: Read access plus ability to edit properties, tenants, and landlords
+- **Admin**: Standard permissions plus advanced features (audit logs, system settings)
+- **Super Admin**: Complete access including user management and system administration
+
+### Security Features
+
+- Three-layer security: OAuth verification → whitelist check → role permissions
+- Session-based authentication with PostgreSQL storage
+- Automatic token refresh for seamless user experience
+- Comprehensive audit logging for all user management actions
+- Secure logout with proper session cleanup
+
+### Database Schema
+
+- `users`: Stores user profiles, roles, and status
+- `sessions`: Secure session storage for authentication
+- `user_audit_log`: Tracks all user management actions and system access
+
+### Setup Process
+
+1. Deploy application with database
+2. Run initial user seed script to create first super admin
+3. Super admin signs in and adds other users through the admin interface
+4. Role-based access automatically enforced throughout the application
 
 ## System Architecture
 
