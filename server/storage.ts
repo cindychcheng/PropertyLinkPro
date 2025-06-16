@@ -564,6 +564,19 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
+      // Add all active tenants (co-tenants)
+      if (activeTenants.length > 0) {
+        propertyDetails.activeTenants = activeTenants.map(t => ({
+          id: t.id,
+          name: t.name,
+          contactNumber: t.contactNumber || undefined,
+          email: t.email || undefined,
+          birthday: t.birthday ? new Date(t.birthday) : undefined,
+          moveInDate: new Date(t.moveInDate),
+          moveOutDate: t.moveOutDate ? new Date(t.moveOutDate) : undefined
+        }));
+      }
+      
       if (rentalIncrease) {
         propertyDetails.rentalInfo = {
           latestRentalRate: rentalIncrease.latestRentalRate,

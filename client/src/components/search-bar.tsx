@@ -30,14 +30,8 @@ export function SearchBar() {
   const searchResults: SearchResult[] = [];
 
   if (searchTerm.length >= 2) {
-    console.log("=== SEARCH DEBUG ===");
-    console.log("Search term:", searchTerm);
-    console.log("Properties data:", properties);
-    
     properties.forEach((property: any) => {
       const searchLower = searchTerm.toLowerCase();
-      console.log(`Property: ${property.propertyAddress}`);
-      console.log("Active tenants:", property.activeTenants);
       
       // Add property if address matches
       if (property.propertyAddress?.toLowerCase().includes(searchLower)) {
