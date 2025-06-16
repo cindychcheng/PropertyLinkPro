@@ -786,7 +786,7 @@ export class DatabaseStorage implements IStorage {
         role: 'Landlord',
         contactNumber: owner.contactNumber || 'N/A',
         birthday: new Date(owner.birthday!),
-        propertyAddress: landlord?.propertyAddress || 'Unknown'
+        propertyAddress: owner.residentialAddress || landlord?.propertyAddress || 'Unknown'
       };
     }));
     
