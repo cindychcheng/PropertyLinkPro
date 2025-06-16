@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import Properties from "@/pages/properties";
 import Landlords from "@/pages/landlords";
@@ -24,6 +25,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/register" component={Register} />
         <Route component={NotFound} />
       </Switch>
     );
