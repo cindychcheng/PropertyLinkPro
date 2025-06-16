@@ -76,19 +76,8 @@ export function SearchBar() {
     setOpen(false);
     setSearchTerm("");
     
-    // Navigate based on result type
-    switch (result.type) {
-      case "property":
-        // Navigate to properties page with address parameter to open the property card
-        setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
-        break;
-      case "landlord":
-        setLocation("/landlords");
-        break;
-      case "tenant":
-        setLocation("/tenants");
-        break;
-    }
+    // For all result types, navigate to the property card since landlords and tenants are associated with properties
+    setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
   };
 
   const getIcon = (type: string) => {
