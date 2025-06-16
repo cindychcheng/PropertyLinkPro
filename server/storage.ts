@@ -90,7 +90,112 @@ export interface IStorage {
 
 // Database implementation
 export class DatabaseStorage implements IStorage {
-  // Landlord operations
+  
+  // === USER OPERATIONS (AUTHENTICATION) ===
+  
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    
+    // Log the user creation
+    await this.logUserAction({
+      actionType: "created",
+      targetUserId: user.id,
+      performedBy: userData.createdBy || "system",
+      details: { role: user.role, email: user.email }
+    });
+    
+    return user;
+  }
+
+  async updateUser(id: string, updates: UpdateUser): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (user) {
+      await this.logUserAction({
+        actionType: "updated",
+        targetUserId: id,
+        performedBy: "system", 
+        details: updates
+      });
+    }
+    
+    return user || undefined;
+  }
+
+  async deactivateUser(id: string): Promise<boolean> {
+    const [user] = await db
+      .update(users)
+      .set({ status: "inactive", updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (user) {
+      await this.logUserAction({
+        actionType: "deactivated",
+        targetUserId: id,
+        performedBy: "system",
+        details: { previousStatus: "active" }
+      });
+      return true;
+    }
+    
+    return false;
+  }
+
+  async logUserAction(action: InsertUserAuditLog): Promise<void> {
+    await db.insert(userAuditLog).values(action);
+  }
+
+  async getUserAuditLog(userId?: string): Promise<UserAuditLog[]> {
+    const query = db.select().from(userAuditLog).orderBy(desc(userAuditLog.timestamp));
+    
+    if (userId) {
+      return await query.where(eq(userAuditLog.targetUserId, userId));
+    }
+    
+    return await query;
+  }
+
+  // === LANDLORD OPERATIONS ===
+  
   async getLandlords(): Promise<Landlord[]> {
     return await db.select().from(landlords);
   }
@@ -779,8 +884,45 @@ export class DatabaseStorage implements IStorage {
 
 // In-memory storage implementation for backwards compatibility
 export class MemStorage implements IStorage {
-  // Implementation omitted for brevity
-  // You can see the full implementation in the original file
+  // User operations (for authentication)
+  async getUser(id: string) { return undefined; }
+  async upsertUser(user: UpsertUser) { 
+    return { 
+      id: user.id!, 
+      email: user.email || null, 
+      firstName: user.firstName || null, 
+      lastName: user.lastName || null, 
+      profileImageUrl: user.profileImageUrl || null, 
+      role: user.role || "read_only", 
+      status: user.status || "active", 
+      createdAt: new Date(), 
+      updatedAt: new Date(), 
+      createdBy: user.createdBy || null, 
+      lastLoginAt: null 
+    }; 
+  }
+  async updateUserLastLogin(id: string) { return; }
+  async getAllUsers() { return []; }
+  async createUser(user: InsertUser) { 
+    return { 
+      id: user.id, 
+      email: user.email || null, 
+      firstName: user.firstName || null, 
+      lastName: user.lastName || null, 
+      profileImageUrl: user.profileImageUrl || null, 
+      role: user.role || "read_only", 
+      status: user.status || "active", 
+      createdAt: new Date(), 
+      updatedAt: new Date(), 
+      createdBy: user.createdBy || null, 
+      lastLoginAt: null 
+    }; 
+  }
+  async updateUser() { return undefined; }
+  async deactivateUser() { return false; }
+  async logUserAction() { return; }
+  async getUserAuditLog() { return []; }
+  
   async getLandlords() { return []; }
   async getLandlordByPropertyAddress() { return undefined; }
   async createLandlord(landlord: InsertLandlord) { 

@@ -1,18 +1,107 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 import { z } from "zod";
 import { 
   insertLandlordSchema, 
   insertLandlordOwnerSchema, 
   insertTenantSchema, 
   insertRentalRateIncreaseSchema,
-  insertRentalRateHistorySchema
+  insertRentalRateHistorySchema,
+  insertUserSchema,
+  updateUserSchema
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // User management routes (Super Admin only)
+  app.get('/api/users', requireRole('super_admin'), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/users', requireRole('super_admin'), async (req: any, res) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromZodError(result.error) });
+      }
+      
+      const user = await storage.createUser({
+        ...result.data,
+        createdBy: req.currentUser?.id || "system"
+      });
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.patch('/api/users/:id', requireRole('super_admin'), async (req: any, res) => {
+    try {
+      const result = updateUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromZodError(result.error) });
+      }
+      
+      const user = await storage.updateUser(req.params.id, result.data);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete('/api/users/:id', requireRole('super_admin'), async (req, res) => {
+    try {
+      const success = await storage.deactivateUser(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deactivating user:", error);
+      res.status(500).json({ message: "Failed to deactivate user" });
+    }
+  });
+
+  app.get('/api/audit-log', requireRole('admin'), async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      const auditLog = await storage.getUserAuditLog(userId);
+      res.json(auditLog);
+    } catch (error) {
+      console.error("Error fetching audit log:", error);
+      res.status(500).json({ message: "Failed to fetch audit log" });
+    }
+  });
+
   // Error handler for validation errors
   const handleZodError = (err: unknown) => {
     if (err instanceof z.ZodError) {
