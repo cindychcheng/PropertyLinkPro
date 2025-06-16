@@ -187,7 +187,11 @@ The application is configured to run in a Replit environment with the following 
 - Updated database schema to properly handle multiple active tenants per property
 - Restored prominent search bar in header with keyboard shortcuts (Cmd/Ctrl+K)
 - Implemented clickable search results that open specific property cards
-- Added User Management interface with role-based access control and "Add User" functionality
+- Added User Management interface with role-based access control
+- Implemented registration system with super admin approval workflow
+- Created `/register` page for user access requests with name and email
+- Added "Request Access" button to landing page alongside sign-in option
+- Replaced manual User ID entry with pending user approval system
 
 ## Next Steps
 

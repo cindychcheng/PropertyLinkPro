@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Landing() {
   return (
@@ -90,13 +91,27 @@ export default function Landing() {
                 <Shield className="h-4 w-4" />
                 <span>Secure authentication system</span>
               </div>
-              <Button 
-                onClick={() => window.location.href = '/api/login'}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                size="lg"
-              >
-                Sign In to Continue
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => window.location.href = '/api/login'}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  size="lg"
+                >
+                  Sign In to Continue
+                </Button>
+                <div className="text-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Don't have access yet?</span>
+                </div>
+                <Link href="/register">
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    size="lg"
+                  >
+                    Request Access
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
