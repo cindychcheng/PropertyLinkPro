@@ -76,11 +76,13 @@ export default function Register() {
               </p>
             </div>
             <div className="text-center">
-              <Link href="/api/login">
-                <Button variant="outline" className="w-full">
-                  Back to Login
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => window.location.href = '/api/login'}
+              >
+                Back to Login
+              </Button>
             </div>
           </CardContent>
         </Card>
