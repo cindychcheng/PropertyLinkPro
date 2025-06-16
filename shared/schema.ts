@@ -227,6 +227,16 @@ export type PropertyWithDetails = {
     moveInDate: Date;
     moveOutDate?: Date;
   };
+  // All current active tenants (without moveOutDate)
+  activeTenants?: Array<{
+    id: number;
+    name: string;
+    contactNumber?: string;
+    email?: string;
+    birthday?: Date;
+    moveInDate: Date;
+    moveOutDate?: Date;
+  }>;
   // All tenants for this property, including past tenants
   tenantHistory?: Array<{
     id: number;
