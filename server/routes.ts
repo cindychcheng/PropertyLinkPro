@@ -44,9 +44,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/users', requireRole('super_admin'), async (req: any, res) => {
     try {
+      console.log("Creating user with data:", req.body);
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ message: fromZodError(result.error) });
+        console.log("Validation failed:", result.error);
+        return res.status(400).json({ message: fromZodError(result.error).message });
       }
       
       const user = await storage.createUser({

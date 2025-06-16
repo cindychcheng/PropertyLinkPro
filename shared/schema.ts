@@ -170,7 +170,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   status: true,
   createdBy: true,
-});
+}).omit({ id: true });
 
 export const updateUserSchema = createInsertSchema(users).pick({
   role: true,
