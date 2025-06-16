@@ -2,36 +2,62 @@
 
 ## Current Status
 ✅ Database schema created with authentication tables
-✅ Replit OAuth environment variables configured
-✅ Initial system admin user created
+✅ Replit OAuth environment variables configured  
+✅ Authentication system working properly
+✅ Session storage configured with PostgreSQL
 
-## Getting Your Replit User ID
+## Quick Setup (3 Steps)
 
-To become a super admin, you need your Replit user ID. Here's how to get it:
+### Step 1: Get Your Replit User ID
+1. Click the "Sign In to Continue" button on the landing page
+2. Complete the Replit OAuth login process
+3. Check the server logs in the console - your user ID will appear
+4. Copy the user ID (it's a long string of numbers)
 
-1. Sign in to your Replit account
-2. Go to your profile or any of your repls
-3. Your user ID will be in the URL or you can find it by:
-   - Opening browser developer tools (F12)
-   - Going to the Console tab
-   - Running: `fetch('/api/login').then(r => console.log('Check Network tab for redirect URL'))`
-   - Look for your user ID in the network request
+### Step 2: Make Yourself Super Admin
+Run this command in the Shell tab, replacing `YOUR_USER_ID` with the ID from step 1:
 
-## Adding Yourself as Super Admin
-
-Once you have your Replit user ID, run this SQL command to make yourself a super admin:
-
-```sql
-INSERT INTO users (id, role, status, created_by) 
-VALUES ('YOUR_REPLIT_USER_ID', 'super_admin', 'active', 'system')
-ON CONFLICT (id) DO UPDATE SET role = 'super_admin', status = 'active';
+```bash
+node add-admin.js YOUR_USER_ID
 ```
 
-Replace 'YOUR_REPLIT_USER_ID' with your actual Replit user ID.
+### Step 3: Sign In Again
+1. Go back to the application
+2. Click "Sign In to Continue"
+3. You'll now have super admin access with the "User Management" section visible
 
 ## Testing Authentication
 
 1. Navigate to the application
+2. You should see the landing page with "Sign In to Continue" button
+3. Click the button to authenticate with Replit
+4. After successful authentication, you'll be redirected to the dashboard
+5. The sidebar will show your profile and role
+6. As a super admin, you'll have access to the "User Management" section
+
+## Adding Other Users
+
+Once you're signed in as a super admin:
+
+1. Go to "User Management" in the sidebar
+2. Click "Add User"
+3. Enter the new user's Replit user ID
+4. Select their role (Read Only, Standard, Admin, or Super Admin)
+5. Save the user
+
+## Role Permissions
+
+- **Read Only**: View all data, cannot make changes
+- **Standard**: Read access plus ability to edit properties, tenants, and landlords
+- **Admin**: Standard permissions plus advanced features (audit logs, system settings)
+- **Super Admin**: Complete access including user management and system administration
+
+## Troubleshooting
+
+- If authentication fails, verify the Replit OAuth environment variables are set correctly
+- If you can't access user management, confirm your role is set to 'super_admin' in the database
+- Session issues can be resolved by clearing cookies and signing in again
+- Check server logs for authentication errors and user IDs during the login process
 2. You should see the landing page with "Sign In to Continue" button
 3. Click the button to authenticate with Replit
 4. After successful authentication, you'll be redirected to the dashboard
