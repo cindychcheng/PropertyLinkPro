@@ -79,41 +79,66 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    
-    const claims = tokens.claims();
-    
-    // Check if user exists by Replit ID first
-    let dbUser = await storage.getUser(claims["sub"]);
-    
-    // If not found by Replit ID, check by email for pending registrations
-    if (!dbUser && claims["email"]) {
-      const userByEmail = await storage.getUserByEmail(claims["email"]);
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
       
-      if (userByEmail && userByEmail.status === 'active') {
-        // Update the pending user record with the actual Replit ID
-        dbUser = await storage.updateUser(userByEmail.id, {
-          id: claims["sub"],
-          email: claims["email"],
-          firstName: claims["first_name"] || userByEmail.firstName,
-          lastName: claims["last_name"] || userByEmail.lastName,
-          profileImageUrl: claims["profile_image_url"]
-        });
+      const claims = tokens.claims();
+      
+      if (!claims || !claims["sub"]) {
+        return verified(new Error("Invalid claims from OAuth provider"), false);
+      }
+      
+      const userId = String(claims["sub"]);
+      const userEmail = claims["email"] ? String(claims["email"]) : null;
+      
+      // Check if user exists by Replit ID first
+      let dbUser = await storage.getUser(userId);
+      
+      // If not found by Replit ID, check by email for approved registrations
+      if (!dbUser && userEmail) {
+        const userByEmail = await storage.getUserByEmail(userEmail);
         
-        // Delete the old record with the temporary ID
-        if (userByEmail.id !== claims["sub"]) {
+        if (userByEmail && userByEmail.status === 'active') {
+          // Create new user record with actual Replit ID, preserving approval info
+          dbUser = await storage.createUser({
+            id: userId,
+            email: userEmail,
+            firstName: (claims["first_name"] && typeof claims["first_name"] === 'string') ? claims["first_name"] : userByEmail.firstName,
+            lastName: (claims["last_name"] && typeof claims["last_name"] === 'string') ? claims["last_name"] : userByEmail.lastName,
+            profileImageUrl: (claims["profile_image_url"] && typeof claims["profile_image_url"] === 'string') ? claims["profile_image_url"] : null,
+            role: userByEmail.role,
+            status: 'active',
+            createdBy: userByEmail.createdBy
+          });
+          
+          // Delete the old temporary registration record
           await storage.deleteUser(userByEmail.id);
+          
+          // Log the account linking
+          await storage.logUserAction({
+            actionType: 'account_linked',
+            targetUserId: userId,
+            performedBy: "system",
+            details: { 
+              linkedFromEmail: userEmail, 
+              previousTempId: userByEmail.id,
+              role: userByEmail.role
+            }
+          });
         }
       }
+      
+      // If still no user found, upsert normally (this handles the original flow)
+      if (!dbUser) {
+        await upsertUser(claims);
+      }
+      
+      verified(null, user);
+    } catch (error) {
+      console.error("Authentication error:", error);
+      verified(error as Error, false);
     }
-    
-    // If still no user found, upsert normally (this handles the original flow)
-    if (!dbUser) {
-      await upsertUser(claims);
-    }
-    
-    verified(null, user);
   };
 
   for (const domain of process.env
