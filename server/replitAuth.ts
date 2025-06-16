@@ -164,14 +164,7 @@ export const requireRole = (minRole: string): RequestHandler => {
   return async (req, res, next) => {
     const user = req.user as any;
     
-    console.log(`[Auth] Checking role ${minRole} for user:`, {
-      isAuthenticated: req.isAuthenticated(),
-      hasClaims: !!user?.claims,
-      userId: user?.claims?.sub
-    });
-    
     if (!req.isAuthenticated() || !user.claims) {
-      console.log("[Auth] Authentication failed - no session or claims");
       return res.status(401).json({ message: "Unauthorized" });
     }
 
