@@ -55,20 +55,6 @@ export function setupAzureAuth(app: Express) {
     }
   });
 
-  // Test endpoint to verify callback is reachable
-  app.get("/api/auth/azure/test", (req, res) => {
-    console.log("=== AZURE TEST ENDPOINT REACHED ===");
-    res.json({ message: "Azure callback route is reachable", host: req.get('host') });
-  });
-
-  // Log all requests to Azure auth routes for debugging
-  app.use("/api/auth/azure*", (req, res, next) => {
-    console.log(`=== AZURE AUTH REQUEST: ${req.method} ${req.path} ===`);
-    console.log("Query params:", req.query);
-    console.log("Host:", req.get('host'));
-    next();
-  });
-
   // Azure callback route
   app.get("/api/auth/azure/callback", async (req, res) => {
     console.log("=== AZURE CALLBACK RECEIVED ===");
