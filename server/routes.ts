@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 import { setupAzureAuth } from "./azureAuth";
 import { sendMagicLink, verifyEmailAuthToken } from "./email-auth";
 import { sendAccessRequestNotification, sendAccessApprovedNotification } from "./email-service";
+import { setupSimpleAuth, isSimpleAuthenticated } from "./simple-auth";
 import "./types"; // Import session type definitions
 import { z } from "zod";
 import { 
@@ -25,6 +26,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Azure auth routes after session middleware is ready
   setupAzureAuth(app);
+  
+  // Register simple username/password auth
+  setupSimpleAuth(app);
 
   // Auth routes - handles Replit OAuth, email, and Azure authentication
   app.get('/api/auth/user', async (req: any, res) => {

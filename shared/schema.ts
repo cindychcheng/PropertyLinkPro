@@ -148,6 +148,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by"), // ID of user who added this user
   lastLoginAt: timestamp("last_login_at"),
+  password: varchar("password"), // For simple username/password authentication
 });
 
 // User audit log for tracking user management actions
@@ -170,6 +171,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   status: true,
   createdBy: true,
+  password: true,
 });
 
 export const updateUserSchema = createInsertSchema(users).pick({

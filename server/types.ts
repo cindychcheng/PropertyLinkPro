@@ -16,6 +16,11 @@ declare global {
         email: string;
         loginTime: number;
       };
+      simpleAuth?: {
+        userId: string;
+        email: string;
+        loginTime: number;
+      };
     }
   }
 }
