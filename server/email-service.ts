@@ -129,16 +129,32 @@ export async function sendAccessApprovedNotification(
   `;
 
   console.log(`Attempting to send approval email to: ${userEmail}`);
+  
+  // For development/testing: send to verified email address due to Resend limitations
+  const testEmail = 'cindychcheng@gmail.com';
+  const actualRecipient = userEmail;
+  
+  // Update email content to show it's for another user
+  const testHtml = html.replace(
+    `<p style="font-size: 16px; margin-bottom: 16px;">Hello ${userName},</p>`,
+    `<p style="font-size: 16px; margin-bottom: 16px;">Hello ${userName},</p>
+     <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #f59e0b;">
+       <p style="margin: 0; color: #92400e; font-size: 14px;">
+         <strong>Note:</strong> This approval email was intended for ${actualRecipient} but sent to you for testing due to Resend domain restrictions.
+       </p>
+     </div>`
+  );
+  
   const result = await sendEmail({
-    to: userEmail,
+    to: testEmail,
     from: 'onboarding@resend.dev',
-    subject,
-    html
+    subject: `${subject} (for ${actualRecipient})`,
+    html: testHtml
   });
   
   if (result) {
-    console.log(`Approval email successfully queued for delivery to: ${userEmail}`);
-    console.log('Note: Check spam/junk folder if email not received within 5 minutes');
+    console.log(`Approval email successfully sent to ${testEmail} (intended for ${userEmail})`);
+    console.log('Note: Check your email for the approval notification');
   }
   
   return result;
