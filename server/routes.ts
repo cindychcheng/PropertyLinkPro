@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated as replitIsAuthenticated, requireRole as replitRequireRole } from "./replitAuth";
-import { setupMicrosoftAuth, isAuthenticated, requireRole } from "./microsoftAuth";
+import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 import { sendMagicLink, verifyEmailAuthToken } from "./email-auth";
 import { sendAccessRequestNotification, sendAccessApprovedNotification } from "./email-service";
 import "./types"; // Import session type definitions
@@ -22,9 +21,8 @@ import { fromZodError } from "zod-validation-error";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
-  await setupMicrosoftAuth(app);
 
-  // Auth routes - handles Replit OAuth, email, and Microsoft authentication
+  // Auth routes - handles Replit OAuth and email authentication
   app.get('/api/auth/user', async (req: any, res) => {
     try {
       let userId: string | null = null;
@@ -33,16 +31,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("isAuthenticated:", req.isAuthenticated());
       console.log("req.user:", req.user ? "exists" : "null");
       console.log("req.session.emailAuth:", (req.session as any).emailAuth);
-      console.log("req.session.microsoftAuth:", (req.session as any).microsoftAuth);
       console.log("session ID:", req.sessionID);
       
-      // Check for Microsoft authentication first
-      if ((req.session as any).microsoftAuth && (req.session as any).microsoftAuth.userId) {
-        userId = (req.session as any).microsoftAuth.userId;
-        console.log("Using Microsoft auth userId:", userId);
-      }
-      // Check for Replit OAuth authentication
-      else if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
+      // Check for Replit OAuth authentication first
+      if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
         userId = req.user.claims.sub;
         console.log("Using Replit OAuth userId:", userId);
       }

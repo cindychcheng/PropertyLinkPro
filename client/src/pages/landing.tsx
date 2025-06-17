@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck, Mail } from "lucide-react";
-import { SiMicrosoft } from "react-icons/si";
 import { Link } from "wouter";
 import { EmailSignin } from "@/components/email-signin";
 
