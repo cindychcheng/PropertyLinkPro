@@ -35,9 +35,11 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     });
 
     console.log('Email sent successfully:', result.data?.id);
+    console.log('Full result:', JSON.stringify(result, null, 2));
     return true;
   } catch (error) {
     console.error('Email sending failed:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
     return false;
   }
 }
@@ -99,39 +101,45 @@ export async function sendAccessApprovedNotification(
   userEmail: string,
   dashboardUrl: string
 ): Promise<boolean> {
-  const subject = 'Access Approved - Property Management System';
+  const subject = 'Property Management System - Access Approved';
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #28a745;">Access Approved!</h2>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #2563eb; margin-bottom: 20px;">Access Approved</h1>
       
-      <p>Hello ${userName},</p>
+      <p style="font-size: 16px; margin-bottom: 16px;">Hello ${userName},</p>
       
-      <p>Your access request to the Property Management System has been approved!</p>
+      <p style="font-size: 16px; margin-bottom: 20px;">Great news! Your access request has been approved.</p>
       
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p>You can now access the system using either:</p>
-        <ul>
-          <li><strong>Email Sign-in:</strong> Enter your email address on the sign-in page to receive a secure login link</li>
-          <li><strong>Replit Account:</strong> Sign in with your Replit account if you have one</li>
-        </ul>
+      <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
+        <h3 style="margin-top: 0; color: #1e40af;">How to Sign In:</h3>
+        <p style="margin-bottom: 10px;"><strong>Option 1:</strong> Email login - Enter your email on the sign-in page</p>
+        <p style="margin-bottom: 0;"><strong>Option 2:</strong> Use your Replit account if you have one</p>
       </div>
       
       <a href="${dashboardUrl}" 
-         style="display: inline-block; background: #28a745; color: white; padding: 12px 24px; 
-                text-decoration: none; border-radius: 6px; margin: 10px 0;">
-        Access Dashboard
+         style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; 
+                text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">
+        Access System
       </a>
       
-      <p style="color: #666; font-size: 14px; margin-top: 30px;">
-        Welcome to the Property Management System!
+      <p style="color: #64748b; font-size: 14px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+        This email was sent from the Property Management System. If you didn't request access, please ignore this message.
       </p>
     </div>
   `;
 
-  return await sendEmail({
+  console.log(`Attempting to send approval email to: ${userEmail}`);
+  const result = await sendEmail({
     to: userEmail,
     from: 'onboarding@resend.dev',
     subject,
     html
   });
+  
+  if (result) {
+    console.log(`Approval email successfully queued for delivery to: ${userEmail}`);
+    console.log('Note: Check spam/junk folder if email not received within 5 minutes');
+  }
+  
+  return result;
 }
