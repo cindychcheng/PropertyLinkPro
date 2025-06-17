@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 import { sendMagicLink, verifyEmailAuthToken } from "./email-auth";
+import { sendAccessRequestNotification, sendAccessApprovedNotification } from "./email-service";
 import "./types"; // Import session type definitions
 import { z } from "zod";
 import { 
@@ -185,6 +186,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.createUser(registrationData);
 
+      // Send email notifications to super admins
+      try {
+        const superAdmins = await storage.getAllUsers();
+        const adminEmails = superAdmins
+          .filter(user => user.role === 'super_admin' && user.status === 'active' && user.email)
+          .map(admin => admin.email as string); // TypeScript knows email is not null here
+
+        if (adminEmails.length > 0) {
+          const dashboardUrl = `${req.protocol}://${req.hostname}`;
+          await sendAccessRequestNotification(
+            `${firstName} ${lastName}`,
+            email,
+            adminEmails,
+            dashboardUrl
+          );
+          console.log(`Access request notification sent to ${adminEmails.length} admin(s)`);
+        } else {
+          console.log('No super admin emails found for notification');
+        }
+      } catch (emailError) {
+        console.error('Failed to send admin notifications:', emailError);
+        // Don't fail the registration if email fails
+      }
+
       res.json({ 
         message: "Registration submitted successfully. Please wait for administrator approval.",
         status: "pending" 
@@ -233,10 +258,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: fromZodError(result.error) });
       }
       
+      // Get the original user to check if status is changing
+      const originalUser = await storage.getUser(req.params.id);
+      if (!originalUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const user = await storage.updateUser(req.params.id, result.data);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      // Send approval email if user status changed from pending to active
+      if (originalUser.status === 'pending' && user.status === 'active' && user.email) {
+        try {
+          const dashboardUrl = `${req.protocol}://${req.hostname}`;
+          await sendAccessApprovedNotification(
+            `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+            user.email,
+            dashboardUrl
+          );
+          console.log(`Access approved notification sent to ${user.email}`);
+        } catch (emailError) {
+          console.error('Failed to send approval notification:', emailError);
+          // Don't fail the update if email fails
+        }
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error updating user:", error);
