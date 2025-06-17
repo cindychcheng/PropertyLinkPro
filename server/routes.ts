@@ -26,16 +26,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let userId: string | null = null;
       
+      console.log("=== AUTH DEBUG ===");
+      console.log("isAuthenticated:", req.isAuthenticated());
+      console.log("req.user:", req.user ? "exists" : "null");
+      console.log("req.session.emailAuth:", (req.session as any).emailAuth);
+      console.log("session ID:", req.sessionID);
+      
       // Check for Replit OAuth authentication first
       if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
         userId = req.user.claims.sub;
+        console.log("Using Replit OAuth userId:", userId);
       }
       // Check for email authentication session
       else if ((req.session as any).emailAuth && (req.session as any).emailAuth.userId) {
         userId = (req.session as any).emailAuth.userId;
+        console.log("Using email auth userId:", userId);
       }
       
       if (!userId) {
+        console.log("No userId found, returning 401");
         return res.status(401).json({ message: "Unauthorized" });
       }
       
@@ -46,6 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found or inactive" });
       }
       
+      console.log("Returning user:", dbUser.email);
       res.json(dbUser);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -80,18 +90,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { token } = req.query;
       
+      console.log("=== MAGIC LINK DEBUG ===");
+      console.log("Token received:", token ? "exists" : "null");
+      console.log("Session ID before:", req.sessionID);
+      
       if (!token || typeof token !== 'string') {
+        console.log("Invalid token, redirecting with error");
         return res.redirect('/auth/magic?error=invalid_token');
       }
 
       const tokenData = verifyEmailAuthToken(token);
+      console.log("Token data:", tokenData);
       if (!tokenData) {
+        console.log("Token verification failed, redirecting with error");
         return res.redirect('/auth/magic?error=expired_token');
       }
 
       // Get user data and create session
       const user = await storage.getUser(tokenData.userId);
+      console.log("User found:", user ? user.email : "null");
       if (!user || user.status !== 'active') {
+        console.log("User not found or inactive, redirecting with error");
         return res.redirect('/auth/magic?error=account_inactive');
       }
 
@@ -101,10 +120,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         loginTime: Date.now()
       };
+      
+      console.log("Session created:", (req.session as any).emailAuth);
+      console.log("Session ID after:", req.sessionID);
+
+      // Save the session explicitly
+      await new Promise((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            console.log("Session saved successfully");
+            resolve(true);
+          }
+        });
+      });
 
       // Update last login time
       await storage.updateUserLastLogin(user.id);
 
+      console.log("Redirecting to dashboard");
       // Redirect to dashboard on successful authentication
       res.redirect('/');
     } catch (error) {
