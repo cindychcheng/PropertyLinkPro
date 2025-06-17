@@ -35,11 +35,9 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     });
 
     console.log('Email sent successfully:', result.data?.id);
-    console.log('Full result:', JSON.stringify(result, null, 2));
     return true;
   } catch (error) {
     console.error('Email sending failed:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     return false;
   }
 }

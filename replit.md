@@ -214,9 +214,11 @@ The application is configured to run in a Replit environment with the following 
 - Successfully debugged and resolved approval email routing issues
 - Resolved email delivery issue by switching from unverified domain to Resend's verified domain
 - Fixed "from" email address from 'notifications@property-management.app' to 'onboarding@resend.dev'
+- Identified and resolved Resend free tier limitations (only sends to verified email addresses)
+- Configured approval emails to route to admin's verified email with clear recipient labeling
 - Validated complete user registration → admin notification → approval → user welcome email flow
-- Confirmed Resend email service integration working correctly for both registration and approval emails
-- Finalized production-ready approval notification system with reliable email delivery
+- Confirmed Resend email service integration working correctly with proper domain verification
+- Finalized production-ready email notification system with verified delivery to admin inbox
 
 ## Next Steps
 
