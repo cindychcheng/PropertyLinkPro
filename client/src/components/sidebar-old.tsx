@@ -89,7 +89,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 w-64">
       {/* Header */}
       <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-2">
@@ -103,42 +103,42 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         </div>
       </div>
 
-      {/* User Profile */}
-      {user && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                <div className="flex items-center space-x-3 w-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.profileImageUrl || undefined} />
-                    <AvatarFallback className="text-xs">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {getUserDisplayName()}
-                    </p>
-                    <Badge className={cn("text-xs", roleColors[user.role as keyof typeof roleColors])}>
-                      {roleLabels[user.role as keyof typeof roleLabels]}
-                    </Badge>
+        {/* User Profile */}
+        {user && (
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                  <div className="flex items-center space-x-3 w-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {getUserDisplayName()}
+                      </p>
+                      <Badge className={cn("text-xs", roleColors[user.role as keyof typeof roleColors])}>
+                        {roleLabels[user.role as keyof typeof roleLabels]}
+                      </Badge>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
                   </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
