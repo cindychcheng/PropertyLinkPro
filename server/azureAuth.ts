@@ -58,10 +58,19 @@ export function setupAzureAuth(app: Express) {
   // Azure callback route
   app.get("/api/auth/azure/callback", async (req, res) => {
     console.log("=== AZURE CALLBACK RECEIVED ===");
+    console.log("Full URL:", req.url);
     console.log("Query params:", req.query);
     console.log("Headers host:", req.get('host'));
     console.log("Has auth code:", !!req.query.code);
+    console.log("Has error:", !!req.query.error);
     console.log("Session ID at callback:", req.sessionID);
+    
+    // If there's an error in the callback
+    if (req.query.error) {
+      console.error("Azure auth error:", req.query.error);
+      console.error("Error description:", req.query.error_description);
+      return res.redirect('/?error=azure_auth_error');
+    }
     try {
       const host = req.get('host');
       const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
