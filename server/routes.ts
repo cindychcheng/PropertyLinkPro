@@ -430,7 +430,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: { newRole: role, previousRole: user.role }
       });
 
-      res.json({ message: "User role updated successfully", user });
+      // Remove password from response for security
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ message: "User role updated successfully", user: userWithoutPassword });
     } catch (error) {
       console.error("Error updating user role:", error);
       res.status(500).json({ message: "Failed to update user role" });
