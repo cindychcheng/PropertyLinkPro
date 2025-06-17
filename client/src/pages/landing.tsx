@@ -104,22 +104,13 @@ export default function Landing() {
                 <span>Secure authentication system</span>
               </div>
               <div className="space-y-3">
-                <Button 
-                  onClick={() => {
-                    console.log("Microsoft sign-in clicked - force logout first");
-                    // Clear all sessions and force logout before Microsoft auth
-                    document.cookie.split(";").forEach(function(c) { 
-                      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-                    });
-                    // Force navigation to Microsoft auth
-                    window.location.replace('/api/auth/azure/login');
-                  }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  size="lg"
+                <a 
+                  href="/api/auth/azure/login"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
                 >
                   <Shield className="h-4 w-4 mr-2" />
                   Sign In with Microsoft
-                </Button>
+                </a>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-gray-300 dark:border-gray-600" />

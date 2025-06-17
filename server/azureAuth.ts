@@ -29,10 +29,11 @@ export function setupAzureAuth(app: Express) {
 
   // Azure login route
   app.get("/api/auth/azure/login", async (req, res) => {
-    console.log("=== MICROSOFT AUTHENTICATION INITIATED ===");
-    console.log("Request from host:", req.get('host'));
-    console.log("User agent:", req.get('user-agent'));
-    console.log("Azure credentials configured:", {
+    console.log("🔵 === MICROSOFT AUTHENTICATION INITIATED ===");
+    console.log("🔵 Request from host:", req.get('host'));
+    console.log("🔵 User agent:", req.get('user-agent'));
+    console.log("🔵 Session ID:", req.sessionID);
+    console.log("🔵 Azure credentials configured:", {
       clientId: !!process.env.AZURE_CLIENT_ID,
       clientSecret: !!process.env.AZURE_CLIENT_SECRET,
       tenantId: !!process.env.AZURE_TENANT_ID
@@ -43,7 +44,7 @@ export function setupAzureAuth(app: Express) {
       const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
       const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
       
-      console.log("Azure login - redirect URI:", redirectUri);
+      console.log("🔵 Azure login - redirect URI:", redirectUri);
       
       const authCodeUrlParameters = {
         scopes: ["user.read"],
