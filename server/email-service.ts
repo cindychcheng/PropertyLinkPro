@@ -127,32 +127,33 @@ export async function sendAccessApprovedNotification(
   `;
 
   console.log(`Attempting to send approval email to: ${userEmail}`);
+  console.log('Testing direct email send to cindychcheng@gmail.com');
   
-  // For development/testing: send to verified email address due to Resend limitations
-  const testEmail = 'cindychcheng@gmail.com';
-  const actualRecipient = userEmail;
+  // Test with a simple, direct email to your verified address
+  const testSubject = `Access Approved for ${userName} (${userEmail})`;
+  const testHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #2563eb;">User Approved: ${userName}</h1>
+      <p>You have approved access for <strong>${userName}</strong> (${userEmail})</p>
+      <p>They can now sign in to the Property Management System.</p>
+      <hr style="margin: 20px 0;">
+      <p style="color: #666; font-size: 14px;">This is a test email to verify delivery to cindychcheng@gmail.com</p>
+    </div>
+  `;
   
-  // Update email content to show it's for another user
-  const testHtml = html.replace(
-    `<p style="font-size: 16px; margin-bottom: 16px;">Hello ${userName},</p>`,
-    `<p style="font-size: 16px; margin-bottom: 16px;">Hello ${userName},</p>
-     <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #f59e0b;">
-       <p style="margin: 0; color: #92400e; font-size: 14px;">
-         <strong>Note:</strong> This approval email was intended for ${actualRecipient} but sent to you for testing due to Resend domain restrictions.
-       </p>
-     </div>`
-  );
-  
+  console.log('Sending test email with subject:', testSubject);
   const result = await sendEmail({
-    to: testEmail,
+    to: 'cindychcheng@gmail.com',
     from: 'onboarding@resend.dev',
-    subject: `${subject} (for ${actualRecipient})`,
+    subject: testSubject,
     html: testHtml
   });
   
   if (result) {
-    console.log(`Approval email successfully sent to ${testEmail} (intended for ${userEmail})`);
-    console.log('Note: Check your email for the approval notification');
+    console.log('Test approval email sent successfully to cindychcheng@gmail.com');
+    console.log('Please check your email inbox and spam folder');
+  } else {
+    console.log('Failed to send test approval email');
   }
   
   return result;
