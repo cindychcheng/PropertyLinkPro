@@ -181,6 +181,13 @@ The application is configured to run in a Replit environment with the following 
 
 ## Recent Changes
 
+**January 21, 2025:**
+- Fixed critical authentication flow issues with account linking between email registrations and Replit OAuth
+- Resolved "server unavailable after login" errors through proper error handling and type safety
+- Fixed account linking for users with mismatched emails between registration and OAuth providers
+- Updated user management system to handle duplicate records and proper role assignment
+- Ensured seamless authentication experience for approved users with proper session management
+
 **June 16, 2025:**
 - Enhanced search functionality with comprehensive co-tenant support
 - Fixed birthday reminders to display "N/A" for landlords without residential addresses  
