@@ -106,8 +106,17 @@ export default function Landing() {
               <div className="space-y-3">
                 <Button 
                   onClick={() => {
-                    console.log("Microsoft sign-in button clicked");
-                    window.location.href = '/api/auth/azure/login';
+                    console.log("Microsoft sign-in button clicked - signing out first");
+                    // Sign out of any existing session first, then redirect to Microsoft
+                    fetch('/api/logout', { method: 'GET' })
+                      .then(() => {
+                        console.log("Signed out, redirecting to Microsoft...");
+                        window.location.href = '/api/auth/azure/login';
+                      })
+                      .catch(() => {
+                        // If logout fails, still try Microsoft auth
+                        window.location.href = '/api/auth/azure/login';
+                      });
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"

@@ -29,7 +29,7 @@ export function setupAzureAuth(app: Express) {
 
   // Azure login route
   app.get("/api/auth/azure/login", async (req, res) => {
-    console.log("=== AZURE LOGIN INITIATED ===");
+    console.log("=== MICROSOFT SIGN-IN CLICKED ===");
     console.log("Request from host:", req.get('host'));
     console.log("User agent:", req.get('user-agent'));
     console.log("Azure credentials configured:", {
