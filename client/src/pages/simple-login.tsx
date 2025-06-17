@@ -40,21 +40,36 @@ export default function SimpleLogin() {
       if (response.ok) {
         const data = await response.json();
         console.log("Login successful, user data:", data);
-        toast({
-          title: "Login successful",
-          description: `Welcome, ${data.user.firstName || "Admin"}!`,
-        });
         
-        // Redirect to dashboard after short delay
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
+        if (data.success && data.user) {
+          toast({
+            title: "Login successful",
+            description: `Welcome, ${data.user.firstName || "Admin"}!`,
+          });
+          
+          // Force a page reload to refresh authentication state
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 500);
+        } else {
+          toast({
+            title: "Login failed",
+            description: "Authentication response invalid",
+            variant: "destructive",
+          });
+        }
       } else {
-        const error = await response.json();
-        console.log("Login error response:", error);
+        let errorMessage = "Invalid credentials";
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          errorMessage = "Network error occurred";
+        }
+        console.log("Login error response:", errorMessage);
         toast({
           title: "Login failed",
-          description: error.error || "Invalid credentials",
+          description: errorMessage,
           variant: "destructive",
         });
       }
