@@ -35,7 +35,7 @@ export function setupAzureAuth(app: Express) {
     
     try {
       const host = req.get('host');
-      const protocol = 'https'; // Always use HTTPS for production
+      const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
       const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
       
       console.log("Azure login - redirect URI:", redirectUri);
@@ -116,8 +116,17 @@ export function setupAzureAuth(app: Express) {
       console.log("Azure auth session created for user:", dbUser.id);
       console.log("Session ID:", req.sessionID);
       console.log("Session azureAuth:", (req.session as any).azureAuth);
-      console.log("Redirecting to dashboard...");
-      res.redirect('/');
+      
+      // Save session explicitly before redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+        } else {
+          console.log("Session saved successfully");
+        }
+        console.log("Redirecting to dashboard...");
+        res.redirect('/');
+      });
     } catch (error: any) {
       console.error("=== AZURE CALLBACK ERROR ===");
       console.error("Error details:", error);
