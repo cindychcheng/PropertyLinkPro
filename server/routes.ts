@@ -31,8 +31,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = req.user.claims.sub;
       }
       // Check for email authentication session
-      else if (req.session.emailAuth && req.session.emailAuth.userId) {
-        userId = req.session.emailAuth.userId;
+      else if ((req.session as any).emailAuth && (req.session as any).emailAuth.userId) {
+        userId = (req.session as any).emailAuth.userId;
       }
       
       if (!userId) {
@@ -96,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create a temporary session for email-authenticated users
-      req.session.emailAuth = {
+      (req.session as any).emailAuth = {
         userId: user.id,
         email: user.email,
         loginTime: Date.now()

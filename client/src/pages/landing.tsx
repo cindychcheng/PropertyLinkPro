@@ -1,9 +1,21 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck } from "lucide-react";
+import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck, Mail } from "lucide-react";
 import { Link } from "wouter";
+import { EmailSignin } from "@/components/email-signin";
 
 export default function Landing() {
+  const [showEmailSignin, setShowEmailSignin] = useState(false);
+
+  if (showEmailSignin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <EmailSignin onBack={() => setShowEmailSignin(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-16">
@@ -97,7 +109,26 @@ export default function Landing() {
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"
                 >
-                  Sign In to Continue
+                  Sign In with Replit
+                </Button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                      or
+                    </span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => setShowEmailSignin(true)}
+                  variant="outline"
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                  size="lg"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Sign In with Email
                 </Button>
                 <div className="text-center">
                   <span className="text-sm text-gray-500 dark:text-gray-400">Don't have access yet?</span>
