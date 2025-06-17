@@ -5,5 +5,12 @@ declare global {
     interface Request {
       currentUser?: User;
     }
+    interface Session {
+      emailAuth?: {
+        userId: string;
+        email: string;
+        loginTime: number;
+      };
+    }
   }
 }

@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
+import { sendMagicLink, verifyEmailAuthToken } from "./email-auth";
+import "./types"; // Import session type definitions
 import { z } from "zod";
 import { 
   insertLandlordSchema, 
@@ -19,27 +21,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes - handles both Replit OAuth and email authentication
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const user = req.user as any;
-      if (!user || !user.claims || !user.claims.sub) {
-        console.error("Invalid user session data:", user);
-        return res.status(401).json({ message: "Invalid session" });
+      let userId: string | null = null;
+      
+      // Check for Replit OAuth authentication first
+      if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
+        userId = req.user.claims.sub;
+      }
+      // Check for email authentication session
+      else if (req.session.emailAuth && req.session.emailAuth.userId) {
+        userId = req.session.emailAuth.userId;
       }
       
-      const userId = user.claims.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const dbUser = await storage.getUser(userId);
       
-      if (!dbUser) {
-        console.error(`User not found in database: ${userId}`);
-        return res.status(404).json({ message: "User not found" });
+      if (!dbUser || dbUser.status !== 'active') {
+        console.error(`User not found or inactive: ${userId}`);
+        return res.status(401).json({ message: "User not found or inactive" });
       }
       
       res.json(dbUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Magic link authentication for users without Replit accounts
+  app.post('/api/auth/magic-link', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const baseUrl = `${req.protocol}://${req.hostname}`;
+      const success = await sendMagicLink(email, baseUrl);
+      
+      if (!success) {
+        return res.status(404).json({ message: "No active account found with this email" });
+      }
+
+      res.json({ message: "Magic link sent to your email" });
+    } catch (error) {
+      console.error("Error sending magic link:", error);
+      res.status(500).json({ message: "Failed to send magic link" });
+    }
+  });
+
+  app.get('/api/auth/magic', async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Invalid token" });
+      }
+
+      const tokenData = verifyEmailAuthToken(token);
+      if (!tokenData) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
+
+      // Get user data and create session
+      const user = await storage.getUser(tokenData.userId);
+      if (!user || user.status !== 'active') {
+        return res.status(401).json({ message: "Account not found or inactive" });
+      }
+
+      // Create a temporary session for email-authenticated users
+      req.session.emailAuth = {
+        userId: user.id,
+        email: user.email,
+        loginTime: Date.now()
+      };
+
+      // Redirect to dashboard
+      res.redirect('/');
+    } catch (error) {
+      console.error("Error processing magic link:", error);
+      res.status(500).json({ message: "Authentication failed" });
     }
   });
 
