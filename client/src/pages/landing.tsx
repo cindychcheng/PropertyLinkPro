@@ -109,7 +109,7 @@ export default function Landing() {
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"
                 >
-                  <SiMicrosoft className="h-4 w-4 mr-2" />
+                  <Shield className="h-4 w-4 mr-2" />
                   Sign In with Microsoft
                 </Button>
                 <div className="relative">
