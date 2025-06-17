@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a pending user registration
       const registrationData = {
         id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Temporary ID for pending users
-        email,
+        email: email.toLowerCase(), // Normalize email to lowercase
         firstName,
         lastName,
         role: "read_only" as const,
