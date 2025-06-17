@@ -309,12 +309,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Approve pending user registration
   app.post('/api/users/:id/approve', requireRole('super_admin'), async (req: any, res) => {
     try {
+      console.log('=== APPROVAL ENDPOINT HIT ===');
+      console.log('User ID:', req.params.id);
       const { role = 'read_only' } = req.body;
       
       const user = await storage.updateUser(req.params.id, {
         status: 'active',
         role: role,
       });
+
+      console.log('Update result:', user);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
