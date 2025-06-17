@@ -191,7 +191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const superAdmins = await storage.getAllUsers();
         const adminEmails = superAdmins
           .filter(user => user.role === 'super_admin' && user.status === 'active' && user.email)
-          .map(admin => admin.email as string); // TypeScript knows email is not null here
+          .map(admin => admin.email!)
+          .filter((email): email is string => email !== null);
 
         if (adminEmails.length > 0) {
           const dashboardUrl = `${req.protocol}://${req.hostname}`;
