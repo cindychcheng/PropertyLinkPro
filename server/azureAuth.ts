@@ -60,9 +60,11 @@ export function setupAzureAuth(app: Express) {
     console.log("=== AZURE CALLBACK RECEIVED ===");
     console.log("Query params:", req.query);
     console.log("Headers host:", req.get('host'));
+    console.log("Has auth code:", !!req.query.code);
+    console.log("Session ID at callback:", req.sessionID);
     try {
       const host = req.get('host');
-      const protocol = host?.includes('replit.dev') ? 'https' : req.protocol;
+      const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
       const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
       
       console.log("Azure callback - redirect URI:", redirectUri);
