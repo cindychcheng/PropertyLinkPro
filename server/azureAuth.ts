@@ -35,7 +35,7 @@ export function setupAzureAuth(app: Express) {
     
     try {
       const host = req.get('host');
-      const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
+      const protocol = 'https'; // Always use HTTPS for production
       const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
       
       console.log("Azure login - redirect URI:", redirectUri);
@@ -118,11 +118,11 @@ export function setupAzureAuth(app: Express) {
       console.log("Session azureAuth:", (req.session as any).azureAuth);
       console.log("Redirecting to dashboard...");
       res.redirect('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error("=== AZURE CALLBACK ERROR ===");
       console.error("Error details:", error);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
+      console.error("Error message:", (error as Error)?.message || 'Unknown error');
+      console.error("Error stack:", (error as Error)?.stack || 'No stack trace');
       res.redirect('/?error=auth_failed');
     }
   });
