@@ -42,22 +42,27 @@ export default function MagicAuth() {
       return;
     }
 
-    // If we have a token, the backend should have already processed it
-    // Let's verify authentication worked by checking user data
-    fetch('/api/auth/user', { credentials: 'include' })
+    // Process the magic link token through the API
+    fetch(`/api/auth/magic?token=${token}`, { 
+      method: 'GET',
+      credentials: 'include' 
+    })
       .then(res => {
         if (res.ok) {
-          setStatus("success");
-          setMessage("Authentication successful! Redirecting...");
-          setTimeout(() => {
-            setLocation('/');
-          }, 2000);
+          return res.json();
         } else {
-          setStatus("error");
-          setMessage("Authentication failed. Please try again.");
+          throw new Error('Authentication failed');
         }
       })
-      .catch(() => {
+      .then(data => {
+        setStatus("success");
+        setMessage("Authentication successful! Redirecting...");
+        // Refresh the auth context by making a request to verify session
+        setTimeout(() => {
+          setLocation('/');
+        }, 2000);
+      })
+      .catch(err => {
         setStatus("error");
         setMessage("Authentication failed. Please try again.");
       });

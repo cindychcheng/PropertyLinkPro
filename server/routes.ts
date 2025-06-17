@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/auth/magic', async (req, res) => {
+  app.get('/api/auth/magic', async (req, res) => {
     try {
       const { token } = req.query;
       
@@ -140,12 +140,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login time
       await storage.updateUserLastLogin(user.id);
 
-      console.log("Redirecting to dashboard");
-      // Redirect to dashboard on successful authentication
-      res.redirect('/');
+      console.log("Authentication successful, returning user data");
+      // Return success response for API endpoint
+      res.json({ message: "Authentication successful", user: user });
     } catch (error) {
       console.error("Error processing magic link:", error);
-      res.redirect('/auth/magic?error=authentication_failed');
+      res.status(401).json({ message: "Authentication failed" });
     }
   });
 
