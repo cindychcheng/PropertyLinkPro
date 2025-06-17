@@ -321,9 +321,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Send approval email notification
+      console.log('=== APPROVAL EMAIL DEBUG ===');
+      console.log('User email:', user.email);
+      console.log('User object:', user);
       if (user.email) {
         try {
           const dashboardUrl = `${req.protocol}://${req.hostname}`;
+          console.log('Sending approval email to:', user.email);
           await sendAccessApprovedNotification(
             `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
             user.email,
@@ -334,6 +338,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Failed to send approval notification:', emailError);
           // Don't fail the approval if email fails
         }
+      } else {
+        console.log('No email address found for user');
       }
 
       await storage.logUserAction({
