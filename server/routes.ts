@@ -20,11 +20,11 @@ import { fromZodError } from "zod-validation-error";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Register Azure auth routes FIRST to ensure they take precedence
-  setupAzureAuth(app);
-  
-  // Auth middleware
+  // Auth middleware MUST be set up first to initialize sessions
   await setupAuth(app);
+  
+  // Register Azure auth routes after session middleware is ready
+  setupAzureAuth(app);
 
   // Auth routes - handles Replit OAuth, email, and Azure authentication
   app.get('/api/auth/user', async (req: any, res) => {

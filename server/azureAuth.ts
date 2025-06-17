@@ -123,7 +123,12 @@ export function setupAzureAuth(app: Express) {
       // Update last login
       await storage.updateUserLastLogin(dbUser.id);
 
-      // Set session
+      // Set session - ensure session object exists
+      if (!req.session) {
+        console.error("Session object is undefined");
+        return res.redirect('/?error=session_error');
+      }
+      
       (req.session as any).azureAuth = {
         userId: dbUser.id,
         email: email,
