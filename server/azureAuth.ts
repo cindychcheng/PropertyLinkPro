@@ -30,9 +30,15 @@ export function setupAzureAuth(app: Express) {
   // Azure login route
   app.get("/api/auth/azure/login", async (req, res) => {
     try {
+      const host = req.get('host');
+      const protocol = host?.includes('replit.dev') ? 'https' : req.protocol;
+      const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
+      
+      console.log("Azure login - redirect URI:", redirectUri);
+      
       const authCodeUrlParameters = {
         scopes: ["user.read"],
-        redirectUri: `${req.protocol}://${req.get('host')}/api/auth/azure/callback`,
+        redirectUri: redirectUri,
       };
 
       const response = await msalInstance.getAuthCodeUrl(authCodeUrlParameters);
@@ -46,10 +52,17 @@ export function setupAzureAuth(app: Express) {
   // Azure callback route
   app.get("/api/auth/azure/callback", async (req, res) => {
     try {
+      const host = req.get('host');
+      const protocol = host?.includes('replit.dev') ? 'https' : req.protocol;
+      const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
+      
+      console.log("Azure callback - redirect URI:", redirectUri);
+      console.log("Azure callback - received code:", req.query.code ? "present" : "missing");
+      
       const tokenRequest = {
         code: req.query.code as string,
         scopes: ["user.read"],
-        redirectUri: `${req.protocol}://${req.get('host')}/api/auth/azure/callback`,
+        redirectUri: redirectUri,
       };
 
       const response = await msalInstance.acquireTokenByCode(tokenRequest);
