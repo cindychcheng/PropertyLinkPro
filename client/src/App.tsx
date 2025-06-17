@@ -9,6 +9,7 @@ import { Header } from "@/components/header";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Register from "@/pages/register";
+import MagicAuth from "@/pages/magic-auth";
 import Dashboard from "@/pages/dashboard";
 import Properties from "@/pages/properties";
 import Landlords from "@/pages/landlords";
@@ -26,6 +27,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/register" component={Register} />
+        <Route path="/auth/magic" component={MagicAuth} />
         <Route component={NotFound} />
       </Switch>
     );

@@ -76,23 +76,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/auth/magic', async (req, res) => {
+  app.get('/auth/magic', async (req, res) => {
     try {
       const { token } = req.query;
       
       if (!token || typeof token !== 'string') {
-        return res.status(400).json({ message: "Invalid token" });
+        return res.redirect('/auth/magic?error=invalid_token');
       }
 
       const tokenData = verifyEmailAuthToken(token);
       if (!tokenData) {
-        return res.status(401).json({ message: "Invalid or expired token" });
+        return res.redirect('/auth/magic?error=expired_token');
       }
 
       // Get user data and create session
       const user = await storage.getUser(tokenData.userId);
       if (!user || user.status !== 'active') {
-        return res.status(401).json({ message: "Account not found or inactive" });
+        return res.redirect('/auth/magic?error=account_inactive');
       }
 
       // Create a temporary session for email-authenticated users
@@ -102,11 +102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         loginTime: Date.now()
       };
 
-      // Redirect to dashboard
+      // Update last login time
+      await storage.updateUserLastLogin(user.id);
+
+      // Redirect to dashboard on successful authentication
       res.redirect('/');
     } catch (error) {
       console.error("Error processing magic link:", error);
-      res.status(500).json({ message: "Authentication failed" });
+      res.redirect('/auth/magic?error=authentication_failed');
     }
   });
 
