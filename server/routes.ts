@@ -320,6 +320,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Send approval email notification
+      if (user.email) {
+        try {
+          const dashboardUrl = `${req.protocol}://${req.hostname}`;
+          await sendAccessApprovedNotification(
+            `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+            user.email,
+            dashboardUrl
+          );
+          console.log(`Access approved notification sent to ${user.email}`);
+        } catch (emailError) {
+          console.error('Failed to send approval notification:', emailError);
+          // Don't fail the approval if email fails
+        }
+      }
+
       await storage.logUserAction({
         actionType: 'approved',
         targetUserId: req.params.id,
