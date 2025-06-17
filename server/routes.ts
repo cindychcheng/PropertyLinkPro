@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
+import { setupAzureAuth } from "./azureAuth";
 import { sendMagicLink, verifyEmailAuthToken } from "./email-auth";
 import { sendAccessRequestNotification, sendAccessApprovedNotification } from "./email-service";
 import "./types"; // Import session type definitions
@@ -21,8 +22,9 @@ import { fromZodError } from "zod-validation-error";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  setupAzureAuth(app);
 
-  // Auth routes - handles Replit OAuth and email authentication
+  // Auth routes - handles Replit OAuth, email, and Azure authentication
   app.get('/api/auth/user', async (req: any, res) => {
     try {
       let userId: string | null = null;
@@ -31,10 +33,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("isAuthenticated:", req.isAuthenticated());
       console.log("req.user:", req.user ? "exists" : "null");
       console.log("req.session.emailAuth:", (req.session as any).emailAuth);
+      console.log("req.session.azureAuth:", (req.session as any).azureAuth);
       console.log("session ID:", req.sessionID);
       
-      // Check for Replit OAuth authentication first
-      if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
+      // Check for Azure authentication first
+      if ((req.session as any).azureAuth && (req.session as any).azureAuth.userId) {
+        userId = (req.session as any).azureAuth.userId;
+        console.log("Using Azure auth userId:", userId);
+      }
+      // Check for Replit OAuth authentication
+      else if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
         userId = req.user.claims.sub;
         console.log("Using Replit OAuth userId:", userId);
       }

@@ -11,6 +11,11 @@ declare global {
         email: string;
         loginTime: number;
       };
+      azureAuth?: {
+        userId: string;
+        email: string;
+        loginTime: number;
+      };
     }
   }
 }

@@ -105,11 +105,12 @@ export default function Landing() {
               </div>
               <div className="space-y-3">
                 <Button 
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/api/auth/azure/login'}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"
                 >
-                  Sign In with Replit
+                  <SiMicrosoft className="h-4 w-4 mr-2" />
+                  Sign In with Microsoft
                 </Button>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -121,6 +122,14 @@ export default function Landing() {
                     </span>
                   </div>
                 </div>
+                <Button 
+                  onClick={() => window.location.href = '/api/login'}
+                  variant="outline"
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                  size="lg"
+                >
+                  Sign In with Replit
+                </Button>
                 <Button 
                   onClick={() => setShowEmailSignin(true)}
                   variant="outline"
