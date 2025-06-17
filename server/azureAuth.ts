@@ -72,10 +72,17 @@ export function setupAzureAuth(app: Express) {
       }
 
       const email = response.account.username;
+      console.log("=== AZURE AUTH SUCCESS ===");
       console.log("Azure auth successful for email:", email);
+      console.log("Full account object:", JSON.stringify(response.account, null, 2));
 
       // Check if user exists and is approved
       const dbUser = await storage.getUserByEmail(email);
+      console.log("Database user lookup result:", dbUser ? "found" : "not found");
+      if (dbUser) {
+        console.log("User status:", dbUser.status);
+        console.log("User role:", dbUser.role);
+      }
       
       if (!dbUser) {
         console.log("User not found in database:", email);
@@ -98,6 +105,9 @@ export function setupAzureAuth(app: Express) {
       };
 
       console.log("Azure auth session created for user:", dbUser.id);
+      console.log("Session ID:", req.sessionID);
+      console.log("Session azureAuth:", (req.session as any).azureAuth);
+      console.log("Redirecting to dashboard...");
       res.redirect('/');
     } catch (error) {
       console.error("Azure callback error:", error);
