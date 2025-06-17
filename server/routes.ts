@@ -245,7 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users', requireRole('super_admin'), async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      // Remove password from all user objects for security
+      const safeUsers = users.map(({ password, ...user }) => user);
+      res.json(safeUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
@@ -265,7 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...result.data,
         createdBy: req.currentUser?.id || "system"
       });
-      res.json(user);
+      // Remove password from response for security
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error creating user:", error);
       res.status(500).json({ message: "Failed to create user" });

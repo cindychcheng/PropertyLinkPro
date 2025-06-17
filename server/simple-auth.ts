@@ -31,8 +31,13 @@ export function setupSimpleAuth(app: Express) {
       }
 
       // Check for the super admin account using environment variables
-      const adminUsername = process.env.ADMIN_USERNAME || "admin";
-      const adminPassword = process.env.ADMIN_PASSWORD || "InstaRealty";
+      const adminUsername = process.env.ADMIN_USERNAME;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      
+      if (!adminUsername || !adminPassword) {
+        console.error("❌ Admin credentials not configured properly");
+        return res.status(500).json({ error: "Server configuration error" });
+      }
       
       console.log("🔍 Checking credentials for user:", username);
       
@@ -62,8 +67,10 @@ export function setupSimpleAuth(app: Express) {
           loginTime: Date.now()
         };
 
+        // Remove password from response for security
+        const { password: _, ...userWithoutPassword } = adminUser;
         console.log("🟢 Simple auth login successful for admin");
-        return res.json({ success: true, user: adminUser });
+        return res.json({ success: true, user: userWithoutPassword });
       }
 
       console.log("❌ Invalid credentials provided");
