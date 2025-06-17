@@ -156,8 +156,11 @@ export default function Landing() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-16 text-gray-500 dark:text-gray-400">
+        <div className="text-center mt-16 text-gray-500 dark:text-gray-400 space-y-2">
           <p>© 2025 Property Management System. Secure and reliable property management.</p>
+          <p className="text-sm">
+            System Admin? <Link href="/admin" className="text-green-600 hover:text-green-700 font-medium">Admin Login</Link>
+          </p>
         </div>
       </div>
     </div>
