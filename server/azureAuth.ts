@@ -51,6 +51,9 @@ export function setupAzureAuth(app: Express) {
 
   // Azure callback route
   app.get("/api/auth/azure/callback", async (req, res) => {
+    console.log("=== AZURE CALLBACK RECEIVED ===");
+    console.log("Query params:", req.query);
+    console.log("Headers host:", req.get('host'));
     try {
       const host = req.get('host');
       const protocol = host?.includes('replit.dev') ? 'https' : req.protocol;
