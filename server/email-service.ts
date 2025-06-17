@@ -79,7 +79,7 @@ export async function sendAccessRequestNotification(
   const emailPromises = adminEmails.map(adminEmail => 
     sendEmail({
       to: adminEmail,
-      from: 'notifications@property-management.app', // This needs to be a verified domain in production
+      from: 'onboarding@resend.dev',
       subject,
       html
     })
@@ -130,7 +130,7 @@ export async function sendAccessApprovedNotification(
 
   return await sendEmail({
     to: userEmail,
-    from: 'notifications@property-management.app',
+    from: 'onboarding@resend.dev',
     subject,
     html
   });
