@@ -24,12 +24,22 @@ export function setupSimpleAuth(app: Express) {
     try {
       const { username, password } = req.body;
       
+      console.log("🔑 Simple login attempt:", { username, passwordLength: password?.length });
+      
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password required" });
       }
 
       // Check for the super admin account
+      console.log("🔍 Checking credentials:", { 
+        usernameMatch: username === "admin", 
+        passwordMatch: password === "InstaRealty",
+        receivedUsername: username,
+        receivedPassword: password
+      });
+      
       if (username === "admin" && password === "InstaRealty") {
+        console.log("✅ Credentials match, creating/getting admin user");
         // Create or get the admin user
         let adminUser = await storage.getUserByEmail("admin@instarealty.com");
         
@@ -58,6 +68,7 @@ export function setupSimpleAuth(app: Express) {
         return res.json({ success: true, user: adminUser });
       }
 
+      console.log("❌ Invalid credentials provided");
       return res.status(401).json({ error: "Invalid credentials" });
     } catch (error) {
       console.error("Simple auth login error:", error);

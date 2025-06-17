@@ -18,11 +18,15 @@ export default function SimpleLogin() {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log("Form submission:", { username, passwordLength: password.length });
+
     try {
       const response = await apiRequest("POST", "/api/simple/login", {
         username,
         password,
       });
+      
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -38,6 +42,7 @@ export default function SimpleLogin() {
         window.location.reload();
       } else {
         const error = await response.json();
+        console.log("Login error response:", error);
         toast({
           title: "Login failed",
           description: error.error || "Invalid credentials",
@@ -45,6 +50,7 @@ export default function SimpleLogin() {
         });
       }
     } catch (error) {
+      console.log("Network error:", error);
       toast({
         title: "Login failed",
         description: "Network error. Please try again.",
