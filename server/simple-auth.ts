@@ -24,21 +24,19 @@ export function setupSimpleAuth(app: Express) {
     try {
       const { username, password } = req.body;
       
-      console.log("🔑 Simple login attempt:", { username, passwordLength: password?.length });
+      console.log("🔑 Simple login attempt for user:", username);
       
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password required" });
       }
 
-      // Check for the super admin account
-      console.log("🔍 Checking credentials:", { 
-        usernameMatch: username === "admin", 
-        passwordMatch: password === "InstaRealty",
-        receivedUsername: username,
-        receivedPassword: password
-      });
+      // Check for the super admin account using environment variables
+      const adminUsername = process.env.ADMIN_USERNAME || "admin";
+      const adminPassword = process.env.ADMIN_PASSWORD || "InstaRealty";
       
-      if (username === "admin" && password === "InstaRealty") {
+      console.log("🔍 Checking credentials for user:", username);
+      
+      if (username === adminUsername && password === adminPassword) {
         console.log("✅ Credentials match, creating/getting admin user");
         // Create or get the admin user
         let adminUser = await storage.getUserByEmail("admin@instarealty.com");
