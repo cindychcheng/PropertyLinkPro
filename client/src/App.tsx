@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Register from "@/pages/register";
 import MagicAuth from "@/pages/magic-auth";
+import SimpleLogin from "@/pages/simple-login";
 import Dashboard from "@/pages/dashboard";
 import Properties from "@/pages/properties";
 import Landlords from "@/pages/landlords";
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/register" component={Register} />
         <Route path="/auth/magic" component={MagicAuth} />
+        <Route path="/admin" component={SimpleLogin} />
         <Route component={NotFound} />
       </Switch>
     );

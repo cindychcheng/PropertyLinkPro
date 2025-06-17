@@ -40,10 +40,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("req.user:", req.user ? "exists" : "null");
       console.log("req.session.emailAuth:", (req.session as any).emailAuth);
       console.log("req.session.azureAuth:", (req.session as any).azureAuth);
+      console.log("req.session.simpleAuth:", (req.session as any).simpleAuth);
       console.log("session ID:", req.sessionID);
       
-      // Check for Azure authentication first
-      if ((req.session as any).azureAuth && (req.session as any).azureAuth.userId) {
+      // Check for simple username/password authentication first
+      if ((req.session as any).simpleAuth && (req.session as any).simpleAuth.userId) {
+        userId = (req.session as any).simpleAuth.userId;
+        console.log("Using simple auth userId:", userId);
+      }
+      // Check for Azure authentication
+      else if ((req.session as any).azureAuth && (req.session as any).azureAuth.userId) {
         userId = (req.session as any).azureAuth.userId;
         console.log("Using Azure auth userId:", userId);
       }

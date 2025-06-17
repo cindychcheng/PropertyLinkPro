@@ -48,7 +48,7 @@ export function setupSimpleAuth(app: Express) {
         }
 
         // Set session
-        req.session.simpleAuth = {
+        (req.session as any).simpleAuth = {
           userId: adminUser.id,
           email: adminUser.email,
           loginTime: Date.now()
@@ -67,16 +67,16 @@ export function setupSimpleAuth(app: Express) {
 
   // Simple logout endpoint
   app.post("/api/simple/logout", (req, res) => {
-    if (req.session.simpleAuth) {
-      delete req.session.simpleAuth;
+    if ((req.session as any).simpleAuth) {
+      delete (req.session as any).simpleAuth;
     }
     res.json({ success: true });
   });
 }
 
 export const isSimpleAuthenticated: RequestHandler = async (req, res, next) => {
-  if (req.session.simpleAuth) {
-    const user = await storage.getUser(req.session.simpleAuth.userId);
+  if ((req.session as any).simpleAuth) {
+    const user = await storage.getUser((req.session as any).simpleAuth.userId);
     if (user && user.status === "active") {
       req.currentUser = user;
       return next();
