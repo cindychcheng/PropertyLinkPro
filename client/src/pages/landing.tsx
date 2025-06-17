@@ -105,7 +105,10 @@ export default function Landing() {
               </div>
               <div className="space-y-3">
                 <Button 
-                  onClick={() => window.location.href = '/api/auth/azure/login'}
+                  onClick={() => {
+                    console.log("Microsoft sign-in button clicked");
+                    window.location.href = '/api/auth/azure/login';
+                  }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"
                 >

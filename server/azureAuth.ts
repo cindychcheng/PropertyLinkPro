@@ -32,6 +32,11 @@ export function setupAzureAuth(app: Express) {
     console.log("=== AZURE LOGIN INITIATED ===");
     console.log("Request from host:", req.get('host'));
     console.log("User agent:", req.get('user-agent'));
+    console.log("Azure credentials configured:", {
+      clientId: !!process.env.AZURE_CLIENT_ID,
+      clientSecret: !!process.env.AZURE_CLIENT_SECRET,
+      tenantId: !!process.env.AZURE_TENANT_ID
+    });
     
     try {
       const host = req.get('host');
