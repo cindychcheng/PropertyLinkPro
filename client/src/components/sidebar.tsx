@@ -145,19 +145,19 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         {filteredNavigation.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.name} href={item.href}>
-              <a
-                onClick={onLinkClick}
-                className={cn(
-                  "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
-              </a>
+            <Link 
+              key={item.name} 
+              href={item.href}
+              onClick={onLinkClick}
+              className={cn(
+                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <item.icon className="h-5 w-5 mr-3" />
+              {item.name}
             </Link>
           );
         })}

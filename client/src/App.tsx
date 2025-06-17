@@ -36,22 +36,24 @@ function Router() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <div className="flex-1 overflow-auto">
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/properties" component={Properties} />
-            <Route path="/landlords" component={Landlords} />
-            <Route path="/tenants" component={Tenants} />
-            <Route path="/birthdays" component={Birthdays} />
-            <Route path="/rate-increases" component={RateIncreases} />
-            <Route path="/users" component={Users} />
-            <Route path="/settings" component={Settings} />
-            <Route component={NotFound} />
-          </Switch>
+      <div className="lg:pl-64">
+        <div className="flex flex-col h-screen">
+          <Header />
+          <main className="flex-1 overflow-auto p-4 lg:p-6">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/properties" component={Properties} />
+              <Route path="/landlords" component={Landlords} />
+              <Route path="/tenants" component={Tenants} />
+              <Route path="/birthdays" component={Birthdays} />
+              <Route path="/rate-increases" component={RateIncreases} />
+              <Route path="/users" component={Users} />
+              <Route path="/settings" component={Settings} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
         </div>
       </div>
     </div>
