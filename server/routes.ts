@@ -309,8 +309,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Approve pending user registration
   app.post('/api/users/:id/approve', requireRole('super_admin'), async (req: any, res) => {
     try {
-      console.log('=== APPROVAL ENDPOINT HIT ===');
-      console.log('User ID:', req.params.id);
       const { role = 'read_only' } = req.body;
       
       const user = await storage.updateUser(req.params.id, {
@@ -318,20 +316,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: role,
       });
 
-      console.log('Update result:', user);
-
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       // Send approval email notification
-      console.log('=== APPROVAL EMAIL DEBUG ===');
-      console.log('User email:', user.email);
-      console.log('User object:', user);
       if (user.email) {
         try {
           const dashboardUrl = `${req.protocol}://${req.hostname}`;
-          console.log('Sending approval email to:', user.email);
           await sendAccessApprovedNotification(
             `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
             user.email,
@@ -342,8 +334,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Failed to send approval notification:', emailError);
           // Don't fail the approval if email fails
         }
-      } else {
-        console.log('No email address found for user');
       }
 
       await storage.logUserAction({
