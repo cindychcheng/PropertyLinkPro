@@ -42,23 +42,13 @@ export function setupSimpleAuth(app: Express) {
       console.log("🔍 Checking credentials for user:", username);
       
       if (username === adminUsername && password === adminPassword) {
-        console.log("✅ Credentials match, creating/getting admin user");
-        // Create or get the admin user using dynamic email
-        const adminEmail = `${adminUsername}@system.local`;
-        let adminUser = await storage.getUserByEmail(adminEmail);
+        console.log("✅ Credentials match, getting admin user");
+        // Get existing admin user from database
+        let adminUser = await storage.getUser("admin") || await storage.getUserByEmail("admin@instarealty.com");
         
         if (!adminUser) {
-          // Create the admin user
-          const hashedPassword = await hashPassword(password);
-          adminUser = await storage.createUser({
-            id: adminUsername,
-            email: adminEmail,
-            firstName: "System",
-            lastName: "Administrator",
-            role: "super_admin",
-            status: "active",
-            password: hashedPassword
-          });
+          console.log("❌ Admin user not found in database");
+          return res.status(500).json({ error: "Admin user configuration error" });
         }
 
         // Set session
