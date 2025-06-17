@@ -78,6 +78,7 @@ export function setupAzureAuth(app: Express) {
       
       console.log("Azure callback - redirect URI:", redirectUri);
       console.log("Azure callback - received code:", req.query.code ? "present" : "missing");
+      console.log("Processing Microsoft authentication...");
       
       const tokenRequest = {
         code: req.query.code as string,
@@ -127,6 +128,7 @@ export function setupAzureAuth(app: Express) {
       console.log("Azure auth session created for user:", dbUser.id);
       console.log("Session ID:", req.sessionID);
       console.log("Session azureAuth:", (req.session as any).azureAuth);
+      console.log("Microsoft authentication successful for:", email);
       
       // Save session explicitly before redirect
       req.session.save((err) => {
