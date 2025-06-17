@@ -29,9 +29,13 @@ export function setupAzureAuth(app: Express) {
 
   // Azure login route
   app.get("/api/auth/azure/login", async (req, res) => {
+    console.log("=== AZURE LOGIN INITIATED ===");
+    console.log("Request from host:", req.get('host'));
+    console.log("User agent:", req.get('user-agent'));
+    
     try {
       const host = req.get('host');
-      const protocol = host?.includes('replit.dev') ? 'https' : req.protocol;
+      const protocol = host?.includes('replit.dev') || host?.includes('replit.app') ? 'https' : req.protocol;
       const redirectUri = `${protocol}://${host}/api/auth/azure/callback`;
       
       console.log("Azure login - redirect URI:", redirectUri);
@@ -42,6 +46,8 @@ export function setupAzureAuth(app: Express) {
       };
 
       const response = await msalInstance.getAuthCodeUrl(authCodeUrlParameters);
+      console.log("Azure auth URL generated successfully");
+      console.log("Redirecting to Microsoft...");
       res.redirect(response);
     } catch (error) {
       console.error("Azure auth error:", error);
@@ -113,7 +119,10 @@ export function setupAzureAuth(app: Express) {
       console.log("Redirecting to dashboard...");
       res.redirect('/');
     } catch (error) {
-      console.error("Azure callback error:", error);
+      console.error("=== AZURE CALLBACK ERROR ===");
+      console.error("Error details:", error);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
       res.redirect('/?error=auth_failed');
     }
   });
