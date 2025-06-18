@@ -115,30 +115,38 @@ export default function Properties() {
     }
   }, [selectedPropertyAddress, properties, clearSelection]);
 
-  // Handle URL parameter navigation for search results
+  // Handle URL parameter navigation for search results - immediate check
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const propertyParam = urlParams.get('property');
     
-    if (propertyParam && properties && Array.isArray(properties) && properties.length > 0) {
-      console.log('URL parameter detected:', propertyParam);
-      
-      const propertyExists = properties.some((p: any) => 
-        p.propertyAddress === propertyParam
-      );
-      
-      if (propertyExists) {
-        console.log('Opening dialog for property from URL:', propertyParam);
-        setSelectedProperty(propertyParam);
-        setShowPropertyDialog(true);
+    console.log('Checking URL parameters:', { propertyParam, propertiesLoaded: !!properties });
+    
+    if (propertyParam) {
+      if (properties && Array.isArray(properties) && properties.length > 0) {
+        const propertyExists = properties.some((p: any) => 
+          p.propertyAddress === propertyParam
+        );
         
-        // Clear the URL parameter
-        urlParams.delete('property');
-        const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
-        window.history.replaceState({}, '', newUrl);
+        console.log('Property search from URL:', { propertyParam, propertyExists });
+        
+        if (propertyExists) {
+          console.log('OPENING DIALOG IMMEDIATELY for:', propertyParam);
+          setSelectedProperty(propertyParam);
+          setShowPropertyDialog(true);
+          
+          // Clear URL parameters to clean up
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('property');
+          newUrl.searchParams.delete('t');
+          window.history.replaceState({}, '', newUrl.pathname);
+        }
+      } else {
+        console.log('Properties not loaded yet, setting pending for:', propertyParam);
+        setPendingPropertyFromUrl(propertyParam);
       }
     }
-  }, [location, properties]);
+  }, [properties]);
 
   // Handle sessionStorage for search result navigation
   useEffect(() => {

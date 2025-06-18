@@ -193,9 +193,9 @@ export function SimpleSearch({
     if (result.propertyAddress) {
       console.log('Search result selected:', result.propertyAddress);
       
-      // Direct approach - store in sessionStorage and navigate
-      sessionStorage.setItem('openProperty', result.propertyAddress);
-      setLocation('/properties');
+      // Force a hard navigation to bypass any caching issues
+      const timestamp = Date.now();
+      window.location.href = `/properties?property=${encodeURIComponent(result.propertyAddress)}&t=${timestamp}`;
     }
   };
   
