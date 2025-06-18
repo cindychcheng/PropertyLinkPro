@@ -106,19 +106,11 @@ export function SearchBar() {
   }
 
   const handleSelect = (result: SearchResult) => {
-    console.log('=== SEARCH RESULT CLICKED ===');
-    console.log('Selected result:', result);
-    console.log('Result type:', result.type);
-    console.log('Property address:', result.address);
-    
     setOpen(false);
     setSearchTerm("");
     
-    const targetUrl = `/properties?address=${encodeURIComponent(result.address)}`;
-    console.log('Navigating to:', targetUrl);
-    
     // For all result types, navigate to the property card since landlords and tenants are associated with properties
-    setLocation(targetUrl);
+    setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
   };
 
   const getIcon = (type: string) => {

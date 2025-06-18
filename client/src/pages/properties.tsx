@@ -117,10 +117,14 @@ export default function Properties() {
 
   // Handle URL parameter navigation for search results - immediate check
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const propertyParam = urlParams.get('property');
+    console.log('=== URL PARAMETER EFFECT RUNNING ===');
+    console.log('Current location:', location);
+    console.log('Window location search:', window.location.search);
     
-    console.log('Checking URL parameters:', { propertyParam, propertiesLoaded: !!properties });
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyParam = urlParams.get('address') || urlParams.get('property');
+    
+    console.log('Checking URL parameters:', { propertyParam, propertiesLoaded: !!properties, location });
     
     if (propertyParam) {
       if (properties && Array.isArray(properties) && properties.length > 0) {
@@ -137,6 +141,7 @@ export default function Properties() {
           
           // Clear URL parameters to clean up
           const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('address');
           newUrl.searchParams.delete('property');
           newUrl.searchParams.delete('t');
           window.history.replaceState({}, '', newUrl.pathname);
@@ -146,7 +151,7 @@ export default function Properties() {
         setPendingPropertyFromUrl(propertyParam);
       }
     }
-  }, [properties]);
+  }, [properties, location]);
 
   // Handle sessionStorage for search result navigation
   useEffect(() => {
