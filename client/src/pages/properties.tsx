@@ -39,23 +39,35 @@ export default function Properties() {
   const { toast } = useToast();
   const [location] = useLocation();
   
-  // Check for address query parameter for search functionality
+  // Listen for custom event to open property dialog directly
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const addressParam = params.get('address');
-    
-    console.log('URL effect triggered:', { location, addressParam });
-    
-    if (addressParam) {
-      const decodedAddress = decodeURIComponent(addressParam);
-      console.log('Setting pending property from URL:', decodedAddress);
-      setPendingPropertyFromUrl(decodedAddress);
+    const handleOpenPropertyDialog = (event: any) => {
+      const { propertyAddress } = event.detail;
+      console.log('Custom event received to open dialog for:', propertyAddress);
       
-      // Clear URL parameter immediately
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [location]);
+      if (propertyAddress && properties && Array.isArray(properties) && properties.length > 0) {
+        const propertyExists = properties.some((p: any) => 
+          p.propertyAddress === propertyAddress
+        );
+        
+        if (propertyExists) {
+          console.log('Opening dialog immediately for:', propertyAddress);
+          setSelectedProperty(propertyAddress);
+          setShowPropertyDialog(true);
+        }
+      } else {
+        // If properties not loaded yet, set as pending
+        console.log('Properties not loaded, setting as pending:', propertyAddress);
+        setPendingPropertyFromUrl(propertyAddress);
+      }
+    };
+
+    window.addEventListener('openPropertyDialog', handleOpenPropertyDialog);
+    
+    return () => {
+      window.removeEventListener('openPropertyDialog', handleOpenPropertyDialog);
+    };
+  }, [properties]);
 
   const { data: properties, isLoading } = useQuery<any[]>({
     queryKey: ['/api/properties'],
