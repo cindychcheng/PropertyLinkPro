@@ -30,23 +30,18 @@ export function SearchBar() {
   const searchResults: SearchResult[] = [];
 
   if (searchTerm.length >= 2) {
-    console.log('=== SEARCH RESULTS GENERATION ===');
-    console.log('Search term:', searchTerm);
-    console.log('Properties data:', properties);
     properties.forEach((property: any) => {
       const searchLower = searchTerm.toLowerCase();
       
       // Add property if address matches
       if (property.propertyAddress?.toLowerCase().includes(searchLower)) {
-        const propertyResult = {
+        searchResults.push({
           type: "property",
           id: property.propertyAddress,
           name: property.propertyAddress,
           details: `Key: ${property.keyNumber}`,
           address: property.propertyAddress,
-        };
-        console.log('Adding property result:', propertyResult);
-        searchResults.push(propertyResult);
+        });
       }
 
       // Add landlord owners if name matches

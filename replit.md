@@ -250,9 +250,12 @@ The application is configured to run in a Replit environment with the following 
 - Fixed URL parameter mismatch between search navigation and properties page detection
 - Search was using `address` parameter while properties page looked for `property` parameter
 - Updated properties page to accept both `address` and `property` URL parameters
-- Confirmed complete search workflow: search → results → click → property dialog opens
-- Search functionality now fully operational with immediate property card access
-- Validated end-to-end search experience from input to property details display
+- Resolved intermittent property dialog opening issues with custom event system
+- Implemented reliable custom event communication between search and properties components
+- Added 100ms delay to ensure navigation completes before dialog opens
+- Search functionality now consistently opens property dialogs on every click
+- Validated complete search workflow: search → results → click → immediate property dialog
+- Confirmed search works for property addresses, landlord names, and tenant names
 
 ## Next Steps
 

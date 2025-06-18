@@ -117,14 +117,8 @@ export default function Properties() {
 
   // Handle URL parameter navigation for search results - immediate check
   useEffect(() => {
-    console.log('=== URL PARAMETER EFFECT RUNNING ===');
-    console.log('Current location:', location);
-    console.log('Window location search:', window.location.search);
-    
     const urlParams = new URLSearchParams(window.location.search);
     const propertyParam = urlParams.get('address') || urlParams.get('property');
-    
-    console.log('Checking URL parameters:', { propertyParam, propertiesLoaded: !!properties, location });
     
     if (propertyParam) {
       if (properties && Array.isArray(properties) && properties.length > 0) {
@@ -187,7 +181,6 @@ export default function Properties() {
         );
         
         if (propertyExists) {
-          console.log('Opening dialog from custom event:', propertyAddress);
           setSelectedProperty(propertyAddress);
           setShowPropertyDialog(true);
         }
