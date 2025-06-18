@@ -140,30 +140,24 @@ export default function Properties() {
     }
   }, [location, properties]);
 
-  // Handle custom event for direct property dialog opening
+  // Handle sessionStorage for search result navigation
   useEffect(() => {
-    const handleOpenProperty = (event: any) => {
-      const { propertyAddress } = event.detail;
-      console.log('Custom event received for property:', propertyAddress);
-      
-      if (properties && Array.isArray(properties) && properties.length > 0) {
-        const propertyExists = properties.some((p: any) => 
-          p.propertyAddress === propertyAddress
-        );
-        
-        if (propertyExists) {
-          console.log('Opening dialog immediately via custom event');
-          setSelectedProperty(propertyAddress);
-          setShowPropertyDialog(true);
-        }
-      }
-    };
-
-    window.addEventListener('openProperty', handleOpenProperty);
+    const propertyToOpen = sessionStorage.getItem('openProperty');
     
-    return () => {
-      window.removeEventListener('openProperty', handleOpenProperty);
-    };
+    if (propertyToOpen && properties && Array.isArray(properties) && properties.length > 0) {
+      console.log('SessionStorage property detected:', propertyToOpen);
+      
+      const propertyExists = properties.some((p: any) => 
+        p.propertyAddress === propertyToOpen
+      );
+      
+      if (propertyExists) {
+        console.log('Opening dialog from sessionStorage:', propertyToOpen);
+        setSelectedProperty(propertyToOpen);
+        setShowPropertyDialog(true);
+        sessionStorage.removeItem('openProperty'); // Clear after use
+      }
+    }
   }, [properties]);
 
   // Handle opening dialog when we have properties data and a pending property

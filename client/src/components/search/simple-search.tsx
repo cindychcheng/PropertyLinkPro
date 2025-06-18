@@ -185,27 +185,17 @@ export function SimpleSearch({
   const [, setLocation] = useLocation();
   const { openPropertyDialog } = useSearch();
   
-  // Handle selection with direct property dialog opening
+  // Handle selection with immediate property dialog opening
   const handleSelect = (result: SearchResult) => {
     setOpen(false);
-    setInputValue("");  // Clear the search input
+    setInputValue("");
     
     if (result.propertyAddress) {
       console.log('Search result selected:', result.propertyAddress);
       
-      // Direct approach: dispatch custom event to any listening components
-      const propertyEvent = new CustomEvent('openProperty', {
-        detail: { propertyAddress: result.propertyAddress }
-      });
-      window.dispatchEvent(propertyEvent);
-      
-      // Navigate to properties page
+      // Direct approach - store in sessionStorage and navigate
+      sessionStorage.setItem('openProperty', result.propertyAddress);
       setLocation('/properties');
-      
-      // Also use URL parameter as backup
-      setTimeout(() => {
-        setLocation(`/properties?property=${encodeURIComponent(result.propertyAddress!)}`);
-      }, 100);
     }
   };
   
