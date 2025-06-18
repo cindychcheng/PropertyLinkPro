@@ -193,8 +193,19 @@ export function SimpleSearch({
     if (result.propertyAddress) {
       console.log('Search result selected:', result.propertyAddress);
       
-      // Navigate to properties page with URL parameter
-      setLocation(`/properties?property=${encodeURIComponent(result.propertyAddress)}`);
+      // Direct approach: dispatch custom event to any listening components
+      const propertyEvent = new CustomEvent('openProperty', {
+        detail: { propertyAddress: result.propertyAddress }
+      });
+      window.dispatchEvent(propertyEvent);
+      
+      // Navigate to properties page
+      setLocation('/properties');
+      
+      // Also use URL parameter as backup
+      setTimeout(() => {
+        setLocation(`/properties?property=${encodeURIComponent(result.propertyAddress!)}`);
+      }, 100);
     }
   };
   
