@@ -109,11 +109,16 @@ export function SearchBar() {
     setOpen(false);
     setSearchTerm("");
     
-    // Store the property to open in sessionStorage for reliable access
-    sessionStorage.setItem('openProperty', result.address);
-    
-    // Navigate to properties page
+    // Navigate to properties page first
     setLocation('/properties');
+    
+    // Use a small delay then dispatch custom event for reliable dialog opening
+    setTimeout(() => {
+      const openEvent = new CustomEvent('openPropertyDialog', {
+        detail: { propertyAddress: result.address }
+      });
+      window.dispatchEvent(openEvent);
+    }, 100);
   };
 
   const getIcon = (type: string) => {

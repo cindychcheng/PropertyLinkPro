@@ -176,6 +176,31 @@ export default function Properties() {
     }
   }, [properties, location]);
 
+  // Handle custom event for property dialog opening from search
+  useEffect(() => {
+    const handleOpenProperty = (event: CustomEvent) => {
+      const propertyAddress = event.detail?.propertyAddress;
+      
+      if (propertyAddress && properties && Array.isArray(properties) && properties.length > 0) {
+        const propertyExists = properties.some((p: any) => 
+          p.propertyAddress === propertyAddress
+        );
+        
+        if (propertyExists) {
+          console.log('Opening dialog from custom event:', propertyAddress);
+          setSelectedProperty(propertyAddress);
+          setShowPropertyDialog(true);
+        }
+      }
+    };
+
+    window.addEventListener('openPropertyDialog', handleOpenProperty as EventListener);
+    
+    return () => {
+      window.removeEventListener('openPropertyDialog', handleOpenProperty as EventListener);
+    };
+  }, [properties]);
+
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
     if (pendingPropertyFromUrl && properties && Array.isArray(properties) && properties.length > 0) {
