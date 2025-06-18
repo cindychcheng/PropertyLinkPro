@@ -193,21 +193,8 @@ export function SimpleSearch({
     if (result.propertyAddress) {
       console.log('Search result selected:', result.propertyAddress);
       
-      // Navigate to properties page first
-      setLocation('/properties');
-      
-      // Use context to trigger dialog opening with multiple approaches
-      setTimeout(() => {
-        console.log('Triggering property dialog via context for:', result.propertyAddress);
-        openPropertyDialog(result.propertyAddress!);
-      }, 100);
-      
-      // Also set URL parameter as backup
-      setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('property', result.propertyAddress!);
-        window.history.pushState({}, '', url.toString());
-      }, 150);
+      // Navigate to properties page with URL parameter
+      setLocation(`/properties?property=${encodeURIComponent(result.propertyAddress)}`);
     }
   };
   

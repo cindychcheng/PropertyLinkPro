@@ -115,6 +115,31 @@ export default function Properties() {
     }
   }, [selectedPropertyAddress, properties, clearSelection]);
 
+  // Handle URL parameter navigation for search results
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyParam = urlParams.get('property');
+    
+    if (propertyParam && properties && Array.isArray(properties) && properties.length > 0) {
+      console.log('URL parameter detected:', propertyParam);
+      
+      const propertyExists = properties.some((p: any) => 
+        p.propertyAddress === propertyParam
+      );
+      
+      if (propertyExists) {
+        console.log('Opening dialog for property from URL:', propertyParam);
+        setSelectedProperty(propertyParam);
+        setShowPropertyDialog(true);
+        
+        // Clear the URL parameter
+        urlParams.delete('property');
+        const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [location, properties]);
+
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
     if (pendingPropertyFromUrl && properties && Array.isArray(properties) && properties.length > 0) {
