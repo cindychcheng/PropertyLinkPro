@@ -66,29 +66,21 @@ export function PropertyDialog({
   const [editingRentalRate, setEditingRentalRate] = useState(false);
   const [addingNewTenantRate, setAddingNewTenantRate] = useState(false);
 
-  // Query for property data - improved state handling
+  // Query for property data - ensure immediate loading
   const {
     data: property,
     isLoading: isLoadingProperty,
     error: propertyError,
-    refetch: refetchProperty,
   } = useQuery<PropertyWithDetails>({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
-    enabled: isOpen && !!propertyAddress,
+    enabled: !!propertyAddress, // Enable as soon as we have an address
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    retry: 1,
-    retryDelay: 500,
+    retry: 2,
+    retryDelay: 300,
   });
-
-  // Force refetch when dialog opens with new property
-  useEffect(() => {
-    if (isOpen && propertyAddress) {
-      refetchProperty();
-    }
-  }, [isOpen, propertyAddress, refetchProperty]);
 
   // Debug what data the client receives
   useEffect(() => {

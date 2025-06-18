@@ -31,6 +31,7 @@ export default function Properties() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   const [showPropertyDialog, setShowPropertyDialog] = useState(false);
+  const [pendingPropertyFromUrl, setPendingPropertyFromUrl] = useState<string | null>(null);
   const [showRateIncreaseDialog, setShowRateIncreaseDialog] = useState(false);
   const [showAddPropertyDialog, setShowAddPropertyDialog] = useState(false);
   
@@ -40,30 +41,34 @@ export default function Properties() {
   
   // Check for address query parameter for search functionality
   useEffect(() => {
-    // Get the current URL parameters
     const params = new URLSearchParams(window.location.search);
     const addressParam = params.get('address');
     
-    // If there's an address parameter, open the property dialog
     if (addressParam) {
       const decodedAddress = decodeURIComponent(addressParam);
-      console.log("URL param detected, opening dialog for:", decodedAddress);
+      setPendingPropertyFromUrl(decodedAddress);
       
-      // Reset state first
-      setShowPropertyDialog(false);
-      setSelectedProperty(null);
-      
-      // Set new state with a small delay to ensure clean state transition
-      setTimeout(() => {
-        setSelectedProperty(decodedAddress);
-        setShowPropertyDialog(true);
-        
-        // Clear the URL parameter after opening dialog
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-      }, 50);
+      // Clear URL parameter immediately
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
     }
   }, [location]);
+
+  // Handle opening dialog when we have properties data and a pending property
+  useEffect(() => {
+    if (pendingPropertyFromUrl && properties && properties.length > 0) {
+      // Check if the property exists in our data
+      const propertyExists = properties.some((p: any) => 
+        p.propertyAddress === pendingPropertyFromUrl
+      );
+      
+      if (propertyExists) {
+        setSelectedProperty(pendingPropertyFromUrl);
+        setShowPropertyDialog(true);
+        setPendingPropertyFromUrl(null);
+      }
+    }
+  }, [pendingPropertyFromUrl, properties]);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ['/api/properties'],
