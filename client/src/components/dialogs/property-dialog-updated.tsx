@@ -86,7 +86,6 @@ export function PropertyDialog({
   // Force refetch when dialog opens with new property
   useEffect(() => {
     if (isOpen && propertyAddress) {
-      console.log("Dialog opened for property:", propertyAddress);
       refetchProperty();
     }
   }, [isOpen, propertyAddress, refetchProperty]);
@@ -158,11 +157,7 @@ export function PropertyDialog({
     }
   };
 
-  // Debug at render time
-  console.log("=== DIALOG RENDER ===");
-  console.log("isOpen:", isOpen);
-  console.log("propertyAddress prop:", propertyAddress);
-  console.log("property data:", property);
+  // Clean state management - removed debug logs
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
