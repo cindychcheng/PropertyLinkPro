@@ -39,7 +39,7 @@ export default function Properties() {
   const rowsPerPage = 10;
   const { toast } = useToast();
   const [location] = useLocation();
-  const { selectedPropertyAddress, clearSelection } = useSearch();
+  const { selectedPropertyAddress, clearSelection, openPropertyDialog } = useSearch();
   
   const { data: properties, isLoading } = useQuery<any[]>({
     queryKey: ['/api/properties'],
@@ -93,16 +93,25 @@ export default function Properties() {
 
   // Handle search context selection for immediate dialog opening
   useEffect(() => {
+    console.log('Search context effect:', { selectedPropertyAddress, propertiesLoaded: !!properties });
+    
     if (selectedPropertyAddress && properties && Array.isArray(properties) && properties.length > 0) {
       const propertyExists = properties.some((p: any) => 
         p.propertyAddress === selectedPropertyAddress
       );
       
+      console.log('Property search result:', { selectedPropertyAddress, propertyExists });
+      
       if (propertyExists) {
+        console.log('Opening dialog via search context for:', selectedPropertyAddress);
         setSelectedProperty(selectedPropertyAddress);
         setShowPropertyDialog(true);
         clearSelection(); // Clear the context selection
       }
+    } else if (selectedPropertyAddress && (!properties || properties.length === 0)) {
+      console.log('Properties not loaded yet, setting pending:', selectedPropertyAddress);
+      setPendingPropertyFromUrl(selectedPropertyAddress);
+      clearSelection();
     }
   }, [selectedPropertyAddress, properties, clearSelection]);
 
@@ -271,10 +280,21 @@ export default function Properties() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-semibold mb-2 md:mb-0">Properties</h1>
-        <Button onClick={() => setShowAddPropertyDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Property
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log('Test button clicked - opening property dialog');
+              openPropertyDialog('2468 10th Street, Unit 2');
+            }}
+          >
+            Test Search
+          </Button>
+          <Button onClick={() => setShowAddPropertyDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property
+          </Button>
+        </div>
       </div>
 
       <DataTable

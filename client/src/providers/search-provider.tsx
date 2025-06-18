@@ -12,6 +12,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [selectedPropertyAddress, setSelectedPropertyAddress] = useState<string | null>(null);
 
   const openPropertyDialog = (address: string) => {
+    console.log('SearchProvider: openPropertyDialog called with:', address);
     setSelectedPropertyAddress(address);
   };
 
