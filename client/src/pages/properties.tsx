@@ -54,9 +54,14 @@ export default function Properties() {
     }
   }, [location]);
 
+  const { data: properties, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/properties'],
+    staleTime: 60000, // 1 minute
+  });
+
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
-    if (pendingPropertyFromUrl && properties && properties.length > 0) {
+    if (pendingPropertyFromUrl && properties && Array.isArray(properties) && properties.length > 0) {
       // Check if the property exists in our data
       const propertyExists = properties.some((p: any) => 
         p.propertyAddress === pendingPropertyFromUrl
@@ -69,11 +74,6 @@ export default function Properties() {
       }
     }
   }, [pendingPropertyFromUrl, properties]);
-
-  const { data: properties, isLoading } = useQuery({
-    queryKey: ['/api/properties'],
-    staleTime: 60000, // 1 minute
-  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
