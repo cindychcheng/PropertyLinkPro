@@ -109,8 +109,11 @@ export function SearchBar() {
     setOpen(false);
     setSearchTerm("");
     
-    // For all result types, navigate to the property card since landlords and tenants are associated with properties
-    setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
+    // Store the property to open in sessionStorage for reliable access
+    sessionStorage.setItem('openProperty', result.address);
+    
+    // Navigate to properties page
+    setLocation('/properties');
   };
 
   const getIcon = (type: string) => {

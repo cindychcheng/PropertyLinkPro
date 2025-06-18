@@ -153,7 +153,7 @@ export default function Properties() {
     }
   }, [properties, location]);
 
-  // Handle sessionStorage for search result navigation
+  // Handle sessionStorage for search result navigation - check on both properties and location changes
   useEffect(() => {
     const propertyToOpen = sessionStorage.getItem('openProperty');
     
@@ -166,12 +166,15 @@ export default function Properties() {
       
       if (propertyExists) {
         console.log('Opening dialog from sessionStorage:', propertyToOpen);
-        setSelectedProperty(propertyToOpen);
-        setShowPropertyDialog(true);
-        sessionStorage.removeItem('openProperty'); // Clear after use
+        // Use a small delay to ensure component is fully mounted
+        setTimeout(() => {
+          setSelectedProperty(propertyToOpen);
+          setShowPropertyDialog(true);
+          sessionStorage.removeItem('openProperty'); // Clear after use
+        }, 50);
       }
     }
-  }, [properties]);
+  }, [properties, location]);
 
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
