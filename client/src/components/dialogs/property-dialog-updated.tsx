@@ -7,6 +7,7 @@ import {
   DialogTitle, 
   DialogHeader,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,11 +66,12 @@ export function PropertyDialog({
   const [editingRentalRate, setEditingRentalRate] = useState(false);
   const [addingNewTenantRate, setAddingNewTenantRate] = useState(false);
 
-  // Query for property data - simplified approach
+  // Query for property data - improved state handling
   const {
     data: property,
     isLoading: isLoadingProperty,
     error: propertyError,
+    refetch: refetchProperty,
   } = useQuery<PropertyWithDetails>({
     queryKey: [`/api/properties/${encodeURIComponent(propertyAddress || '')}`],
     enabled: isOpen && !!propertyAddress,
@@ -77,8 +79,17 @@ export function PropertyDialog({
     gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    retry: false,
+    retry: 1,
+    retryDelay: 500,
   });
+
+  // Force refetch when dialog opens with new property
+  useEffect(() => {
+    if (isOpen && propertyAddress) {
+      console.log("Dialog opened for property:", propertyAddress);
+      refetchProperty();
+    }
+  }, [isOpen, propertyAddress, refetchProperty]);
 
   // Debug what data the client receives
   useEffect(() => {
@@ -164,6 +175,9 @@ export function PropertyDialog({
               property?.propertyAddress || propertyAddress || "Property Details"
             )}
           </DialogTitle>
+          <DialogDescription>
+            View and manage property details, tenant information, and rental history
+          </DialogDescription>
         </DialogHeader>
         
         <div className="mt-4">

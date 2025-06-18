@@ -46,8 +46,22 @@ export default function Properties() {
     
     // If there's an address parameter, open the property dialog
     if (addressParam) {
-      setSelectedProperty(decodeURIComponent(addressParam));
-      setShowPropertyDialog(true);
+      const decodedAddress = decodeURIComponent(addressParam);
+      console.log("URL param detected, opening dialog for:", decodedAddress);
+      
+      // Reset state first
+      setShowPropertyDialog(false);
+      setSelectedProperty(null);
+      
+      // Set new state with a small delay to ensure clean state transition
+      setTimeout(() => {
+        setSelectedProperty(decodedAddress);
+        setShowPropertyDialog(true);
+        
+        // Clear the URL parameter after opening dialog
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }, 50);
     }
   }, [location]);
 
