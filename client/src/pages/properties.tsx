@@ -39,6 +39,11 @@ export default function Properties() {
   const { toast } = useToast();
   const [location] = useLocation();
   
+  const { data: properties, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/properties'],
+    staleTime: 60000, // 1 minute
+  });
+
   // Listen for custom event to open property dialog directly
   useEffect(() => {
     const handleOpenPropertyDialog = (event: any) => {
@@ -69,31 +74,15 @@ export default function Properties() {
     };
   }, [properties]);
 
-  const { data: properties, isLoading } = useQuery<any[]>({
-    queryKey: ['/api/properties'],
-    staleTime: 60000, // 1 minute
-  });
-
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
-    console.log('Dialog effect triggered:', { 
-      pendingPropertyFromUrl, 
-      hasProperties: !!properties, 
-      propertiesLength: properties?.length,
-      showPropertyDialog,
-      selectedProperty
-    });
-    
     if (pendingPropertyFromUrl && properties && Array.isArray(properties) && properties.length > 0) {
       // Check if the property exists in our data
       const propertyExists = properties.some((p: any) => 
         p.propertyAddress === pendingPropertyFromUrl
       );
       
-      console.log('Property exists check:', { pendingPropertyFromUrl, propertyExists });
-      
       if (propertyExists) {
-        console.log('Opening dialog for property:', pendingPropertyFromUrl);
         setSelectedProperty(pendingPropertyFromUrl);
         setShowPropertyDialog(true);
         setPendingPropertyFromUrl(null);
