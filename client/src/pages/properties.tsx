@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useSearch } from "@/providers/search-provider";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 
@@ -38,6 +39,7 @@ export default function Properties() {
   const rowsPerPage = 10;
   const { toast } = useToast();
   const [location] = useLocation();
+  const { selectedPropertyAddress, clearSelection } = useSearch();
   
   const { data: properties, isLoading } = useQuery<any[]>({
     queryKey: ['/api/properties'],
@@ -88,6 +90,21 @@ export default function Properties() {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, [properties]);
+
+  // Handle search context selection for immediate dialog opening
+  useEffect(() => {
+    if (selectedPropertyAddress && properties && Array.isArray(properties) && properties.length > 0) {
+      const propertyExists = properties.some((p: any) => 
+        p.propertyAddress === selectedPropertyAddress
+      );
+      
+      if (propertyExists) {
+        setSelectedProperty(selectedPropertyAddress);
+        setShowPropertyDialog(true);
+        clearSelection(); // Clear the context selection
+      }
+    }
+  }, [selectedPropertyAddress, properties, clearSelection]);
 
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {

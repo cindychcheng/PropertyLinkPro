@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useSearch } from "@/providers/search-provider";
 import {
   CommandDialog,
   CommandEmpty,
@@ -182,6 +183,7 @@ export function SimpleSearch({
   }, [open, setOpen]);
   
   const [, setLocation] = useLocation();
+  const { openPropertyDialog } = useSearch();
   
   // Handle selection with direct property dialog opening
   const handleSelect = (result: SearchResult) => {
@@ -189,10 +191,12 @@ export function SimpleSearch({
     setInputValue("");  // Clear the search input
     
     if (result.propertyAddress) {
-      console.log('Search selection:', result.propertyAddress);
-      const hashUrl = `/properties#${encodeURIComponent(result.propertyAddress)}`;
-      console.log('Navigating to:', hashUrl);
-      setLocation(hashUrl);
+      // Navigate to properties page first
+      setLocation('/properties');
+      // Use context to trigger dialog opening
+      setTimeout(() => {
+        openPropertyDialog(result.propertyAddress!);
+      }, 100);
     }
   };
   
