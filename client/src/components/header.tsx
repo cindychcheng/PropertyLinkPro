@@ -5,11 +5,13 @@ export function Header() {
     <header className="border-b bg-white dark:bg-gray-950 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* Mobile: Hide title since it's in the sidebar */}
+          {/* Mobile: Add left padding to avoid hamburger menu overlap */}
+          <div className="lg:hidden w-12"></div>
+          {/* Desktop: Show full title */}
           <h1 className="hidden lg:block text-xl font-semibold text-gray-900 dark:text-white">
             PropertyHub
           </h1>
-          {/* Mobile: Show just "Property Management" */}
+          {/* Mobile: Show "Property Management" with left spacing */}
           <h1 className="lg:hidden text-lg font-semibold text-gray-900 dark:text-white">
             Property Management
           </h1>

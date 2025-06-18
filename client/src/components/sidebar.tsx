@@ -190,7 +190,7 @@ export function Sidebar() {
             <Button
               variant="outline"
               size="icon"
-              className="fixed top-2 right-4 z-50 bg-white dark:bg-gray-900 shadow-lg"
+              className="fixed top-4 left-4 z-50 bg-white dark:bg-gray-900 shadow-lg"
             >
               <Menu className="h-4 w-4" />
             </Button>
