@@ -189,8 +189,10 @@ export function SimpleSearch({
     setInputValue("");  // Clear the search input
     
     if (result.propertyAddress) {
-      // Navigate to properties page with hash parameter for immediate dialog opening
-      setLocation(`/properties#${encodeURIComponent(result.propertyAddress)}`);
+      console.log('Search selection:', result.propertyAddress);
+      const hashUrl = `/properties#${encodeURIComponent(result.propertyAddress)}`;
+      console.log('Navigating to:', hashUrl);
+      setLocation(hashUrl);
     }
   };
   

@@ -48,22 +48,29 @@ export default function Properties() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1); // Remove the #
+      console.log('Hash detected:', hash);
+      
       if (hash) {
         const decodedAddress = decodeURIComponent(hash);
+        console.log('Decoded address:', decodedAddress);
+        console.log('Properties loaded:', !!properties, 'Length:', properties?.length);
         
         if (properties && Array.isArray(properties) && properties.length > 0) {
           const propertyExists = properties.some((p: any) => 
             p.propertyAddress === decodedAddress
           );
           
+          console.log('Property exists:', propertyExists);
+          
           if (propertyExists) {
+            console.log('Opening dialog for:', decodedAddress);
             setSelectedProperty(decodedAddress);
             setShowPropertyDialog(true);
             // Clear the hash
             window.history.replaceState({}, '', window.location.pathname);
           }
         } else {
-          // Properties not loaded yet, set as pending
+          console.log('Properties not loaded, setting pending:', decodedAddress);
           setPendingPropertyFromUrl(decodedAddress);
           // Clear the hash
           window.history.replaceState({}, '', window.location.pathname);

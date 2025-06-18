@@ -248,6 +248,8 @@ The application is configured to run in a Replit environment with the following 
 - Improved property dialog state management with proper data fetching and retry logic
 - Added DialogDescription component to improve accessibility and remove console warnings
 - Optimized search-to-property-card workflow for seamless user experience
+- Implemented multiple approaches for search result navigation including URL parameters, custom events, and hash-based routing
+- Currently debugging search functionality timing issues between navigation and dialog state management
 
 ## Next Steps
 
