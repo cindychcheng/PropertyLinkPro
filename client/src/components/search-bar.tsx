@@ -30,18 +30,23 @@ export function SearchBar() {
   const searchResults: SearchResult[] = [];
 
   if (searchTerm.length >= 2) {
+    console.log('=== SEARCH RESULTS GENERATION ===');
+    console.log('Search term:', searchTerm);
+    console.log('Properties data:', properties);
     properties.forEach((property: any) => {
       const searchLower = searchTerm.toLowerCase();
       
       // Add property if address matches
       if (property.propertyAddress?.toLowerCase().includes(searchLower)) {
-        searchResults.push({
+        const propertyResult = {
           type: "property",
           id: property.propertyAddress,
           name: property.propertyAddress,
           details: `Key: ${property.keyNumber}`,
           address: property.propertyAddress,
-        });
+        };
+        console.log('Adding property result:', propertyResult);
+        searchResults.push(propertyResult);
       }
 
       // Add landlord owners if name matches
@@ -101,11 +106,19 @@ export function SearchBar() {
   }
 
   const handleSelect = (result: SearchResult) => {
+    console.log('=== SEARCH RESULT CLICKED ===');
+    console.log('Selected result:', result);
+    console.log('Result type:', result.type);
+    console.log('Property address:', result.address);
+    
     setOpen(false);
     setSearchTerm("");
     
+    const targetUrl = `/properties?address=${encodeURIComponent(result.address)}`;
+    console.log('Navigating to:', targetUrl);
+    
     // For all result types, navigate to the property card since landlords and tenants are associated with properties
-    setLocation(`/properties?address=${encodeURIComponent(result.address)}`);
+    setLocation(targetUrl);
   };
 
   const getIcon = (type: string) => {
