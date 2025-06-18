@@ -44,18 +44,26 @@ export function SimpleSearch({
   setOpen: (open: boolean) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
+  console.log('Current input value:', inputValue);
   const debouncedValue = useDebounce(inputValue, 300);
+  console.log('Debounced value:', debouncedValue);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
   // Search when input changes
   useEffect(() => {
+    console.log('=== SEARCH EFFECT TRIGGERED ===');
+    console.log('Debounced value:', debouncedValue);
+    console.log('Value length:', debouncedValue?.length);
+    
     // Don't search on empty input
     if (!debouncedValue) {
+      console.log('No search value, clearing results');
       setSearchResults([]);
       return;
     }
     
+    console.log('Starting search for:', debouncedValue);
     setIsLoading(true);
     
     const searchProperties = async () => {
@@ -103,13 +111,15 @@ export function SimpleSearch({
             property.propertyAddress &&
             property.propertyAddress.toLowerCase().includes(searchLower)
           ) {
-            results.push({
+            const propertyResult = {
               id: `property-${property.propertyAddress}`,
-              type: "property",
+              type: "property" as const,
               title: property.propertyAddress,
               subtitle: property.serviceType,
               propertyAddress: property.propertyAddress,
-            });
+            };
+            console.log('Adding property result:', propertyResult);
+            results.push(propertyResult);
           }
           
           // Match landlord owners
@@ -159,6 +169,11 @@ export function SimpleSearch({
             });
           }
         });
+        
+        console.log('=== FINAL SEARCH RESULTS ===');
+        console.log('Total results:', results.length);
+        console.log('Property results:', results.filter(r => r.type === 'property'));
+        console.log('Setting search results...');
         
         setSearchResults(results);
         setIsLoading(false);
