@@ -189,19 +189,8 @@ export function SimpleSearch({
     setInputValue("");  // Clear the search input
     
     if (result.propertyAddress) {
-      console.log('Search result clicked, opening property:', result.propertyAddress);
-      
-      // Navigate to properties page first
-      setLocation('/properties');
-      
-      // Use a timeout to ensure the properties page is loaded, then trigger the dialog
-      setTimeout(() => {
-        // Dispatch a custom event to open the property dialog
-        const event = new CustomEvent('openPropertyDialog', {
-          detail: { propertyAddress: result.propertyAddress }
-        });
-        window.dispatchEvent(event);
-      }, 100);
+      // Navigate to properties page with hash parameter for immediate dialog opening
+      setLocation(`/properties#${encodeURIComponent(result.propertyAddress)}`);
     }
   };
   

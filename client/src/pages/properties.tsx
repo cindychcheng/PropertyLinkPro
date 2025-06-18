@@ -44,33 +44,41 @@ export default function Properties() {
     staleTime: 60000, // 1 minute
   });
 
-  // Listen for custom event to open property dialog directly
+  // Handle hash-based navigation for search results
   useEffect(() => {
-    const handleOpenPropertyDialog = (event: any) => {
-      const { propertyAddress } = event.detail;
-      console.log('Custom event received to open dialog for:', propertyAddress);
-      
-      if (propertyAddress && properties && Array.isArray(properties) && properties.length > 0) {
-        const propertyExists = properties.some((p: any) => 
-          p.propertyAddress === propertyAddress
-        );
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove the #
+      if (hash) {
+        const decodedAddress = decodeURIComponent(hash);
         
-        if (propertyExists) {
-          console.log('Opening dialog immediately for:', propertyAddress);
-          setSelectedProperty(propertyAddress);
-          setShowPropertyDialog(true);
+        if (properties && Array.isArray(properties) && properties.length > 0) {
+          const propertyExists = properties.some((p: any) => 
+            p.propertyAddress === decodedAddress
+          );
+          
+          if (propertyExists) {
+            setSelectedProperty(decodedAddress);
+            setShowPropertyDialog(true);
+            // Clear the hash
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        } else {
+          // Properties not loaded yet, set as pending
+          setPendingPropertyFromUrl(decodedAddress);
+          // Clear the hash
+          window.history.replaceState({}, '', window.location.pathname);
         }
-      } else {
-        // If properties not loaded yet, set as pending
-        console.log('Properties not loaded, setting as pending:', propertyAddress);
-        setPendingPropertyFromUrl(propertyAddress);
       }
     };
 
-    window.addEventListener('openPropertyDialog', handleOpenPropertyDialog);
+    // Check on mount
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
     
     return () => {
-      window.removeEventListener('openPropertyDialog', handleOpenPropertyDialog);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, [properties]);
 
@@ -95,9 +103,18 @@ export default function Properties() {
   };
 
   const handleViewProperty = (address: string) => {
+    console.log('🎯 Direct handleViewProperty called for:', address);
     setSelectedProperty(address);
     setShowPropertyDialog(true);
   };
+
+  // Test function for debugging - expose to window
+  useEffect(() => {
+    (window as any).testPropertyDialog = (address: string) => {
+      console.log('🧪 Test function called for:', address);
+      handleViewProperty(address);
+    };
+  }, []);
 
   const handleProcessRateIncrease = (address: string) => {
     setSelectedProperty(address);
