@@ -337,16 +337,45 @@ export default function Properties() {
           <Button 
             variant="outline" 
             onClick={() => {
-              console.log('Test button clicked - opening property dialog');
-              openPropertyDialog('2468 10th Street, Unit 2');
+              const property = "2468 10th Street, Unit 2";
+              console.log('Direct test - opening property dialog for:', property);
+              setSelectedProperty(property);
+              setShowPropertyDialog(true);
             }}
           >
-            Test Search
+            Test: Open Peppa Property
           </Button>
           <Button onClick={() => setShowAddPropertyDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Property
           </Button>
+        </div>
+      </div>
+
+      {/* Quick Property Access */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border p-4 mb-6">
+        <h3 className="text-lg font-medium mb-3">Quick Property Access</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          {properties && properties.map((property: any) => (
+            <Button
+              key={property.propertyAddress}
+              variant="outline"
+              size="sm"
+              className="justify-start text-left h-auto p-3"
+              onClick={() => {
+                console.log('Quick access - opening property:', property.propertyAddress);
+                setSelectedProperty(property.propertyAddress);
+                setShowPropertyDialog(true);
+              }}
+            >
+              <div className="flex flex-col items-start">
+                <span className="font-medium">{property.propertyAddress}</span>
+                <span className="text-xs text-gray-500">
+                  {property.tenant ? property.tenant.name : 'Vacant'}
+                </span>
+              </div>
+            </Button>
+          ))}
         </div>
       </div>
 

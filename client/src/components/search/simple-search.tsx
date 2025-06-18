@@ -187,15 +187,28 @@ export function SimpleSearch({
   
   // Handle selection with immediate property dialog opening
   const handleSelect = (result: SearchResult) => {
+    console.log('=== HANDLE SELECT CALLED ===');
+    console.log('Full result object:', result);
+    console.log('Result type:', result.type);
+    console.log('Property address field:', result.propertyAddress);
+    console.log('Current location before navigation:', window.location.href);
+    
     setOpen(false);
     setInputValue("");
     
     if (result.propertyAddress) {
-      console.log('Search result selected:', result.propertyAddress);
+      console.log('Property address found, proceeding with navigation');
+      console.log('Property address value:', result.propertyAddress);
       
       // Force a hard navigation to bypass any caching issues
       const timestamp = Date.now();
-      window.location.href = `/properties?property=${encodeURIComponent(result.propertyAddress)}&t=${timestamp}`;
+      const targetUrl = `/properties?property=${encodeURIComponent(result.propertyAddress)}&t=${timestamp}`;
+      console.log('Navigating to:', targetUrl);
+      
+      window.location.href = targetUrl;
+    } else {
+      console.log('ERROR: No property address found in result');
+      console.log('Available result fields:', Object.keys(result));
     }
   };
   
@@ -220,7 +233,12 @@ export function SimpleSearch({
                   .map(result => (
                     <CommandItem
                       key={result.id}
-                      onSelect={() => handleSelect(result)}
+                      onSelect={() => {
+                        console.log('=== PROPERTY RESULT CLICKED ===');
+                        console.log('Result data:', result);
+                        console.log('Property address:', result.propertyAddress);
+                        handleSelect(result);
+                      }}
                     >
                       <Building className="mr-2 h-4 w-4" />
                       <div className="flex flex-col">
