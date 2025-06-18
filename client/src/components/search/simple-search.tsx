@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import {
   CommandDialog,
   CommandEmpty,
@@ -180,13 +181,16 @@ export function SimpleSearch({
     return () => document.removeEventListener("keydown", down);
   }, [open, setOpen]);
   
+  const [, setLocation] = useLocation();
+  
   // Handle selection
   const handleSelect = (result: SearchResult) => {
     setOpen(false);
     setInputValue("");  // Clear the search input
     
     if (result.propertyAddress) {
-      window.location.href = `/properties?address=${encodeURIComponent(result.propertyAddress)}`;
+      console.log('Search result clicked, navigating to:', result.propertyAddress);
+      setLocation(`/properties?address=${encodeURIComponent(result.propertyAddress)}`);
     }
   };
   

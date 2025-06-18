@@ -44,8 +44,11 @@ export default function Properties() {
     const params = new URLSearchParams(window.location.search);
     const addressParam = params.get('address');
     
+    console.log('URL effect triggered:', { location, addressParam });
+    
     if (addressParam) {
       const decodedAddress = decodeURIComponent(addressParam);
+      console.log('Setting pending property from URL:', decodedAddress);
       setPendingPropertyFromUrl(decodedAddress);
       
       // Clear URL parameter immediately
@@ -61,13 +64,24 @@ export default function Properties() {
 
   // Handle opening dialog when we have properties data and a pending property
   useEffect(() => {
+    console.log('Dialog effect triggered:', { 
+      pendingPropertyFromUrl, 
+      hasProperties: !!properties, 
+      propertiesLength: properties?.length,
+      showPropertyDialog,
+      selectedProperty
+    });
+    
     if (pendingPropertyFromUrl && properties && Array.isArray(properties) && properties.length > 0) {
       // Check if the property exists in our data
       const propertyExists = properties.some((p: any) => 
         p.propertyAddress === pendingPropertyFromUrl
       );
       
+      console.log('Property exists check:', { pendingPropertyFromUrl, propertyExists });
+      
       if (propertyExists) {
+        console.log('Opening dialog for property:', pendingPropertyFromUrl);
         setSelectedProperty(pendingPropertyFromUrl);
         setShowPropertyDialog(true);
         setPendingPropertyFromUrl(null);
