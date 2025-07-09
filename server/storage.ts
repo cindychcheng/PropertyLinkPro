@@ -1279,11 +1279,20 @@ export class MemStorage implements IStorage {
     const currentMonth = month || new Date().getMonth() + 1;
     const result = [];
     
+    console.log("=== BIRTHDAY REMINDERS DEBUG ===");
+    console.log("Target month:", currentMonth);
+    console.log("Total landlord owners:", this.landlordOwners.length);
+    console.log("Total tenants:", this.tenants.length);
+    
     // Check landlord owners
     for (const owner of this.landlordOwners) {
+      console.log("Checking owner:", owner.name, "birthday:", owner.birthday);
       if (owner.birthday) {
         const birthday = new Date(owner.birthday);
-        if (birthday.getMonth() + 1 === currentMonth) {
+        const birthdayMonth = birthday.getMonth() + 1;
+        console.log("Owner", owner.name, "birthday month:", birthdayMonth, "target month:", currentMonth);
+        if (birthdayMonth === currentMonth) {
+          console.log("✓ Adding owner to results:", owner.name);
           result.push({
             name: owner.name,
             role: 'Landlord',
@@ -1297,9 +1306,13 @@ export class MemStorage implements IStorage {
     
     // Check tenants
     for (const tenant of this.tenants) {
+      console.log("Checking tenant:", tenant.name, "birthday:", tenant.birthday, "moved out:", tenant.moveOutDate);
       if (tenant.birthday && !tenant.moveOutDate) {
         const birthday = new Date(tenant.birthday);
-        if (birthday.getMonth() + 1 === currentMonth) {
+        const birthdayMonth = birthday.getMonth() + 1;
+        console.log("Tenant", tenant.name, "birthday month:", birthdayMonth, "target month:", currentMonth);
+        if (birthdayMonth === currentMonth) {
+          console.log("✓ Adding tenant to results:", tenant.name);
           result.push({
             name: tenant.name,
             role: 'Tenant',
@@ -1311,6 +1324,7 @@ export class MemStorage implements IStorage {
       }
     }
     
+    console.log("Total birthday reminders found:", result.length);
     return result.sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
   }
   async processRentalIncrease(propertyAddress: string, increaseDate: Date, newRate: number) { 

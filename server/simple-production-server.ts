@@ -111,7 +111,17 @@ app.get('/api/reminders/birthdays', async (req, res) => {
   try {
     console.log("Birthday reminders endpoint called");
     const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    console.log("Current date:", currentDate.toISOString());
+    console.log("Current month:", currentMonth);
+    console.log("Requested month:", month);
+    
     const reminders = await storage.getBirthdayReminders(month);
+    console.log("Birthday reminders found:", reminders.length);
+    console.log("Reminders:", JSON.stringify(reminders, null, 2));
+    
     res.json(reminders);
   } catch (error) {
     console.error("Birthday reminders error:", error);
