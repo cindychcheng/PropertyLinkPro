@@ -154,7 +154,7 @@ app.get('/api/init-db', async (req, res) => {
       landlordId: testProperty.id,
       name: "John Doe",
       contactNumber: "604-555-0123",
-      birthday: "1980-03-15",
+      birthday: "1980-07-25",
       residentialAddress: "123 Main St, Vancouver, BC"
     });
     
@@ -166,7 +166,7 @@ app.get('/api/init-db', async (req, res) => {
       name: "Jane Smith",
       contactNumber: "604-555-0456",
       email: "jane.smith@example.com",
-      birthday: "1985-07-20",
+      birthday: "1985-07-09",
       moveInDate: "2023-01-15",
       serviceType: "Full-Service Management",
       isPrimary: true
