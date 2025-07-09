@@ -74,7 +74,35 @@ app.use((req, res, next) => {
       log(`Error setting up Vite: ${error}`, "error");
     }
   } else {
-    serveStatic(app);
+    // Simple static serving for production
+    const express = await import("express");
+    const path = await import("path");
+    const fs = await import("fs");
+    
+    const distPath = path.resolve(process.cwd(), "dist", "public");
+    log(`Looking for static files at: ${distPath}`);
+    
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      });
+      log("Static files served successfully");
+    } else {
+      log("No static files found, serving basic response");
+      app.use("*", (_req, res) => {
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head><title>PropertyLinkPro</title></head>
+            <body>
+              <h1>PropertyLinkPro API Server</h1>
+              <p>Server is running! API endpoints are available.</p>
+            </body>
+          </html>
+        `);
+      });
+    }
   }
 
   // Serve the app on Railway's assigned port or fallback to 8080
