@@ -18,5 +18,13 @@ if (!process.env.DATABASE_URL && process.env.USE_MEMORY_STORAGE !== 'true') {
 // Use a dummy connection string if using memory storage
 const connectionString = process.env.DATABASE_URL || "postgresql://dummy:dummy@localhost:5432/dummy";
 
-export const pool = new Pool({ connectionString });
+// Configure SSL for Railway's PostgreSQL
+const poolConfig = {
+  connectionString,
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : false
+};
+
+export const pool = new Pool(poolConfig);
 export const db = drizzle({ client: pool, schema });
