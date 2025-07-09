@@ -25,7 +25,7 @@ export function GlobalSearch({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);

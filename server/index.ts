@@ -3,6 +3,10 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed-database";
 
+// Load environment variables
+import * as dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -38,12 +42,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Seed the database with initial data
-  try {
-    await seedDatabase();
-    log("Database setup completed", "info");
-  } catch (error) {
-    log(`Error setting up database: ${error}`, "error");
+  // Seed the database with initial data (skip for memory storage)
+  if (process.env.USE_MEMORY_STORAGE !== 'true') {
+    try {
+      await seedDatabase();
+      log("Database setup completed", "info");
+    } catch (error) {
+      log(`Error setting up database: ${error}`, "error");
+    }
+  } else {
+    log("Using memory storage - skipping database setup", "info");
   }
   
   const server = await registerRoutes(app);
@@ -60,20 +68,20 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    try {
+      await setupVite(app, server);
+    } catch (error) {
+      log(`Error setting up Vite: ${error}`, "error");
+    }
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  // Serve the app on Railway's assigned port or fallback to 8080
+  // Railway provides PORT environment variable
+  const port = process.env.PORT || 8080;
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+    log(`Server ready for Railway deployment`);
   });
 })();

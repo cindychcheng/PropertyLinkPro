@@ -32,7 +32,7 @@ export default function Birthdays() {
   const { toast } = useToast();
   const { setActiveBirthdayCount } = useAppContext();
 
-  const { data: birthdays, isLoading, refetch } = useQuery({
+  const { data: birthdays = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: [`/api/reminders/birthdays?month=${selectedMonth}`],
     staleTime: 60000, // 1 minute
   });
@@ -56,11 +56,11 @@ export default function Birthdays() {
     setCurrentPage(1);
   };
 
-  const totalItems = birthdays?.length || 0;
-  const paginatedData = birthdays?.slice(
+  const totalItems = Array.isArray(birthdays) ? birthdays.length : 0;
+  const paginatedData = Array.isArray(birthdays) ? birthdays.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
-  );
+  ) : [];
 
   const months = [
     { value: "1", label: "January" },

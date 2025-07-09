@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 import { setupAzureAuth } from "./azureAuth";
@@ -22,10 +23,24 @@ import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware MUST be set up first to initialize sessions
-  await setupAuth(app);
+  // Skip Replit auth for memory storage
+  if (process.env.USE_MEMORY_STORAGE !== 'true') {
+    await setupAuth(app);
+  } else {
+    // Setup basic session middleware without Replit auth
+    app.use(session({
+      secret: 'dummy-secret-for-testing',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: false }
+    }));
+  }
   
   // Register Azure auth routes after session middleware is ready
-  setupAzureAuth(app);
+  // Skip Azure auth for memory storage
+  if (process.env.USE_MEMORY_STORAGE !== 'true') {
+    setupAzureAuth(app);
+  }
   
   // Register simple username/password auth
   setupSimpleAuth(app);
@@ -36,12 +51,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let userId: string | null = null;
       
       console.log("=== AUTH DEBUG ===");
-      console.log("isAuthenticated:", req.isAuthenticated());
+      console.log("isAuthenticated:", req.isAuthenticated ? req.isAuthenticated() : "not available");
       console.log("req.user:", req.user ? "exists" : "null");
       console.log("req.session.emailAuth:", (req.session as any).emailAuth);
       console.log("req.session.azureAuth:", (req.session as any).azureAuth);
       console.log("req.session.simpleAuth:", (req.session as any).simpleAuth);
       console.log("session ID:", req.sessionID);
+      
+      // For memory storage, create a default test user
+      if (process.env.USE_MEMORY_STORAGE === 'true') {
+        console.log("Using memory storage - creating test user");
+        userId = "test-user-123";
+        // Create test user if it doesn't exist
+        let testUser = await storage.getUser(userId);
+        if (!testUser) {
+          testUser = await storage.createUser({
+            id: userId,
+            email: "test@example.com",
+            firstName: "Test",
+            lastName: "User",
+            role: "admin",
+            status: "active",
+            createdBy: "system"
+          });
+        }
+        console.log("Using test user:", testUser.email);
+        return res.json(testUser);
+      }
       
       // Check for simple username/password authentication first
       if ((req.session as any).simpleAuth && (req.session as any).simpleAuth.userId) {
@@ -54,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Using Azure auth userId:", userId);
       }
       // Check for Replit OAuth authentication
-      else if (req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
+      else if (req.isAuthenticated && req.isAuthenticated() && req.user && req.user.claims && req.user.claims.sub) {
         userId = req.user.claims.sub;
         console.log("Using Replit OAuth userId:", userId);
       }

@@ -34,7 +34,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
   
   const { toast } = useToast();
 
-  const { data: properties = [], isLoading, error } = useQuery({
+  const { data: properties = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/properties'],
     staleTime: 60000, // 1 minute
   });
@@ -48,7 +48,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
   }
 
   // Filter and sort properties (most recently added/edited first)
-  const filteredProperties = (properties || []).filter((property: any) => {
+  const filteredProperties = Array.isArray(properties) ? properties.filter((property: any) => {
     // Service type filter
     if (serviceTypeFilter !== "all") {
       if (property.serviceType !== serviceTypeFilter) {
@@ -70,7 +70,7 @@ export function PropertiesTable({ onViewProperty, onEditProperty }: PropertyTabl
     const dateA = a.rentalInfo?.latestRateIncreaseDate || a.tenant?.moveInDate || '1900-01-01';
     const dateB = b.rentalInfo?.latestRateIncreaseDate || b.tenant?.moveInDate || '1900-01-01';
     return new Date(dateB).getTime() - new Date(dateA).getTime(); // Newest first
-  });
+  }) : [];
   
   // Calculate pagination
   const totalItems = filteredProperties.length;

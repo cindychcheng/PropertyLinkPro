@@ -1026,5 +1026,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use the DatabaseStorage implementation
-export const storage = new DatabaseStorage();
+// Use the DatabaseStorage implementation or MemStorage for testing
+export const storage = process.env.USE_MEMORY_STORAGE === 'true' 
+  ? new MemStorage() 
+  : new DatabaseStorage();
