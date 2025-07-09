@@ -927,11 +927,25 @@ export class DatabaseStorage implements IStorage {
 
 // In-memory storage implementation for backwards compatibility
 export class MemStorage implements IStorage {
+  private landlords: Landlord[] = [];
+  private landlordOwners: LandlordOwner[] = [];
+  private tenants: Tenant[] = [];
+  private rentalRateIncreases: RentalRateIncrease[] = [];
+  private rentalRateHistory: RentalRateHistory[] = [];
+  private users: User[] = [];
+  private userAuditLog: UserAuditLog[] = [];
+  private nextId = 1;
+
   // User operations (for authentication)
-  async getUser(id: string) { return undefined; }
-  async getUserByEmail(email: string) { return undefined; }
+  async getUser(id: string) { return this.users.find(u => u.id === id); }
+  async getUserByEmail(email: string) { return this.users.find(u => u.email === email); }
   async upsertUser(user: UpsertUser) { 
-    return { 
+    const existingUser = this.users.find(u => u.id === user.id);
+    if (existingUser) {
+      Object.assign(existingUser, user, { updatedAt: new Date() });
+      return existingUser;
+    }
+    const newUser = { 
       id: user.id!, 
       email: user.email || null, 
       firstName: user.firstName || null, 
@@ -943,12 +957,17 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(), 
       createdBy: user.createdBy || null, 
       lastLoginAt: null 
-    }; 
+    };
+    this.users.push(newUser);
+    return newUser;
   }
-  async updateUserLastLogin(id: string) { return; }
-  async getAllUsers() { return []; }
+  async updateUserLastLogin(id: string) { 
+    const user = this.users.find(u => u.id === id);
+    if (user) user.lastLoginAt = new Date();
+  }
+  async getAllUsers() { return [...this.users]; }
   async createUser(user: InsertUser) { 
-    return { 
+    const newUser = { 
       id: user.id, 
       email: user.email || null, 
       firstName: user.firstName || null, 
@@ -960,69 +979,376 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(), 
       createdBy: user.createdBy || null, 
       lastLoginAt: null 
-    }; 
+    };
+    this.users.push(newUser);
+    return newUser;
   }
-  async updateUser() { return undefined; }
-  async deactivateUser() { return false; }
-  async deleteUser() { return false; }
-  async logUserAction() { return; }
-  async getUserAuditLog() { return []; }
+  async updateUser(id: string, updates: UpdateUser) { 
+    const user = this.users.find(u => u.id === id);
+    if (user) {
+      Object.assign(user, updates, { updatedAt: new Date() });
+      return user;
+    }
+    return undefined;
+  }
+  async deactivateUser(id: string) { 
+    const user = this.users.find(u => u.id === id);
+    if (user) {
+      user.status = "inactive";
+      user.updatedAt = new Date();
+      return true;
+    }
+    return false;
+  }
+  async deleteUser(id: string) { 
+    const index = this.users.findIndex(u => u.id === id);
+    if (index >= 0) {
+      this.users.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+  async logUserAction(action: InsertUserAuditLog) { 
+    const logEntry = { ...action, id: this.nextId++, timestamp: new Date() };
+    this.userAuditLog.push(logEntry);
+  }
+  async getUserAuditLog(userId?: string) { 
+    return userId ? this.userAuditLog.filter(log => log.targetUserId === userId) : [...this.userAuditLog];
+  }
   
-  async getLandlords() { return []; }
-  async getLandlordByPropertyAddress() { return undefined; }
+  async getLandlords() { return [...this.landlords]; }
+  async getLandlordByPropertyAddress(propertyAddress: string) { 
+    return this.landlords.find(l => l.propertyAddress === propertyAddress);
+  }
   async createLandlord(landlord: InsertLandlord) { 
-    // Use non-nullable default for serviceType
-    return { 
-      id: 0, 
+    const newLandlord = { 
+      id: this.nextId++, 
       ...landlord, 
       serviceType: landlord.serviceType ?? 'Full-Service Management',
       strataContactNumber: null, 
       strataManagementCompany: null, 
       strataContactPerson: null 
-    }; 
+    };
+    this.landlords.push(newLandlord);
+    return newLandlord;
   }
-  async updateLandlord() { return undefined; }
-  async deleteLandlord() { return false; }
-  async getLandlordOwners() { return []; }
-  async createLandlordOwner(owner: InsertLandlordOwner) { return { id: 0, ...owner, contactNumber: null, birthday: null, residentialAddress: null }; }
-  async updateLandlordOwner() { return undefined; }
-  async deleteLandlordOwner() { return false; }
-  async getTenants() { return []; }
-  async getTenantByPropertyAddress() { return undefined; }
-  async getTenantsByPropertyAddress() { return []; }
+  async updateLandlord(propertyAddress: string, landlord: Partial<InsertLandlord>) { 
+    const existing = this.landlords.find(l => l.propertyAddress === propertyAddress);
+    if (existing) {
+      Object.assign(existing, landlord);
+      return existing;
+    }
+    return undefined;
+  }
+  async deleteLandlord(propertyAddress: string) { 
+    const index = this.landlords.findIndex(l => l.propertyAddress === propertyAddress);
+    if (index >= 0) {
+      this.landlords.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+  async getLandlordOwners(landlordId: number) { 
+    return this.landlordOwners.filter(o => o.landlordId === landlordId);
+  }
+  async createLandlordOwner(owner: InsertLandlordOwner) { 
+    const newOwner = { 
+      id: this.nextId++, 
+      ...owner, 
+      contactNumber: null, 
+      birthday: null, 
+      residentialAddress: null 
+    };
+    this.landlordOwners.push(newOwner);
+    return newOwner;
+  }
+  async updateLandlordOwner(id: number, owner: Partial<InsertLandlordOwner>) { 
+    const existing = this.landlordOwners.find(o => o.id === id);
+    if (existing) {
+      Object.assign(existing, owner);
+      return existing;
+    }
+    return undefined;
+  }
+  async deleteLandlordOwner(id: number) { 
+    const index = this.landlordOwners.findIndex(o => o.id === id);
+    if (index >= 0) {
+      this.landlordOwners.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+  async getTenants() { return [...this.tenants]; }
+  async getTenantByPropertyAddress(propertyAddress: string) { 
+    return this.tenants.find(t => t.propertyAddress === propertyAddress && !t.moveOutDate);
+  }
+  async getTenantsByPropertyAddress(propertyAddress: string) { 
+    return this.tenants.filter(t => t.propertyAddress === propertyAddress);
+  }
   async createTenant(tenant: InsertTenant) { 
-    return { 
-      id: 0, 
+    const newTenant = { 
+      id: this.nextId++, 
       ...tenant, 
       contactNumber: null, 
       birthday: null, 
       moveOutDate: null, 
       email: null,
       isPrimary: tenant.isPrimary ?? false
-    }; 
+    };
+    this.tenants.push(newTenant);
+    return newTenant;
   }
-  async updateTenant() { return undefined; }
-  async deleteTenant() { return false; }
-  async getRentalRateIncreases() { return []; }
-  async getRentalRateIncreaseByPropertyAddress() { return undefined; }
-  async createRentalRateIncrease(increase: InsertRentalRateIncrease) { return { id: 0, ...increase }; }
-  async updateRentalRateIncrease() { return undefined; }
-  async getRentalRateHistory() { return []; }
-  async createRentalRateHistory(history: InsertRentalRateHistory) { return { id: 0, ...history, createdAt: new Date(), notes: null }; }
-  async getPropertiesWithDetails() { return []; }
-  async getPropertyDetailsByAddress() { return undefined; }
-  async getRentalIncreaseReminders() { return []; }
-  async getBirthdayReminders() { return []; }
+  async updateTenant(id: number, tenant: Partial<InsertTenant>) { 
+    const existing = this.tenants.find(t => t.id === id);
+    if (existing) {
+      Object.assign(existing, tenant);
+      return existing;
+    }
+    return undefined;
+  }
+  async deleteTenant(id: number) { 
+    const index = this.tenants.findIndex(t => t.id === id);
+    if (index >= 0) {
+      this.tenants.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+  async getRentalRateIncreases() { return [...this.rentalRateIncreases]; }
+  async getRentalRateIncreaseByPropertyAddress(propertyAddress: string) { 
+    return this.rentalRateIncreases.find(r => r.propertyAddress === propertyAddress);
+  }
+  async createRentalRateIncrease(increase: InsertRentalRateIncrease) { 
+    const newIncrease = { id: this.nextId++, ...increase };
+    this.rentalRateIncreases.push(newIncrease);
+    return newIncrease;
+  }
+  async updateRentalRateIncrease(propertyAddress: string, increase: Partial<InsertRentalRateIncrease>) { 
+    const existing = this.rentalRateIncreases.find(r => r.propertyAddress === propertyAddress);
+    if (existing) {
+      Object.assign(existing, increase);
+      return existing;
+    }
+    return undefined;
+  }
+  async getRentalRateHistory(propertyAddress: string) { 
+    return this.rentalRateHistory.filter(h => h.propertyAddress === propertyAddress);
+  }
+  async createRentalRateHistory(history: InsertRentalRateHistory) { 
+    const newHistory = { id: this.nextId++, ...history, createdAt: new Date(), notes: null };
+    this.rentalRateHistory.push(newHistory);
+    return newHistory;
+  }
+  async getPropertiesWithDetails(): Promise<PropertyWithDetails[]> { 
+    const result: PropertyWithDetails[] = [];
+    
+    for (const landlord of this.landlords) {
+      const owners = this.landlordOwners.filter(o => o.landlordId === landlord.id);
+      const activeTenants = this.tenants.filter(t => t.propertyAddress === landlord.propertyAddress && !t.moveOutDate);
+      const tenant = activeTenants.length > 0 ? activeTenants[0] : undefined;
+      const rentalIncrease = this.rentalRateIncreases.find(r => r.propertyAddress === landlord.propertyAddress);
+      
+      const propertyDetails: PropertyWithDetails = {
+        propertyAddress: landlord.propertyAddress,
+        keyNumber: landlord.keyNumber,
+        strataContactNumber: landlord.strataContactNumber || undefined,
+        strataManagementCompany: landlord.strataManagementCompany || undefined,
+        strataContactPerson: landlord.strataContactPerson || undefined,
+        serviceType: landlord.serviceType || tenant?.serviceType || '',
+        landlordOwners: owners.map(owner => ({
+          name: owner.name,
+          contactNumber: owner.contactNumber || undefined,
+          birthday: owner.birthday ? new Date(owner.birthday) : undefined,
+          residentialAddress: owner.residentialAddress || undefined
+        }))
+      };
+      
+      if (tenant) {
+        propertyDetails.tenant = {
+          id: tenant.id,
+          name: tenant.name,
+          contactNumber: tenant.contactNumber || undefined,
+          email: tenant.email || undefined,
+          birthday: tenant.birthday ? new Date(tenant.birthday) : undefined,
+          moveInDate: new Date(tenant.moveInDate),
+          moveOutDate: tenant.moveOutDate ? new Date(tenant.moveOutDate) : undefined
+        };
+      }
+      
+      if (rentalIncrease) {
+        propertyDetails.rentalInfo = {
+          latestRentalRate: rentalIncrease.latestRentalRate,
+          latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
+          nextAllowableRentalIncreaseDate: new Date(rentalIncrease.nextAllowableRentalIncreaseDate),
+          nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
+          reminderDate: new Date(rentalIncrease.reminderDate)
+        };
+      }
+      
+      result.push(propertyDetails);
+    }
+    
+    return result;
+  }
+  async getPropertyDetailsByAddress(propertyAddress: string) { 
+    const landlord = this.landlords.find(l => l.propertyAddress === propertyAddress);
+    if (!landlord) return undefined;
+    
+    const owners = this.landlordOwners.filter(o => o.landlordId === landlord.id);
+    const activeTenants = this.tenants.filter(t => t.propertyAddress === propertyAddress && !t.moveOutDate);
+    const tenant = activeTenants.length > 0 ? activeTenants[0] : undefined;
+    const rentalIncrease = this.rentalRateIncreases.find(r => r.propertyAddress === propertyAddress);
+    
+    const propertyDetails: PropertyWithDetails = {
+      propertyAddress: landlord.propertyAddress,
+      keyNumber: landlord.keyNumber,
+      strataContactNumber: landlord.strataContactNumber || undefined,
+      strataManagementCompany: landlord.strataManagementCompany || undefined,
+      strataContactPerson: landlord.strataContactPerson || undefined,
+      serviceType: landlord.serviceType || tenant?.serviceType || '',
+      landlordOwners: owners.map(owner => ({
+        name: owner.name,
+        contactNumber: owner.contactNumber || undefined,
+        birthday: owner.birthday ? new Date(owner.birthday) : undefined,
+        residentialAddress: owner.residentialAddress || undefined
+      }))
+    };
+    
+    if (tenant) {
+      propertyDetails.tenant = {
+        id: tenant.id,
+        name: tenant.name,
+        contactNumber: tenant.contactNumber || undefined,
+        email: tenant.email || undefined,
+        birthday: tenant.birthday ? new Date(tenant.birthday) : undefined,
+        moveInDate: new Date(tenant.moveInDate),
+        moveOutDate: tenant.moveOutDate ? new Date(tenant.moveOutDate) : undefined
+      };
+    }
+    
+    if (rentalIncrease) {
+      propertyDetails.rentalInfo = {
+        latestRentalRate: rentalIncrease.latestRentalRate,
+        latestRateIncreaseDate: new Date(rentalIncrease.latestRateIncreaseDate),
+        nextAllowableRentalIncreaseDate: new Date(rentalIncrease.nextAllowableRentalIncreaseDate),
+        nextAllowableRentalRate: rentalIncrease.nextAllowableRentalRate,
+        reminderDate: new Date(rentalIncrease.reminderDate)
+      };
+    }
+    
+    return propertyDetails;
+  }
+  async getRentalIncreaseReminders(month?: number, minMonthsSinceIncrease?: number) { 
+    const result = [];
+    
+    for (const increase of this.rentalRateIncreases) {
+      const increaseDate = new Date(increase.latestRateIncreaseDate);
+      const today = new Date();
+      const monthsSinceIncrease = 
+        (today.getFullYear() - increaseDate.getFullYear()) * 12 + 
+        (today.getMonth() - increaseDate.getMonth());
+      
+      if (minMonthsSinceIncrease !== undefined && monthsSinceIncrease < minMonthsSinceIncrease) {
+        continue;
+      }
+      
+      if (month && month > 0) {
+        const reminderDate = new Date(increase.reminderDate);
+        if (reminderDate.getMonth() + 1 !== month) {
+          continue;
+        }
+      }
+      
+      const tenant = this.tenants.find(t => t.propertyAddress === increase.propertyAddress && !t.moveOutDate);
+      
+      result.push({
+        propertyAddress: increase.propertyAddress,
+        serviceType: tenant?.serviceType || 'Unknown',
+        latestRateIncreaseDate: increase.latestRateIncreaseDate,
+        latestRentalRate: increase.latestRentalRate,
+        nextAllowableRentalIncreaseDate: increase.nextAllowableRentalIncreaseDate,
+        nextAllowableRentalRate: increase.nextAllowableRentalRate,
+        reminderDate: increase.reminderDate,
+        monthsSinceIncrease
+      });
+    }
+    
+    return result.sort((a, b) => (b?.monthsSinceIncrease || 0) - (a?.monthsSinceIncrease || 0));
+  }
+  async getBirthdayReminders(month?: number) { 
+    const currentMonth = month || new Date().getMonth() + 1;
+    const result = [];
+    
+    // Check landlord owners
+    for (const owner of this.landlordOwners) {
+      if (owner.birthday) {
+        const birthday = new Date(owner.birthday);
+        if (birthday.getMonth() + 1 === currentMonth) {
+          result.push({
+            name: owner.name,
+            role: 'Landlord',
+            contactNumber: owner.contactNumber || 'N/A',
+            birthday: new Date(owner.birthday),
+            propertyAddress: owner.residentialAddress || 'N/A'
+          });
+        }
+      }
+    }
+    
+    // Check tenants
+    for (const tenant of this.tenants) {
+      if (tenant.birthday && !tenant.moveOutDate) {
+        const birthday = new Date(tenant.birthday);
+        if (birthday.getMonth() + 1 === currentMonth) {
+          result.push({
+            name: tenant.name,
+            role: 'Tenant',
+            contactNumber: tenant.contactNumber || 'N/A',
+            birthday: new Date(tenant.birthday),
+            propertyAddress: tenant.propertyAddress
+          });
+        }
+      }
+    }
+    
+    return result.sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  }
   async processRentalIncrease(propertyAddress: string, increaseDate: Date, newRate: number) { 
-    return { 
-      id: 0, 
-      propertyAddress, 
-      latestRateIncreaseDate: format(increaseDate, 'yyyy-MM-dd'), 
+    const currentRateInfo = this.rentalRateIncreases.find(r => r.propertyAddress === propertyAddress);
+    if (!currentRateInfo) {
+      throw new Error("No rental rate information found for this property");
+    }
+    
+    const nextAllowableDate = addMonths(increaseDate, 12);
+    const nextAllowableRate = Math.round(newRate * 1.03 * 100) / 100;
+    const reminderDate = addMonths(increaseDate, 8);
+    
+    const tenant = this.tenants.find(t => t.propertyAddress === propertyAddress && !t.moveOutDate);
+    const tenantName = tenant ? tenant.name : "No tenant";
+    
+    // Create history entry
+    await this.createRentalRateHistory({
+      propertyAddress,
+      increaseDate: format(increaseDate, 'yyyy-MM-dd'),
+      previousRate: currentRateInfo.latestRentalRate,
+      newRate,
+      notes: `Rate increase\n\nActive tenant: ${tenantName}`
+    });
+    
+    // Update rental rate increase
+    const updated = await this.updateRentalRateIncrease(propertyAddress, {
+      latestRateIncreaseDate: format(increaseDate, 'yyyy-MM-dd'),
       latestRentalRate: newRate,
-      nextAllowableRentalIncreaseDate: format(addMonths(increaseDate, 12), 'yyyy-MM-dd'),
-      nextAllowableRentalRate: Math.round(newRate * 1.03 * 100) / 100,
-      reminderDate: format(addMonths(increaseDate, 8), 'yyyy-MM-dd')
-    }; 
+      nextAllowableRentalIncreaseDate: format(nextAllowableDate, 'yyyy-MM-dd'),
+      nextAllowableRentalRate: nextAllowableRate,
+      reminderDate: format(reminderDate, 'yyyy-MM-dd')
+    });
+    
+    if (!updated) {
+      throw new Error("Failed to update rental increase information");
+    }
+    
+    return updated;
   }
 }
 

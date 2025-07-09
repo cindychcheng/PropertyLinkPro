@@ -140,7 +140,7 @@ app.get('/api/init-db', async (req, res) => {
   try {
     console.log("Database initialization called");
     
-    // Try to create a test property to verify database works
+    // Create test property
     const testProperty = await storage.createLandlord({
       propertyAddress: "Test Property - 456 Oak St",
       keyNumber: "TEST001",
@@ -149,9 +149,49 @@ app.get('/api/init-db', async (req, res) => {
     
     console.log("Test property created:", testProperty);
     
+    // Create test landlord owner
+    const testOwner = await storage.createLandlordOwner({
+      landlordId: testProperty.id,
+      name: "John Doe",
+      contactNumber: "604-555-0123",
+      birthday: "1980-03-15",
+      residentialAddress: "123 Main St, Vancouver, BC"
+    });
+    
+    console.log("Test owner created:", testOwner);
+    
+    // Create test tenant
+    const testTenant = await storage.createTenant({
+      propertyAddress: testProperty.propertyAddress,
+      name: "Jane Smith",
+      contactNumber: "604-555-0456",
+      email: "jane.smith@example.com",
+      birthday: "1985-07-20",
+      moveInDate: "2023-01-15",
+      serviceType: "Full-Service Management",
+      isPrimary: true
+    });
+    
+    console.log("Test tenant created:", testTenant);
+    
+    // Create test rental rate increase
+    const testRentalIncrease = await storage.createRentalRateIncrease({
+      propertyAddress: testProperty.propertyAddress,
+      latestRateIncreaseDate: "2023-01-15",
+      latestRentalRate: 2500.00,
+      nextAllowableRentalIncreaseDate: "2024-01-15",
+      nextAllowableRentalRate: 2575.00,
+      reminderDate: "2023-09-15"
+    });
+    
+    console.log("Test rental increase created:", testRentalIncrease);
+    
     res.json({ 
       message: "Database initialized successfully",
-      testProperty: testProperty
+      testProperty: testProperty,
+      testOwner: testOwner,
+      testTenant: testTenant,
+      testRentalIncrease: testRentalIncrease
     });
   } catch (error) {
     console.error("Database initialization error:", error);
