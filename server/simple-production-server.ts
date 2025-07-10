@@ -118,26 +118,12 @@ app.get('/api/reminders/birthdays', async (req, res) => {
     console.log("Current month:", currentMonth);
     console.log("Requested month:", month);
     
-    // For now, return hardcoded test data to verify the endpoint works
-    const testReminders = [
-      {
-        name: "John Doe",
-        role: "Landlord",
-        contactNumber: "604-555-0123",
-        birthday: new Date("1980-07-25"),
-        propertyAddress: "123 Main St, Vancouver, BC"
-      },
-      {
-        name: "Jane Smith",
-        role: "Tenant",
-        contactNumber: "604-555-0456",
-        birthday: new Date("1985-07-09"),
-        propertyAddress: "Test Property - 456 Oak St"
-      }
-    ];
+    // Use actual storage to get birthday reminders
+    const reminders = await storage.getBirthdayReminders(month);
+    console.log("Birthday reminders found:", reminders.length);
+    console.log("Reminders:", JSON.stringify(reminders, null, 2));
     
-    console.log("Returning test reminders:", testReminders);
-    res.json(testReminders);
+    res.json(reminders);
   } catch (error) {
     console.error("Birthday reminders error:", error);
     // Return empty array instead of error to prevent UI crashes
