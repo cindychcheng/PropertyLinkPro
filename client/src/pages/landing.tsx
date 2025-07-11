@@ -1,17 +1,146 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck, Mail } from "lucide-react";
+import { Building2, Users, TrendingUp, Calendar, Shield, UserCheck, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import { EmailSignin } from "@/components/email-signin";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
-  const [showEmailSignin, setShowEmailSignin] = useState(false);
+  const [showMagicLogin, setShowMagicLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const { toast } = useToast();
 
-  if (showEmailSignin) {
+  const handleMagicLinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setEmailSent(true);
+        toast({
+          title: "Login link sent",
+          description: "Check your email for a sign-in link",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to send login link",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (showMagicLogin) {
+    if (emailSent) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <CardTitle>Check your email</CardTitle>
+              <CardDescription>
+                We've sent a sign-in link to {email}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center">
+                Click the link in your email to sign in. The link will expire in 15 minutes.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowMagicLogin(false);
+                  setEmailSent(false);
+                  setEmail("");
+                }} 
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to sign in options
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-        <EmailSignin onBack={() => setShowEmailSignin(false)} />
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Sign in with email</CardTitle>
+            <CardDescription>
+              Enter your company email address and we'll send you a secure sign-in link
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleMagicLinkSubmit} className="space-y-4">
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Enter your company email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMagicLogin(false)}
+                  className="flex-1"
+                  disabled={isLoading}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  {isLoading ? "Sending..." : "Send login link"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -97,57 +226,41 @@ export default function Landing() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                 <UserCheck className="h-4 w-4" />
-                <span>Role-based access control</span>
+                <span>Secure staff access</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                 <Shield className="h-4 w-4" />
-                <span>Secure authentication system</span>
+                <span>Company employee authentication</span>
               </div>
               <div className="space-y-3">
-                <a 
-                  href="/api/auth/azure/login"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+                <Button 
+                  onClick={() => setShowMagicLogin(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  size="lg"
                 >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Sign In with Microsoft
-                </a>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Sign in with Email
+                </Button>
+                
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-gray-300 dark:border-gray-600" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                      or
+                      Emergency Access
                     </span>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => window.location.href = '/api/login'}
-                  variant="outline"
-                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-                  size="lg"
-                >
-                  Sign In with Replit
-                </Button>
-                <Button 
-                  onClick={() => setShowEmailSignin(true)}
-                  variant="outline"
-                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-                  size="lg"
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Sign In with Email
-                </Button>
-                <div className="text-center">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Don't have access yet?</span>
-                </div>
-                <Link href="/register">
+                
+                <Link href="/admin">
                   <Button 
-                    variant="outline" 
-                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    variant="outline"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                     size="lg"
                   >
-                    Request Access
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Backup Login
                   </Button>
                 </Link>
               </div>
@@ -157,9 +270,9 @@ export default function Landing() {
 
         {/* Footer */}
         <div className="text-center mt-16 text-gray-500 dark:text-gray-400 space-y-2">
-          <p>© 2025 Property Management System. Secure and reliable property management.</p>
+          <p>© 2025 PropertyLinkPro. Secure and reliable property management.</p>
           <p className="text-sm">
-            System Admin? <Link href="/admin" className="text-green-600 hover:text-green-700 font-medium">Admin Login</Link>
+            For authorized company staff only
           </p>
         </div>
       </div>

@@ -517,6 +517,19 @@ export function PropertyDialog({
                         })}
                       </tbody>
                     </table>
+                    
+                    {/* Process Rate Increase Button for Rental History Tab - Updated */}
+                    {property?.tenant && hasTenantLivedForMinimumPeriod(property.tenant.moveInDate) && (
+                      <div className="mt-6 flex justify-end">
+                        <Button 
+                          onClick={() => onProcessRateIncrease(propertyAddress!)}
+                          className="bg-primary hover:bg-primary/90 text-white"
+                        >
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Process Rate Increase
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-4 bg-neutral-lightest rounded-lg">
@@ -633,34 +646,68 @@ export function PropertyDialog({
                     onCancel={() => setEditingTenant(false)}
                   />
                 ) : (
-                  property && property.tenantHistory && property.tenantHistory.length > 0 ? (
+                  property ? (
                     <div className="space-y-4">
-                      {property.tenantHistory.map((tenant, index) => (
-                        <div key={index} className={index > 0 ? "border-t pt-4" : ""}>
+                      {/* Current Tenant */}
+                      {property.tenant && !property.tenant.moveOutDate ? (
+                        <div>
                           <p className="font-medium">
-                            {tenant.name}
-                            {tenant.moveOutDate ? " (Previous)" : ""}
-                            {!tenant.moveOutDate && index === 0 ? " (Primary)" : ""}
+                            {property.tenant.name} (Current Tenant)
                           </p>
-                          <p className="text-sm">{tenant.contactNumber || 'No contact number'}</p>
-                          <p className="text-sm">{tenant.email || 'No email provided'}</p>
+                          <p className="text-sm">{property.tenant.contactNumber || 'No contact number'}</p>
+                          <p className="text-sm">{property.tenant.email || 'No email provided'}</p>
                           <p className="text-sm text-neutral-medium">
-                            Birthday: {tenant.birthday 
-                              ? formatDisplayDate(tenant.birthday) 
+                            Birthday: {property.tenant.birthday 
+                              ? formatDisplayDate(property.tenant.birthday) 
                               : 'Not provided'}
                           </p>
-                          <p className="mt-2"><strong>Move-in Date:</strong> {tenant.moveInDate 
-                            ? formatDisplayDate(tenant.moveInDate) 
+                          <p className="mt-2"><strong>Move-in Date:</strong> {property.tenant.moveInDate 
+                            ? formatDisplayDate(property.tenant.moveInDate) 
                             : 'Not specified'}</p>
                           
-                          {tenant.moveOutDate && (
-                            <p><strong>Move-out Date:</strong> {formatDisplayDate(tenant.moveOutDate)}</p>
+                          {property.tenant.moveOutDate && (
+                            <p><strong>Move-out Date:</strong> {formatDisplayDate(property.tenant.moveOutDate)}</p>
                           )}
                         </div>
-                      ))}
+                      ) : null}
+                      
+                      {/* Tenant History */}
+                      {property.tenantHistory && property.tenantHistory.length > 0 && (
+                        <div className={property.tenant && !property.tenant.moveOutDate ? "border-t pt-4" : ""}>
+                          <h4 className="font-medium mb-3 text-neutral-medium">Previous Tenants</h4>
+                          <div className="space-y-4">
+                            {property.tenantHistory.map((tenant, index) => (
+                              <div key={index} className={index > 0 ? "border-t pt-4" : ""}>
+                                <p className="font-medium">
+                                  {tenant.name} (Previous)
+                                </p>
+                                <p className="text-sm">{tenant.contactNumber || 'No contact number'}</p>
+                                <p className="text-sm">{tenant.email || 'No email provided'}</p>
+                                <p className="text-sm text-neutral-medium">
+                                  Birthday: {tenant.birthday 
+                                    ? formatDisplayDate(tenant.birthday) 
+                                    : 'Not provided'}
+                                </p>
+                                <p className="mt-2"><strong>Move-in Date:</strong> {tenant.moveInDate 
+                                  ? formatDisplayDate(tenant.moveInDate) 
+                                  : 'Not specified'}</p>
+                                
+                                {tenant.moveOutDate && (
+                                  <p><strong>Move-out Date:</strong> {formatDisplayDate(tenant.moveOutDate)}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Show vacant message only if no current tenant and no history */}
+                      {!property.tenant && (!property.tenantHistory || property.tenantHistory.length === 0) && (
+                        <p className="text-warning italic">Vacant</p>
+                      )}
                     </div>
                   ) : (
-                    <p className="text-warning italic">Vacant</p>
+                    <p className="text-warning italic">No property data available</p>
                   )
                 )}
               </div>

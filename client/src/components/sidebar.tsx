@@ -28,29 +28,29 @@ const navigation = [
   { name: "Tenants", href: "/tenants", icon: Users, minRole: "read_only" },
   { name: "Rate Increases", href: "/rate-increases", icon: TrendingUp, minRole: "read_only" },
   { name: "Birthdays", href: "/birthdays", icon: Calendar, minRole: "read_only" },
-  { name: "User Management", href: "/users", icon: Shield, minRole: "super_admin" },
-  { name: "Settings", href: "/settings", icon: Settings, minRole: "standard" },
+  { name: "User Management", href: "/users", icon: Shield, minRole: "admin" },
+  { name: "Settings", href: "/settings", icon: Settings, minRole: "staff" },
 ];
 
 const roleHierarchy = {
   "read_only": 1,
-  "standard": 2,
-  "admin": 3,
-  "super_admin": 4
+  "staff": 2,
+  "manager": 3,
+  "admin": 4
 };
 
 const roleLabels = {
   "read_only": "Read Only",
-  "standard": "Standard",
-  "admin": "Admin",
-  "super_admin": "Super Admin"
+  "staff": "Staff",
+  "manager": "Manager", 
+  "admin": "Admin"
 };
 
 const roleColors = {
   "read_only": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-  "standard": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  "admin": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  "super_admin": "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+  "staff": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  "manager": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  "admin": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
 };
 
 function hasAccess(userRole: string, requiredRole: string): boolean {
