@@ -168,11 +168,14 @@ async function sendMagicLink(email, token) {
     return false;
   }
 
-  const magicLink = `http://127.0.0.1:8080/auth/magic?token=${token}`;
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://web-production-2b556.up.railway.app' 
+    : 'http://127.0.0.1:8080';
+  const magicLink = `${baseUrl}/auth/magic?token=${token}`;
   
   try {
     const info = await emailTransporter.sendMail({
-      from: '"PropertyLinkPro" <noreply@propertylinkpro.com>',
+      from: '"PropertyLinkPro" <cindychcheng@gmail.com>',
       to: email,
       subject: 'Your PropertyLinkPro Login Link',
       html: `
