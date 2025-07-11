@@ -17,7 +17,8 @@ import Tenants from "@/pages/tenants";
 import Birthdays from "@/pages/birthdays";
 import RateIncreases from "@/pages/rate-increases";
 import Settings from "@/pages/settings";
-import Users from "@/pages/users-simple";
+import Users from "@/pages/users-basic";
+import TestMinimal from "@/pages/test-minimal";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +48,7 @@ function Router() {
               <Route path="/birthdays" component={Birthdays} />
               <Route path="/rate-increases" component={RateIncreases} />
               <Route path="/users" component={Users} />
+              <Route path="/test" component={TestMinimal} />
               <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>
