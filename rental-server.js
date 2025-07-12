@@ -520,6 +520,173 @@ async function getPropertyByAddress(propertyAddress) {
   }
 }
 
+// Landlord owner database helper functions
+async function createLandlordOwner(ownerData, propertyId) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory - find property and add owner
+    const property = propertiesData.find(p => p.id === propertyId);
+    if (property) {
+      const newOwner = {
+        id: Date.now(),
+        name: ownerData.name,
+        contactNumber: ownerData.contactNumber || null,
+        birthday: ownerData.birthday || null,
+        residentialAddress: ownerData.residentialAddress || null
+      };
+      if (!property.landlordOwners) property.landlordOwners = [];
+      property.landlordOwners.push(newOwner);
+      return newOwner;
+    }
+    return null;
+  } else {
+    try {
+      const result = await global.dbPool.query(
+        'INSERT INTO landlord_owners (id, property_id, name, contact_number, birthday, residential_address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [
+          Date.now(),
+          propertyId,
+          ownerData.name,
+          ownerData.contactNumber || null,
+          ownerData.birthday || null,
+          ownerData.residentialAddress || null
+        ]
+      );
+      return {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        contactNumber: result.rows[0].contact_number,
+        birthday: result.rows[0].birthday,
+        residentialAddress: result.rows[0].residential_address
+      };
+    } catch (error) {
+      console.error('Database error creating landlord owner, falling back to memory:', error);
+      // Fallback to memory
+      const property = propertiesData.find(p => p.id === propertyId);
+      if (property) {
+        const newOwner = {
+          id: Date.now(),
+          name: ownerData.name,
+          contactNumber: ownerData.contactNumber || null,
+          birthday: ownerData.birthday || null,
+          residentialAddress: ownerData.residentialAddress || null
+        };
+        if (!property.landlordOwners) property.landlordOwners = [];
+        property.landlordOwners.push(newOwner);
+        return newOwner;
+      }
+      return null;
+    }
+  }
+}
+
+async function updateLandlordOwner(ownerId, updates) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory
+    for (const property of propertiesData) {
+      if (property.landlordOwners) {
+        const ownerIndex = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+        if (ownerIndex !== -1) {
+          Object.assign(property.landlordOwners[ownerIndex], updates);
+          return property.landlordOwners[ownerIndex];
+        }
+      }
+    }
+    return null;
+  } else {
+    try {
+      const fields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (updates.name) {
+        fields.push(`name = $${paramIndex}`);
+        values.push(updates.name);
+        paramIndex++;
+      }
+      if (updates.contactNumber !== undefined) {
+        fields.push(`contact_number = $${paramIndex}`);
+        values.push(updates.contactNumber);
+        paramIndex++;
+      }
+      if (updates.birthday !== undefined) {
+        fields.push(`birthday = $${paramIndex}`);
+        values.push(updates.birthday);
+        paramIndex++;
+      }
+      if (updates.residentialAddress !== undefined) {
+        fields.push(`residential_address = $${paramIndex}`);
+        values.push(updates.residentialAddress);
+        paramIndex++;
+      }
+      
+      values.push(ownerId);
+      
+      const result = await global.dbPool.query(
+        `UPDATE landlord_owners SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+        values
+      );
+      
+      if (result.rows.length > 0) {
+        return {
+          id: result.rows[0].id,
+          name: result.rows[0].name,
+          contactNumber: result.rows[0].contact_number,
+          birthday: result.rows[0].birthday,
+          residentialAddress: result.rows[0].residential_address
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Database error updating landlord owner, falling back to memory:', error);
+      // Fallback to memory
+      for (const property of propertiesData) {
+        if (property.landlordOwners) {
+          const ownerIndex = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+          if (ownerIndex !== -1) {
+            Object.assign(property.landlordOwners[ownerIndex], updates);
+            return property.landlordOwners[ownerIndex];
+          }
+        }
+      }
+      return null;
+    }
+  }
+}
+
+async function deleteLandlordOwner(ownerId) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory
+    for (const property of propertiesData) {
+      if (property.landlordOwners) {
+        const ownerIndex = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+        if (ownerIndex !== -1) {
+          property.landlordOwners.splice(ownerIndex, 1);
+          return true;
+        }
+      }
+    }
+    return false;
+  } else {
+    try {
+      const result = await global.dbPool.query('DELETE FROM landlord_owners WHERE id = $1', [ownerId]);
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Database error deleting landlord owner, falling back to memory:', error);
+      // Fallback to memory
+      for (const property of propertiesData) {
+        if (property.landlordOwners) {
+          const ownerIndex = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+          if (ownerIndex !== -1) {
+            property.landlordOwners.splice(ownerIndex, 1);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+  }
+}
+
 function hasPermission(user, permission) {
   if (!user || user.status !== 'active') return false;
   const userPermissions = ROLE_PERMISSIONS[user.role] || [];
@@ -1511,13 +1678,13 @@ app.delete('/api/tenants/:tenantId', async (req, res) => {
 });
 
 // Landlord owner management endpoints
-app.get('/api/landlords/:propertyAddress/owners', (req, res) => {
+app.get('/api/landlords/:propertyAddress/owners', async (req, res) => {
   try {
     const propertyAddress = decodeURIComponent(req.params.propertyAddress);
     console.log('👥 Get landlord owners for property:', propertyAddress);
     
-    // Find property
-    const property = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    // Find property using database function
+    const property = await getPropertyByAddress(propertyAddress);
     if (!property) {
       return res.status(404).json({ error: 'Property not found' });
     }
@@ -1546,19 +1713,23 @@ app.post('/api/landlord-owners', async (req, res) => {
     // Find property by landlordId, propertyAddress, or most recent
     let targetProperty = null;
     
-    // Try to find by landlordId first
-    if (landlordId) {
-      targetProperty = propertiesData.find(p => p.id === landlordId);
+    // Try to find by propertyAddress first (most reliable)
+    if (propertyAddress) {
+      targetProperty = await getPropertyByAddress(propertyAddress);
     }
     
-    // If not found and propertyAddress provided, find by address
-    if (!targetProperty && propertyAddress) {
-      targetProperty = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    // If not found and landlordId provided, try to find by ID
+    if (!targetProperty && landlordId) {
+      const properties = await getAllProperties();
+      targetProperty = properties.find(p => p.id === landlordId);
     }
     
     // If still not found, find by the most recently created property (fallback)
-    if (!targetProperty && propertiesData.length > 0) {
-      targetProperty = propertiesData[propertiesData.length - 1];
+    if (!targetProperty) {
+      const properties = await getAllProperties();
+      if (properties.length > 0) {
+        targetProperty = properties[properties.length - 1];
+      }
     }
     
     if (!targetProperty) {
@@ -1570,20 +1741,13 @@ app.post('/api/landlord-owners', async (req, res) => {
       return res.status(400).json({ error: 'Owner name is required' });
     }
     
-    // Create new owner
-    const newOwner = {
-      id: Date.now(), // Simple ID generation
+    // Create new owner using database function
+    const newOwner = await createLandlordOwner({
       name,
       contactNumber: contactNumber || null,
       birthday: birthday || null,
       residentialAddress: residentialAddress || null
-    };
-    
-    // Add owner to property
-    if (!targetProperty.landlordOwners) {
-      targetProperty.landlordOwners = [];
-    }
-    targetProperty.landlordOwners.push(newOwner);
+    }, targetProperty.id);
     
     console.log('✅ Landlord owner created successfully:', name);
     res.status(201).json(newOwner);
@@ -1601,35 +1765,19 @@ app.put('/api/landlord-owners/:ownerId', async (req, res) => {
     
     const { name, contactNumber, birthday, residentialAddress } = req.body;
     
-    // Find property containing this owner
-    let targetProperty = null;
-    let ownerIndex = -1;
+    // Prepare updates
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (contactNumber !== undefined) updates.contactNumber = contactNumber;
+    if (birthday !== undefined) updates.birthday = birthday;
+    if (residentialAddress !== undefined) updates.residentialAddress = residentialAddress;
     
-    for (const property of propertiesData) {
-      if (property.landlordOwners) {
-        const index = property.landlordOwners.findIndex(owner => owner.id === ownerId);
-        if (index !== -1) {
-          targetProperty = property;
-          ownerIndex = index;
-          break;
-        }
-      }
-    }
+    // Update owner using database function
+    const updatedOwner = await updateLandlordOwner(ownerId, updates);
     
-    if (!targetProperty || ownerIndex === -1) {
+    if (!updatedOwner) {
       return res.status(404).json({ error: 'Landlord owner not found' });
     }
-    
-    // Update owner
-    const updatedOwner = {
-      ...targetProperty.landlordOwners[ownerIndex],
-      name: name || targetProperty.landlordOwners[ownerIndex].name,
-      contactNumber: contactNumber || targetProperty.landlordOwners[ownerIndex].contactNumber,
-      birthday: birthday || targetProperty.landlordOwners[ownerIndex].birthday,
-      residentialAddress: residentialAddress || targetProperty.landlordOwners[ownerIndex].residentialAddress
-    };
-    
-    targetProperty.landlordOwners[ownerIndex] = updatedOwner;
     
     console.log('✅ Landlord owner updated successfully:', name);
     res.json(updatedOwner);
@@ -1645,27 +1793,12 @@ app.delete('/api/landlord-owners/:ownerId', async (req, res) => {
     const ownerId = parseInt(req.params.ownerId);
     console.log('🗑️ Delete landlord owner:', ownerId);
     
-    // Find property containing this owner
-    let targetProperty = null;
-    let ownerIndex = -1;
+    // Delete owner using database function
+    const deleted = await deleteLandlordOwner(ownerId);
     
-    for (const property of propertiesData) {
-      if (property.landlordOwners) {
-        const index = property.landlordOwners.findIndex(owner => owner.id === ownerId);
-        if (index !== -1) {
-          targetProperty = property;
-          ownerIndex = index;
-          break;
-        }
-      }
-    }
-    
-    if (!targetProperty || ownerIndex === -1) {
+    if (!deleted) {
       return res.status(404).json({ error: 'Landlord owner not found' });
     }
-    
-    // Remove owner
-    targetProperty.landlordOwners.splice(ownerIndex, 1);
     
     console.log('✅ Landlord owner deleted successfully');
     res.json({ success: true });
