@@ -977,7 +977,7 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🌐 Server listening on port ${PORT}`);
-  console.log('🚀 PropertyLinkPro with Rental Increase Processing');
+  console.log('🚀 PropertyLinkPro with Rental Increase Processing (Database Mode)');
   console.log('✅ POST /api/process-rental-increase endpoint ready');
   console.log('💰 Rental increase processing should now work');
   
