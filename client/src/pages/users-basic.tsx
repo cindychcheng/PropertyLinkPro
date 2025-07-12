@@ -49,6 +49,29 @@ export default function UsersBasic() {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        alert("User deleted successfully!");
+        refetch();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      alert("Failed to delete user");
+    }
+  };
+
   if (isLoading) {
     return <div style={{padding: "20px"}}>Loading users...</div>;
   }
@@ -120,12 +143,31 @@ export default function UsersBasic() {
       <div>
         <h2>Current Users ({users.length})</h2>
         {users.map((user) => (
-          <div key={user.id} style={{padding: "10px", margin: "5px", border: "1px solid #ddd", borderRadius: "3px"}}>
-            <strong>{user.firstName} {user.lastName}</strong> ({user.role})
-            <br />
-            <small>Email: {user.email}</small>
-            <br />
-            <small>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</small>
+          <div key={user.id} style={{padding: "10px", margin: "5px", border: "1px solid #ddd", borderRadius: "3px", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+            <div>
+              <strong>{user.firstName} {user.lastName}</strong> ({user.role})
+              <br />
+              <small>Email: {user.email}</small>
+              <br />
+              <small>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</small>
+            </div>
+            <div>
+              <button 
+                onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
+                style={{
+                  padding: "5px 10px", 
+                  backgroundColor: "#dc3545", 
+                  color: "white", 
+                  border: "none", 
+                  borderRadius: "3px",
+                  cursor: "pointer"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#c82333"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#dc3545"}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
