@@ -1710,31 +1710,50 @@ app.post('/api/landlord-owners', async (req, res) => {
     
     const { landlordId, propertyAddress, name, contactNumber, birthday, residentialAddress } = req.body;
     
+    // Debug logging
+    console.log('🔍 Looking for property with:');
+    console.log('  - landlordId:', landlordId);
+    console.log('  - propertyAddress:', propertyAddress);
+    
     // Find property by landlordId, propertyAddress, or most recent
     let targetProperty = null;
     
     // Try to find by propertyAddress first (most reliable)
     if (propertyAddress) {
+      console.log('🔍 Searching by property address...');
       targetProperty = await getPropertyByAddress(propertyAddress);
+      if (targetProperty) {
+        console.log('✅ Found property by address:', targetProperty.propertyAddress);
+      }
     }
     
     // If not found and landlordId provided, try to find by ID
     if (!targetProperty && landlordId) {
+      console.log('🔍 Searching by landlord ID...');
       const properties = await getAllProperties();
-      targetProperty = properties.find(p => p.id === landlordId);
+      console.log('📋 Available properties:', properties.map(p => ({ id: p.id, address: p.propertyAddress })));
+      targetProperty = properties.find(p => p.id == landlordId); // Use == for type coercion
+      if (targetProperty) {
+        console.log('✅ Found property by ID:', targetProperty.propertyAddress);
+      }
     }
     
     // If still not found, find by the most recently created property (fallback)
     if (!targetProperty) {
+      console.log('🔍 Using most recent property as fallback...');
       const properties = await getAllProperties();
       if (properties.length > 0) {
         targetProperty = properties[properties.length - 1];
+        console.log('✅ Using fallback property:', targetProperty.propertyAddress);
       }
     }
     
     if (!targetProperty) {
+      console.log('❌ No property found for landlord owner creation');
       return res.status(404).json({ error: 'No property found to associate owner with' });
     }
+    
+    console.log('🎯 Target property found:', targetProperty.propertyAddress, 'ID:', targetProperty.id);
     
     // Validation
     if (!name) {

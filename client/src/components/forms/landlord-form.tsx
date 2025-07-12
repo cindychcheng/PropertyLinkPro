@@ -130,6 +130,7 @@ export function LandlordForm({
         
         const ownerPayload = {
           landlordId: landlord.id,
+          propertyAddress: values.propertyAddress, // Add property address for reliable lookup
           name: owner.name,
           contactNumber: owner.contactNumber || undefined,
           birthday: formattedBirthday,
