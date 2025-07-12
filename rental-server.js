@@ -130,7 +130,52 @@ async function initializeDatabase() {
         )
       `);
       
-      console.log('📋 Users table ready');
+      // Create properties table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS properties (
+          id BIGINT PRIMARY KEY,
+          property_address VARCHAR UNIQUE NOT NULL,
+          key_number VARCHAR NOT NULL,
+          service_type VARCHAR NOT NULL,
+          strata_contact_number VARCHAR,
+          strata_management_company VARCHAR,
+          strata_contact_person VARCHAR,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      
+      // Create landlord_owners table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS landlord_owners (
+          id BIGINT PRIMARY KEY,
+          property_id BIGINT REFERENCES properties(id) ON DELETE CASCADE,
+          name VARCHAR NOT NULL,
+          contact_number VARCHAR,
+          birthday DATE,
+          residential_address TEXT,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      
+      // Create tenants table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS tenants (
+          id BIGINT PRIMARY KEY,
+          property_id BIGINT REFERENCES properties(id) ON DELETE CASCADE,
+          name VARCHAR NOT NULL,
+          contact_number VARCHAR,
+          email VARCHAR,
+          birthday DATE,
+          move_in_date DATE NOT NULL,
+          move_out_date DATE,
+          is_primary BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      
+      console.log('📋 Database tables ready (users, properties, landlord_owners, tenants)');
       
     } catch (error) {
       console.log('⚠️ Database connection failed, using memory storage:', error.message);
@@ -336,6 +381,141 @@ async function deleteUser(id) {
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       return users.delete(id);
+    }
+  }
+}
+
+// Property database helper functions
+async function createProperty(propertyData) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    const property = {
+      id: Date.now(),
+      propertyAddress: propertyData.propertyAddress,
+      keyNumber: propertyData.keyNumber,
+      serviceType: propertyData.serviceType,
+      strataContactNumber: propertyData.strataContactNumber || null,
+      strataManagementCompany: propertyData.strataManagementCompany || null,
+      strataContactPerson: propertyData.strataContactPerson || null,
+      landlordOwners: [],
+      tenant: null,
+      activeTenants: [],
+      tenantHistory: [],
+      rentalInfo: null
+    };
+    propertiesData.push(property);
+    return property;
+  } else {
+    try {
+      const result = await global.dbPool.query(
+        'INSERT INTO properties (id, property_address, key_number, service_type, strata_contact_number, strata_management_company, strata_contact_person) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [
+          propertyData.id || Date.now(),
+          propertyData.propertyAddress,
+          propertyData.keyNumber,
+          propertyData.serviceType,
+          propertyData.strataContactNumber || null,
+          propertyData.strataManagementCompany || null,
+          propertyData.strataContactPerson || null
+        ]
+      );
+      return result.rows[0];
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      const property = {
+        id: Date.now(),
+        propertyAddress: propertyData.propertyAddress,
+        keyNumber: propertyData.keyNumber,
+        serviceType: propertyData.serviceType,
+        strataContactNumber: propertyData.strataContactNumber || null,
+        strataManagementCompany: propertyData.strataManagementCompany || null,
+        strataContactPerson: propertyData.strataContactPerson || null,
+        landlordOwners: [],
+        tenant: null,
+        activeTenants: [],
+        tenantHistory: [],
+        rentalInfo: null
+      };
+      propertiesData.push(property);
+      return property;
+    }
+  }
+}
+
+async function getAllProperties() {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    return propertiesData;
+  } else {
+    try {
+      const propertiesResult = await global.dbPool.query('SELECT * FROM properties ORDER BY created_at DESC');
+      const properties = [];
+      
+      for (const propertyRow of propertiesResult.rows) {
+        // Get landlord owners
+        const ownersResult = await global.dbPool.query('SELECT * FROM landlord_owners WHERE property_id = $1', [propertyRow.id]);
+        const landlordOwners = ownersResult.rows.map(owner => ({
+          id: owner.id,
+          name: owner.name,
+          contactNumber: owner.contact_number,
+          birthday: owner.birthday,
+          residentialAddress: owner.residential_address
+        }));
+        
+        // Get active tenants
+        const tenantsResult = await global.dbPool.query('SELECT * FROM tenants WHERE property_id = $1 AND move_out_date IS NULL', [propertyRow.id]);
+        const activeTenants = tenantsResult.rows.map(tenant => ({
+          id: tenant.id,
+          name: tenant.name,
+          contactNumber: tenant.contact_number,
+          email: tenant.email,
+          birthday: tenant.birthday,
+          moveInDate: tenant.move_in_date,
+          moveOutDate: tenant.move_out_date,
+          isPrimary: tenant.is_primary
+        }));
+        
+        // Find primary tenant
+        const primaryTenant = activeTenants.find(t => t.isPrimary) || activeTenants[0] || null;
+        
+        properties.push({
+          id: propertyRow.id,
+          propertyAddress: propertyRow.property_address,
+          keyNumber: propertyRow.key_number,
+          serviceType: propertyRow.service_type,
+          strataContactNumber: propertyRow.strata_contact_number,
+          strataManagementCompany: propertyRow.strata_management_company,
+          strataContactPerson: propertyRow.strata_contact_person,
+          landlordOwners,
+          tenant: primaryTenant,
+          activeTenants,
+          tenantHistory: [], // Could be implemented later
+          rentalInfo: null // Could be implemented later
+        });
+      }
+      
+      return properties;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      return propertiesData;
+    }
+  }
+}
+
+async function getPropertyByAddress(propertyAddress) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    return propertiesData.find(p => p.propertyAddress === propertyAddress) || null;
+  } else {
+    try {
+      const result = await global.dbPool.query('SELECT * FROM properties WHERE property_address = $1', [propertyAddress]);
+      if (result.rows.length === 0) return null;
+      
+      const propertyRow = result.rows[0];
+      
+      // Get landlord owners and tenants
+      const properties = await getAllProperties();
+      return properties.find(p => p.id === propertyRow.id) || null;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      return propertiesData.find(p => p.propertyAddress === propertyAddress) || null;
     }
   }
 }
@@ -765,17 +945,18 @@ app.get('/api/auth/user', async (req, res) => {
 });
 
 // Properties API
-app.get('/api/properties', (req, res) => {
+app.get('/api/properties', async (req, res) => {
   console.log('📋 Properties API called');
-  res.json(propertiesData);
+  const properties = await getAllProperties();
+  res.json(properties);
 });
 
 // Individual property details API
-app.get('/api/properties/:propertyAddress', (req, res) => {
+app.get('/api/properties/:propertyAddress', async (req, res) => {
   const propertyAddress = decodeURIComponent(req.params.propertyAddress);
   console.log('🏠 Property details for:', propertyAddress);
   
-  const property = propertiesData.find(p => p.propertyAddress === propertyAddress);
+  const property = await getPropertyByAddress(propertyAddress);
   
   if (property) {
     res.json(property);
@@ -1059,9 +1240,10 @@ app.get('/api/reminders/rental-increases', (req, res) => {
 });
 
 // Property/Landlord management endpoints
-app.get('/api/landlords', (req, res) => {
+app.get('/api/landlords', async (req, res) => {
   console.log('🏠 Get all landlords/properties');
-  res.json(propertiesData);
+  const properties = await getAllProperties();
+  res.json(properties);
 });
 
 app.post('/api/landlords', async (req, res) => {
@@ -1076,28 +1258,21 @@ app.post('/api/landlords', async (req, res) => {
     }
     
     // Check if property already exists
-    const existingProperty = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    const existingProperty = await getPropertyByAddress(propertyAddress);
     if (existingProperty) {
       return res.status(409).json({ error: 'Property with this address already exists' });
     }
     
-    // Create new property
-    const newProperty = {
+    // Create new property using database function
+    const newProperty = await createProperty({
       id: Date.now(), // Add unique ID for landlord association
       propertyAddress,
       keyNumber,
       serviceType,
       strataContactNumber: strataContactNumber || null,
       strataManagementCompany: strataManagementCompany || null,
-      strataContactPerson: strataContactPerson || null,
-      landlordOwners: [], // Will be populated separately if needed
-      tenant: null,
-      activeTenants: [],
-      tenantHistory: [],
-      rentalInfo: null
-    };
-    
-    propertiesData.push(newProperty);
+      strataContactPerson: strataContactPerson || null
+    });
     
     console.log('✅ Property created successfully:', propertyAddress);
     res.status(201).json(newProperty);
