@@ -92,10 +92,30 @@ const ROLE_PERMISSIONS = {
   ]
 };
 
-// Import database functionality
-import { db } from './server/db.js';
-import { users as usersTable } from './shared/schema.js';
-import { eq } from 'drizzle-orm';
+// Database functionality (conditionally imported)
+let db = null;
+let usersTable = null;
+let eq = null;
+
+// Initialize database imports only if not using memory storage
+async function initializeDatabase() {
+  if (process.env.USE_MEMORY_STORAGE !== 'true') {
+    try {
+      const dbModule = await import('./server/db.js');
+      const schemaModule = await import('./shared/schema.js');
+      const drizzleModule = await import('drizzle-orm');
+      
+      db = dbModule.db;
+      usersTable = schemaModule.users;
+      eq = drizzleModule.eq;
+      
+      console.log('🗄️ Database modules loaded successfully');
+    } catch (error) {
+      console.log('⚠️ Database modules not available, using memory storage:', error.message);
+      process.env.USE_MEMORY_STORAGE = 'true'; // Fallback to memory
+    }
+  }
+}
 
 // In-memory storage for magic tokens and fallback if database fails
 const magicTokens = new Map(); // For magic link authentication
@@ -114,7 +134,7 @@ async function createUser(userData) {
     lastLoginAt: null
   };
 
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
     users.set(user.id, user);
     return user;
   } else {
@@ -130,7 +150,7 @@ async function createUser(userData) {
 }
 
 async function getUserByEmail(email) {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
     for (const user of users.values()) {
       if (user.email.toLowerCase() === email.toLowerCase()) {
         return user;
@@ -154,7 +174,7 @@ async function getUserByEmail(email) {
 }
 
 async function getUserById(id) {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
     return users.get(id) || null;
   } else {
     try {
@@ -168,7 +188,7 @@ async function getUserById(id) {
 }
 
 async function getAllUsers() {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
     return Array.from(users.values());
   } else {
     try {
@@ -181,7 +201,7 @@ async function getAllUsers() {
 }
 
 async function updateUser(id, updates) {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
     const user = users.get(id);
     if (user) {
       Object.assign(user, updates);
@@ -205,7 +225,7 @@ async function updateUser(id, updates) {
 }
 
 async function deleteUser(id) {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
     return users.delete(id);
   } else {
     try {
@@ -297,7 +317,7 @@ async function sendMagicLink(email, token) {
 
 // Initialize with sample users
 async function initializeSampleUsers() {
-  if (process.env.USE_MEMORY_STORAGE === 'true') {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
     await createUser({
       id: 'admin',
       email: 'admin@instarealty.com',
@@ -968,10 +988,13 @@ const server = app.listen(8080, '0.0.0.0', async () => {
     console.error('❌ Failed to setup email transporter:', error);
   }
   
+  // Initialize database if needed
+  await initializeDatabase();
+  
   // Initialize users
   try {
     await initializeSampleUsers();
-    if (process.env.USE_MEMORY_STORAGE === 'true') {
+    if (process.env.USE_MEMORY_STORAGE === 'true' || !db) {
       console.log('👥 Sample users available:');
       console.log('   📧 admin@instarealty.com (Admin)');
       console.log('   📧 sarah.manager@company.com (Manager)');
