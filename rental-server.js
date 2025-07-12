@@ -1115,6 +1115,28 @@ app.get('/api/auth/user', async (req, res) => {
 app.get('/api/properties', async (req, res) => {
   console.log('📋 Properties API called');
   const properties = await getAllProperties();
+  
+  // Add debug info when debug=true query parameter is present
+  if (req.query.debug === 'true') {
+    console.log('🐛 DEBUG: Properties loaded:');
+    console.log('  - Total properties:', properties.length);
+    console.log('  - Using memory storage:', process.env.USE_MEMORY_STORAGE === 'true');
+    console.log('  - Has database pool:', !!global.dbPool);
+    console.log('  - Properties:', properties.map(p => ({ 
+      id: p.id, 
+      address: p.propertyAddress,
+      ownersCount: p.landlordOwners?.length || 0 
+    })));
+    
+    return res.json({
+      debug: true,
+      totalProperties: properties.length,
+      useMemoryStorage: process.env.USE_MEMORY_STORAGE === 'true',
+      hasDbPool: !!global.dbPool,
+      properties: properties
+    });
+  }
+  
   res.json(properties);
 });
 
