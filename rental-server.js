@@ -974,8 +974,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-const server = app.listen(8080, '0.0.0.0', async () => {
-  console.log('🌐 Server listening on http://127.0.0.1:8080 and http://localhost:8080');
+const PORT = process.env.PORT || 8080;
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🌐 Server listening on port ${PORT}`);
   console.log('🚀 PropertyLinkPro with Rental Increase Processing');
   console.log('✅ POST /api/process-rental-increase endpoint ready');
   console.log('💰 Rental increase processing should now work');
