@@ -1828,6 +1828,29 @@ app.delete('/api/landlord-owners/:ownerId', async (req, res) => {
   }
 });
 
+// Debug endpoint to check what properties exist
+app.get('/api/debug/properties', async (req, res) => {
+  try {
+    const properties = await getAllProperties();
+    const summary = properties.map(p => ({
+      id: p.id,
+      propertyAddress: p.propertyAddress,
+      keyNumber: p.keyNumber,
+      ownersCount: p.landlordOwners ? p.landlordOwners.length : 0,
+      tenantsCount: p.activeTenants ? p.activeTenants.length : 0
+    }));
+    
+    res.json({
+      totalProperties: properties.length,
+      useMemoryStorage: process.env.USE_MEMORY_STORAGE === 'true',
+      hasDbPool: !!global.dbPool,
+      properties: summary
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', rentalIncreases: 'enabled' });
 });
