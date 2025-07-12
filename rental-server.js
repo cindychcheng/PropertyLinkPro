@@ -530,7 +530,7 @@ app.post('/api/auth/magic-link', async (req, res) => {
   }
 });
 
-app.get('/auth/magic', (req, res) => {
+app.get('/auth/magic', async (req, res) => {
   try {
     const { token } = req.query;
     
