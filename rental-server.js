@@ -1728,6 +1728,7 @@ app.get('/api/landlords/:propertyAddress/owners', async (req, res) => {
 
 app.post('/api/landlord-owners', async (req, res) => {
   try {
+    console.log('🚨 LANDLORD OWNER ENDPOINT CALLED! 🚨');
     console.log('👤 Create new landlord owner:', req.body);
     
     const { landlordId, propertyAddress, name, contactNumber, birthday, residentialAddress } = req.body;
