@@ -419,7 +419,7 @@ async function sendMagicLink(email, token) {
 
 // Initialize with sample users
 async function initializeSampleUsers() {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     await createUser({
       id: 'admin',
       email: 'admin@instarealty.com',
@@ -1097,7 +1097,7 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
   // Initialize users
   try {
     await initializeSampleUsers();
-    if (process.env.USE_MEMORY_STORAGE === 'true' || !db) {
+    if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
       console.log('👥 Sample users available:');
       console.log('   📧 admin@instarealty.com (Admin)');
       console.log('   📧 sarah.manager@company.com (Manager)');
