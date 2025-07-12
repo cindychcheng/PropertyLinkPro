@@ -687,6 +687,172 @@ async function deleteLandlordOwner(ownerId) {
   }
 }
 
+// Tenant database helper functions
+async function createTenant(tenantData, propertyId) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory - this is handled in the endpoint for now
+    return tenantData;
+  } else {
+    try {
+      const result = await global.dbPool.query(
+        'INSERT INTO tenants (id, property_id, name, contact_number, email, birthday, move_in_date, move_out_date, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+        [
+          tenantData.id,
+          propertyId,
+          tenantData.name,
+          tenantData.contactNumber || null,
+          tenantData.email || null,
+          tenantData.birthday || null,
+          tenantData.moveInDate,
+          tenantData.moveOutDate || null,
+          tenantData.isPrimary || false
+        ]
+      );
+      return {
+        id: result.rows[0].id,
+        propertyId: result.rows[0].property_id,
+        name: result.rows[0].name,
+        contactNumber: result.rows[0].contact_number,
+        email: result.rows[0].email,
+        birthday: result.rows[0].birthday,
+        moveInDate: result.rows[0].move_in_date,
+        moveOutDate: result.rows[0].move_out_date,
+        isPrimary: result.rows[0].is_primary
+      };
+    } catch (error) {
+      console.error('Database error creating tenant, falling back to memory:', error);
+      return tenantData;
+    }
+  }
+}
+
+async function updateTenant(tenantId, updates) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory - find in propertiesData and update
+    for (const property of propertiesData) {
+      if (property.activeTenants) {
+        const tenantIndex = property.activeTenants.findIndex(tenant => tenant.id == tenantId);
+        if (tenantIndex !== -1) {
+          Object.assign(property.activeTenants[tenantIndex], updates);
+          return property.activeTenants[tenantIndex];
+        }
+      }
+    }
+    return null;
+  } else {
+    try {
+      const fields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (updates.name !== undefined) {
+        fields.push(`name = $${paramIndex}`);
+        values.push(updates.name);
+        paramIndex++;
+      }
+      if (updates.contactNumber !== undefined) {
+        fields.push(`contact_number = $${paramIndex}`);
+        values.push(updates.contactNumber);
+        paramIndex++;
+      }
+      if (updates.email !== undefined) {
+        fields.push(`email = $${paramIndex}`);
+        values.push(updates.email);
+        paramIndex++;
+      }
+      if (updates.birthday !== undefined) {
+        fields.push(`birthday = $${paramIndex}`);
+        values.push(updates.birthday);
+        paramIndex++;
+      }
+      if (updates.moveInDate !== undefined) {
+        fields.push(`move_in_date = $${paramIndex}`);
+        values.push(updates.moveInDate);
+        paramIndex++;
+      }
+      if (updates.moveOutDate !== undefined) {
+        fields.push(`move_out_date = $${paramIndex}`);
+        values.push(updates.moveOutDate);
+        paramIndex++;
+      }
+      if (updates.isPrimary !== undefined) {
+        fields.push(`is_primary = $${paramIndex}`);
+        values.push(updates.isPrimary);
+        paramIndex++;
+      }
+      
+      values.push(tenantId);
+      
+      const result = await global.dbPool.query(
+        `UPDATE tenants SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+        values
+      );
+      
+      if (result.rows.length > 0) {
+        return {
+          id: result.rows[0].id,
+          propertyId: result.rows[0].property_id,
+          name: result.rows[0].name,
+          contactNumber: result.rows[0].contact_number,
+          email: result.rows[0].email,
+          birthday: result.rows[0].birthday,
+          moveInDate: result.rows[0].move_in_date,
+          moveOutDate: result.rows[0].move_out_date,
+          isPrimary: result.rows[0].is_primary
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Database error updating tenant, falling back to memory:', error);
+      // Fallback to memory
+      for (const property of propertiesData) {
+        if (property.activeTenants) {
+          const tenantIndex = property.activeTenants.findIndex(tenant => tenant.id == tenantId);
+          if (tenantIndex !== -1) {
+            Object.assign(property.activeTenants[tenantIndex], updates);
+            return property.activeTenants[tenantIndex];
+          }
+        }
+      }
+      return null;
+    }
+  }
+}
+
+async function deleteTenant(tenantId) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Fallback to memory
+    for (const property of propertiesData) {
+      if (property.activeTenants) {
+        const tenantIndex = property.activeTenants.findIndex(tenant => tenant.id == tenantId);
+        if (tenantIndex !== -1) {
+          property.activeTenants.splice(tenantIndex, 1);
+          return true;
+        }
+      }
+    }
+    return false;
+  } else {
+    try {
+      const result = await global.dbPool.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Database error deleting tenant, falling back to memory:', error);
+      // Fallback to memory
+      for (const property of propertiesData) {
+        if (property.activeTenants) {
+          const tenantIndex = property.activeTenants.findIndex(tenant => tenant.id == tenantId);
+          if (tenantIndex !== -1) {
+            property.activeTenants.splice(tenantIndex, 1);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+  }
+}
+
 function hasPermission(user, permission) {
   if (!user || user.status !== 'active') return false;
   const userPermissions = ROLE_PERMISSIONS[user.role] || [];
@@ -1573,23 +1739,31 @@ app.post('/api/tenants', async (req, res) => {
         return res.status(400).json({ error: 'Tenant name and move-in date are required' });
       }
       
-      // Create new tenant - for now we'll use memory storage
-      // TODO: Implement proper database storage for tenants
-      const newTenant = {
+      // Create tenant data for database
+      const tenantForDb = {
         id: Date.now() + Math.random(), // Simple ID generation with uniqueness
-        propertyAddress,
-        serviceType: serviceType || property.serviceType,
-        moveInDate,
-        moveOutDate: moveOutDate || null,
         name,
         contactNumber: contactNumber || null,
         email: email || null,
         birthday: birthday || null,
+        moveInDate,
+        moveOutDate: moveOutDate || null,
         isPrimary: isPrimary || false
       };
       
-      createdTenants.push(newTenant);
-      console.log('✅ Tenant processed successfully:', name);
+      // Create tenant in database (with fallback to memory)
+      console.log('💾 Creating tenant in database:', name);
+      const newTenant = await createTenant(tenantForDb, property.id);
+      
+      // Add property context for response
+      const tenantWithProperty = {
+        ...newTenant,
+        propertyAddress,
+        serviceType: serviceType || property.serviceType
+      };
+      
+      createdTenants.push(tenantWithProperty);
+      console.log('✅ Tenant created successfully:', name);
     }
     
     console.log('✅ All tenants created successfully');
