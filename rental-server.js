@@ -1083,6 +1083,7 @@ app.post('/api/landlords', async (req, res) => {
     
     // Create new property
     const newProperty = {
+      id: Date.now(), // Add unique ID for landlord association
       propertyAddress,
       keyNumber,
       serviceType,
@@ -1210,6 +1211,172 @@ app.post('/api/tenants', async (req, res) => {
   } catch (error) {
     console.error('❌ Error creating tenant:', error);
     res.status(500).json({ error: 'Failed to create tenant' });
+  }
+});
+
+// Landlord owner management endpoints
+app.get('/api/landlords/:propertyAddress/owners', (req, res) => {
+  try {
+    const propertyAddress = decodeURIComponent(req.params.propertyAddress);
+    console.log('👥 Get landlord owners for property:', propertyAddress);
+    
+    // Find property
+    const property = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Return landlord owners with IDs
+    const owners = property.landlordOwners || [];
+    const ownersWithIds = owners.map((owner, index) => ({
+      id: owner.id || index + 1, // Ensure each owner has an ID
+      ...owner
+    }));
+    
+    res.json(ownersWithIds);
+    
+  } catch (error) {
+    console.error('❌ Error getting landlord owners:', error);
+    res.status(500).json({ error: 'Failed to get landlord owners' });
+  }
+});
+
+app.post('/api/landlord-owners', async (req, res) => {
+  try {
+    console.log('👤 Create new landlord owner:', req.body);
+    
+    const { landlordId, propertyAddress, name, contactNumber, birthday, residentialAddress } = req.body;
+    
+    // Find property by landlordId, propertyAddress, or most recent
+    let targetProperty = null;
+    
+    // Try to find by landlordId first
+    if (landlordId) {
+      targetProperty = propertiesData.find(p => p.id === landlordId);
+    }
+    
+    // If not found and propertyAddress provided, find by address
+    if (!targetProperty && propertyAddress) {
+      targetProperty = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    }
+    
+    // If still not found, find by the most recently created property (fallback)
+    if (!targetProperty && propertiesData.length > 0) {
+      targetProperty = propertiesData[propertiesData.length - 1];
+    }
+    
+    if (!targetProperty) {
+      return res.status(404).json({ error: 'No property found to associate owner with' });
+    }
+    
+    // Validation
+    if (!name) {
+      return res.status(400).json({ error: 'Owner name is required' });
+    }
+    
+    // Create new owner
+    const newOwner = {
+      id: Date.now(), // Simple ID generation
+      name,
+      contactNumber: contactNumber || null,
+      birthday: birthday || null,
+      residentialAddress: residentialAddress || null
+    };
+    
+    // Add owner to property
+    if (!targetProperty.landlordOwners) {
+      targetProperty.landlordOwners = [];
+    }
+    targetProperty.landlordOwners.push(newOwner);
+    
+    console.log('✅ Landlord owner created successfully:', name);
+    res.status(201).json(newOwner);
+    
+  } catch (error) {
+    console.error('❌ Error creating landlord owner:', error);
+    res.status(500).json({ error: 'Failed to create landlord owner' });
+  }
+});
+
+app.put('/api/landlord-owners/:ownerId', async (req, res) => {
+  try {
+    const ownerId = parseInt(req.params.ownerId);
+    console.log('👤 Update landlord owner:', ownerId);
+    
+    const { name, contactNumber, birthday, residentialAddress } = req.body;
+    
+    // Find property containing this owner
+    let targetProperty = null;
+    let ownerIndex = -1;
+    
+    for (const property of propertiesData) {
+      if (property.landlordOwners) {
+        const index = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+        if (index !== -1) {
+          targetProperty = property;
+          ownerIndex = index;
+          break;
+        }
+      }
+    }
+    
+    if (!targetProperty || ownerIndex === -1) {
+      return res.status(404).json({ error: 'Landlord owner not found' });
+    }
+    
+    // Update owner
+    const updatedOwner = {
+      ...targetProperty.landlordOwners[ownerIndex],
+      name: name || targetProperty.landlordOwners[ownerIndex].name,
+      contactNumber: contactNumber || targetProperty.landlordOwners[ownerIndex].contactNumber,
+      birthday: birthday || targetProperty.landlordOwners[ownerIndex].birthday,
+      residentialAddress: residentialAddress || targetProperty.landlordOwners[ownerIndex].residentialAddress
+    };
+    
+    targetProperty.landlordOwners[ownerIndex] = updatedOwner;
+    
+    console.log('✅ Landlord owner updated successfully:', name);
+    res.json(updatedOwner);
+    
+  } catch (error) {
+    console.error('❌ Error updating landlord owner:', error);
+    res.status(500).json({ error: 'Failed to update landlord owner' });
+  }
+});
+
+app.delete('/api/landlord-owners/:ownerId', async (req, res) => {
+  try {
+    const ownerId = parseInt(req.params.ownerId);
+    console.log('🗑️ Delete landlord owner:', ownerId);
+    
+    // Find property containing this owner
+    let targetProperty = null;
+    let ownerIndex = -1;
+    
+    for (const property of propertiesData) {
+      if (property.landlordOwners) {
+        const index = property.landlordOwners.findIndex(owner => owner.id === ownerId);
+        if (index !== -1) {
+          targetProperty = property;
+          ownerIndex = index;
+          break;
+        }
+      }
+    }
+    
+    if (!targetProperty || ownerIndex === -1) {
+      return res.status(404).json({ error: 'Landlord owner not found' });
+    }
+    
+    // Remove owner
+    targetProperty.landlordOwners.splice(ownerIndex, 1);
+    
+    console.log('✅ Landlord owner deleted successfully');
+    res.json({ success: true });
+    
+  } catch (error) {
+    console.error('❌ Error deleting landlord owner:', error);
+    res.status(500).json({ error: 'Failed to delete landlord owner' });
   }
 });
 
