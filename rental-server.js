@@ -690,10 +690,17 @@ async function deleteLandlordOwner(ownerId) {
 // Tenant database helper functions
 async function createTenant(tenantData, propertyId) {
   if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    console.log('🔄 Using memory storage for tenant creation');
     // Fallback to memory - this is handled in the endpoint for now
     return tenantData;
   } else {
     try {
+      console.log('🔍 Database tenant insertion attempt:');
+      console.log('  - Tenant ID:', tenantData.id, 'Type:', typeof tenantData.id);
+      console.log('  - Property ID:', propertyId, 'Type:', typeof propertyId);
+      console.log('  - Tenant name:', tenantData.name);
+      console.log('  - Move-in date:', tenantData.moveInDate);
+      
       const result = await global.dbPool.query(
         'INSERT INTO tenants (id, property_id, name, contact_number, email, birthday, move_in_date, move_out_date, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
         [
@@ -708,6 +715,9 @@ async function createTenant(tenantData, propertyId) {
           tenantData.isPrimary || false
         ]
       );
+      
+      console.log('✅ Database tenant insertion successful:', result.rows[0]);
+      
       return {
         id: result.rows[0].id,
         propertyId: result.rows[0].property_id,
@@ -720,7 +730,9 @@ async function createTenant(tenantData, propertyId) {
         isPrimary: result.rows[0].is_primary
       };
     } catch (error) {
-      console.error('Database error creating tenant, falling back to memory:', error);
+      console.error('❌ Database error creating tenant, falling back to memory:', error);
+      console.error('Error details:', error.message);
+      console.error('Error code:', error.code);
       return tenantData;
     }
   }
@@ -1751,7 +1763,7 @@ app.post('/api/tenants', async (req, res) => {
       
       // Create tenant data for database
       const tenantForDb = {
-        id: Date.now() + Math.random(), // Simple ID generation with uniqueness
+        id: Date.now() + Math.floor(Math.random() * 1000), // Generate integer ID
         name,
         contactNumber: contactNumber || null,
         email: email || null,
@@ -1762,8 +1774,10 @@ app.post('/api/tenants', async (req, res) => {
       };
       
       // Create tenant in database (with fallback to memory)
-      console.log('💾 Creating tenant in database:', name);
+      console.log('💾 Creating tenant in database:', name, 'with ID:', tenantForDb.id);
+      console.log('🏠 Property ID for tenant:', property.id);
       const newTenant = await createTenant(tenantForDb, property.id);
+      console.log('📄 Created tenant result:', newTenant);
       
       // Add property context for response
       const tenantWithProperty = {
