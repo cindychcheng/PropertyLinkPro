@@ -1676,24 +1676,34 @@ app.put('/api/landlords/:propertyAddress', async (req, res) => {
 });
 
 // Tenant management endpoints
-app.get('/api/tenants', (req, res) => {
+app.get('/api/tenants', async (req, res) => {
   console.log('👥 Get all tenants');
   
-  // Extract all tenants from all properties
-  const allTenants = [];
-  propertiesData.forEach(property => {
-    if (property.activeTenants && property.activeTenants.length > 0) {
-      property.activeTenants.forEach(tenant => {
-        allTenants.push({
-          ...tenant,
-          propertyAddress: property.propertyAddress,
-          serviceType: property.serviceType
+  try {
+    // Get all properties with their tenants from database
+    const properties = await getAllProperties();
+    
+    // Extract all tenants from all properties
+    const allTenants = [];
+    properties.forEach(property => {
+      if (property.activeTenants && property.activeTenants.length > 0) {
+        property.activeTenants.forEach(tenant => {
+          allTenants.push({
+            ...tenant,
+            propertyAddress: property.propertyAddress,
+            serviceType: property.serviceType
+          });
         });
-      });
-    }
-  });
-  
-  res.json(allTenants);
+      }
+    });
+    
+    console.log('✅ Retrieved tenants from database:', allTenants.length);
+    res.json(allTenants);
+    
+  } catch (error) {
+    console.error('❌ Error getting all tenants:', error);
+    res.status(500).json({ error: 'Failed to get tenants' });
+  }
 });
 
 app.post('/api/tenants', async (req, res) => {
@@ -1775,19 +1785,20 @@ app.post('/api/tenants', async (req, res) => {
   }
 });
 
-app.get('/api/tenants/:propertyAddress', (req, res) => {
+app.get('/api/tenants/:propertyAddress', async (req, res) => {
   try {
     const propertyAddress = decodeURIComponent(req.params.propertyAddress);
     console.log('👥 Get tenants for property:', propertyAddress);
     
-    // Find property
-    const property = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    // Find property using database function
+    const property = await getPropertyByAddress(propertyAddress);
     if (!property) {
       return res.status(404).json({ error: 'Property not found' });
     }
     
     // Return active tenants for this property
     const tenants = property.activeTenants || [];
+    console.log('✅ Retrieved tenants for property from database:', tenants.length);
     res.json(tenants);
     
   } catch (error) {
