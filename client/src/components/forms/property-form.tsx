@@ -46,6 +46,16 @@ const formSchema = z.object({
   includeRentalRate: z.boolean().default(false),
   currentRentalRate: z.string().optional(),
   lastIncreaseDate: z.string().optional(),
+}).refine((data) => {
+  // If includeTenant is true, then tenant name and move-in date are required
+  if (data.includeTenant) {
+    return data.tenantName && data.tenantName.trim() !== "" && 
+           data.moveInDate && data.moveInDate.trim() !== "";
+  }
+  return true;
+}, {
+  message: "Tenant name and move-in date are required when adding a tenant",
+  path: ["tenantName"]
 });
 
 type PropertyFormProps = {

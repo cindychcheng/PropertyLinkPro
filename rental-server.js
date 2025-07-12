@@ -1214,6 +1214,127 @@ app.post('/api/tenants', async (req, res) => {
   }
 });
 
+app.get('/api/tenants/:propertyAddress', (req, res) => {
+  try {
+    const propertyAddress = decodeURIComponent(req.params.propertyAddress);
+    console.log('👥 Get tenants for property:', propertyAddress);
+    
+    // Find property
+    const property = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Return active tenants for this property
+    const tenants = property.activeTenants || [];
+    res.json(tenants);
+    
+  } catch (error) {
+    console.error('❌ Error getting tenants for property:', error);
+    res.status(500).json({ error: 'Failed to get tenants for property' });
+  }
+});
+
+app.put('/api/tenants/:tenantId', async (req, res) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    console.log('👤 Update tenant:', tenantId);
+    
+    const { name, contactNumber, email, birthday, moveInDate, moveOutDate, isPrimary } = req.body;
+    
+    // Find property containing this tenant
+    let targetProperty = null;
+    let tenantIndex = -1;
+    
+    for (const property of propertiesData) {
+      if (property.activeTenants) {
+        const index = property.activeTenants.findIndex(tenant => tenant.id === tenantId);
+        if (index !== -1) {
+          targetProperty = property;
+          tenantIndex = index;
+          break;
+        }
+      }
+    }
+    
+    if (!targetProperty || tenantIndex === -1) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+    
+    // Update tenant
+    const updatedTenant = {
+      ...targetProperty.activeTenants[tenantIndex],
+      name: name || targetProperty.activeTenants[tenantIndex].name,
+      contactNumber: contactNumber || targetProperty.activeTenants[tenantIndex].contactNumber,
+      email: email || targetProperty.activeTenants[tenantIndex].email,
+      birthday: birthday || targetProperty.activeTenants[tenantIndex].birthday,
+      moveInDate: moveInDate || targetProperty.activeTenants[tenantIndex].moveInDate,
+      moveOutDate: moveOutDate || targetProperty.activeTenants[tenantIndex].moveOutDate,
+      isPrimary: isPrimary !== undefined ? isPrimary : targetProperty.activeTenants[tenantIndex].isPrimary
+    };
+    
+    targetProperty.activeTenants[tenantIndex] = updatedTenant;
+    
+    // Update primary tenant if needed
+    if (isPrimary) {
+      targetProperty.tenant = updatedTenant;
+    }
+    
+    console.log('✅ Tenant updated successfully:', name);
+    res.json(updatedTenant);
+    
+  } catch (error) {
+    console.error('❌ Error updating tenant:', error);
+    res.status(500).json({ error: 'Failed to update tenant' });
+  }
+});
+
+app.delete('/api/tenants/:tenantId', async (req, res) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    console.log('🗑️ Delete tenant:', tenantId);
+    
+    // Find property containing this tenant
+    let targetProperty = null;
+    let tenantIndex = -1;
+    
+    for (const property of propertiesData) {
+      if (property.activeTenants) {
+        const index = property.activeTenants.findIndex(tenant => tenant.id === tenantId);
+        if (index !== -1) {
+          targetProperty = property;
+          tenantIndex = index;
+          break;
+        }
+      }
+    }
+    
+    if (!targetProperty || tenantIndex === -1) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+    
+    // Remove tenant
+    const removedTenant = targetProperty.activeTenants.splice(tenantIndex, 1)[0];
+    
+    // If this was the primary tenant, set a new primary tenant or clear it
+    if (targetProperty.tenant && targetProperty.tenant.id === tenantId) {
+      if (targetProperty.activeTenants.length > 0) {
+        targetProperty.tenant = targetProperty.activeTenants[0];
+        targetProperty.activeTenants[0].isPrimary = true;
+      } else {
+        targetProperty.tenant = null;
+      }
+    }
+    
+    console.log('✅ Tenant deleted successfully');
+    res.json({ success: true });
+    
+  } catch (error) {
+    console.error('❌ Error deleting tenant:', error);
+    res.status(500).json({ error: 'Failed to delete tenant' });
+  }
+});
+
 // Landlord owner management endpoints
 app.get('/api/landlords/:propertyAddress/owners', (req, res) => {
   try {
