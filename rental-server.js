@@ -1532,20 +1532,31 @@ app.get('/api/tenants', (req, res) => {
 
 app.post('/api/tenants', async (req, res) => {
   try {
+    console.log('🚨 TENANT CREATION ENDPOINT CALLED! 🚨');
     console.log('👤 Create new tenant:', req.body);
     
     const { propertyAddress, serviceType, moveInDate, moveOutDate, name, contactNumber, email, birthday, isPrimary } = req.body;
     
+    // Debug logging for validation
+    console.log('🔍 Validating tenant fields:');
+    console.log('  - propertyAddress:', propertyAddress ? `"${propertyAddress}"` : 'MISSING');
+    console.log('  - name:', name ? `"${name}"` : 'MISSING');  
+    console.log('  - moveInDate:', moveInDate ? `"${moveInDate}"` : 'MISSING');
+    
     // Validation
     if (!propertyAddress || !name || !moveInDate) {
+      console.log('❌ Validation failed - missing required fields');
       return res.status(400).json({ error: 'Property address, tenant name, and move-in date are required' });
     }
     
-    // Find property
-    const propertyIndex = propertiesData.findIndex(p => p.propertyAddress === propertyAddress);
-    if (propertyIndex === -1) {
+    // Find property using database function
+    const property = await getPropertyByAddress(propertyAddress);
+    if (!property) {
+      console.log('❌ Property not found:', propertyAddress);
       return res.status(404).json({ error: 'Property not found' });
     }
+    
+    console.log('✅ Property found for tenant creation:', property.propertyAddress);
     
     // Create new tenant
     const newTenant = {
