@@ -97,21 +97,43 @@ let db = null;
 let usersTable = null;
 let eq = null;
 
-// Initialize database imports only if not using memory storage
+// Simple PostgreSQL connection without Drizzle for Railway compatibility
 async function initializeDatabase() {
-  if (process.env.USE_MEMORY_STORAGE !== 'true') {
+  if (process.env.USE_MEMORY_STORAGE !== 'true' && process.env.DATABASE_URL) {
     try {
-      const dbModule = await import('./server/db.js');
-      const schemaModule = await import('./shared/schema.js');
-      const drizzleModule = await import('drizzle-orm');
+      // Try to use a simple PostgreSQL connection
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
       
-      db = dbModule.db;
-      usersTable = schemaModule.users;
-      eq = drizzleModule.eq;
+      // Test connection
+      await pool.query('SELECT 1');
       
-      console.log('🗄️ Database modules loaded successfully');
+      // Store pool for manual queries
+      global.dbPool = pool;
+      
+      console.log('🗄️ PostgreSQL connected successfully');
+      
+      // Create users table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR PRIMARY KEY,
+          email VARCHAR UNIQUE,
+          first_name VARCHAR,
+          last_name VARCHAR,
+          role VARCHAR DEFAULT 'staff',
+          status VARCHAR DEFAULT 'active',
+          created_at TIMESTAMP DEFAULT NOW(),
+          last_login_at TIMESTAMP
+        )
+      `);
+      
+      console.log('📋 Users table ready');
+      
     } catch (error) {
-      console.log('⚠️ Database modules not available, using memory storage:', error.message);
+      console.log('⚠️ Database connection failed, using memory storage:', error.message);
       process.env.USE_MEMORY_STORAGE = 'true'; // Fallback to memory
     }
   }
@@ -134,13 +156,16 @@ async function createUser(userData) {
     lastLoginAt: null
   };
 
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     users.set(user.id, user);
     return user;
   } else {
     try {
-      const [dbUser] = await db.insert(usersTable).values(user).returning();
-      return dbUser;
+      await global.dbPool.query(
+        'INSERT INTO users (id, email, first_name, last_name, role, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [user.id, user.email, user.firstName, user.lastName, user.role, user.status, user.createdAt]
+      );
+      return user;
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       users.set(user.id, user);
@@ -150,7 +175,7 @@ async function createUser(userData) {
 }
 
 async function getUserByEmail(email) {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     for (const user of users.values()) {
       if (user.email.toLowerCase() === email.toLowerCase()) {
         return user;
@@ -159,8 +184,21 @@ async function getUserByEmail(email) {
     return null;
   } else {
     try {
-      const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
-      return user || null;
+      const result = await global.dbPool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        return {
+          id: row.id,
+          email: row.email,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          role: row.role,
+          status: row.status,
+          createdAt: row.created_at,
+          lastLoginAt: row.last_login_at
+        };
+      }
+      return null;
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       for (const user of users.values()) {
@@ -174,12 +212,25 @@ async function getUserByEmail(email) {
 }
 
 async function getUserById(id) {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     return users.get(id) || null;
   } else {
     try {
-      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
-      return user || null;
+      const result = await global.dbPool.query('SELECT * FROM users WHERE id = $1', [id]);
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        return {
+          id: row.id,
+          email: row.email,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          role: row.role,
+          status: row.status,
+          createdAt: row.created_at,
+          lastLoginAt: row.last_login_at
+        };
+      }
+      return null;
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       return users.get(id) || null;
@@ -188,11 +239,21 @@ async function getUserById(id) {
 }
 
 async function getAllUsers() {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     return Array.from(users.values());
   } else {
     try {
-      return await db.select().from(usersTable);
+      const result = await global.dbPool.query('SELECT * FROM users ORDER BY created_at DESC');
+      return result.rows.map(row => ({
+        id: row.id,
+        email: row.email,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        role: row.role,
+        status: row.status,
+        createdAt: row.created_at,
+        lastLoginAt: row.last_login_at
+      }));
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       return Array.from(users.values());
@@ -201,7 +262,7 @@ async function getAllUsers() {
 }
 
 async function updateUser(id, updates) {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     const user = users.get(id);
     if (user) {
       Object.assign(user, updates);
@@ -210,8 +271,49 @@ async function updateUser(id, updates) {
     return null;
   } else {
     try {
-      const [updatedUser] = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
-      return updatedUser;
+      const fields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (updates.email) {
+        fields.push(`email = $${paramIndex}`);
+        values.push(updates.email);
+        paramIndex++;
+      }
+      if (updates.firstName) {
+        fields.push(`first_name = $${paramIndex}`);
+        values.push(updates.firstName);
+        paramIndex++;
+      }
+      if (updates.lastName) {
+        fields.push(`last_name = $${paramIndex}`);
+        values.push(updates.lastName);
+        paramIndex++;
+      }
+      if (updates.role) {
+        fields.push(`role = $${paramIndex}`);
+        values.push(updates.role);
+        paramIndex++;
+      }
+      if (updates.status) {
+        fields.push(`status = $${paramIndex}`);
+        values.push(updates.status);
+        paramIndex++;
+      }
+      if (updates.lastLoginAt) {
+        fields.push(`last_login_at = $${paramIndex}`);
+        values.push(updates.lastLoginAt);
+        paramIndex++;
+      }
+      
+      values.push(id);
+      
+      await global.dbPool.query(
+        `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex}`,
+        values
+      );
+      
+      return await getUserById(id);
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
       const user = users.get(id);
@@ -225,11 +327,11 @@ async function updateUser(id, updates) {
 }
 
 async function deleteUser(id) {
-  if (process.env.USE_MEMORY_STORAGE === 'true' || !db || !usersTable || !eq) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
     return users.delete(id);
   } else {
     try {
-      await db.delete(usersTable).where(eq(usersTable.id, id));
+      await global.dbPool.query('DELETE FROM users WHERE id = $1', [id]);
       return true;
     } catch (error) {
       console.error('Database error, falling back to memory:', error);
