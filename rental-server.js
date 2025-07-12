@@ -1535,18 +1535,17 @@ app.post('/api/tenants', async (req, res) => {
     console.log('🚨 TENANT CREATION ENDPOINT CALLED! 🚨');
     console.log('👤 Create new tenant:', req.body);
     
-    const { propertyAddress, serviceType, moveInDate, moveOutDate, name, contactNumber, email, birthday, isPrimary } = req.body;
+    const { propertyAddress, serviceType, tenants } = req.body;
     
     // Debug logging for validation
-    console.log('🔍 Validating tenant fields:');
+    console.log('🔍 Validating tenant request:');
     console.log('  - propertyAddress:', propertyAddress ? `"${propertyAddress}"` : 'MISSING');
-    console.log('  - name:', name ? `"${name}"` : 'MISSING');  
-    console.log('  - moveInDate:', moveInDate ? `"${moveInDate}"` : 'MISSING');
+    console.log('  - tenants array:', tenants ? `${tenants.length} tenant(s)` : 'MISSING');
     
     // Validation
-    if (!propertyAddress || !name || !moveInDate) {
-      console.log('❌ Validation failed - missing required fields');
-      return res.status(400).json({ error: 'Property address, tenant name, and move-in date are required' });
+    if (!propertyAddress || !tenants || !Array.isArray(tenants) || tenants.length === 0) {
+      console.log('❌ Validation failed - missing property address or tenants array');
+      return res.status(400).json({ error: 'Property address and at least one tenant are required' });
     }
     
     // Find property using database function
@@ -1558,33 +1557,43 @@ app.post('/api/tenants', async (req, res) => {
     
     console.log('✅ Property found for tenant creation:', property.propertyAddress);
     
-    // Create new tenant
-    const newTenant = {
-      id: Date.now(), // Simple ID generation
-      propertyAddress,
-      serviceType: serviceType || propertiesData[propertyIndex].serviceType,
-      moveInDate,
-      moveOutDate: moveOutDate || null,
-      name,
-      contactNumber: contactNumber || null,
-      email: email || null,
-      birthday: birthday || null,
-      isPrimary: isPrimary || false
-    };
+    // Process each tenant in the array
+    const createdTenants = [];
     
-    // Add tenant to property
-    if (!propertiesData[propertyIndex].activeTenants) {
-      propertiesData[propertyIndex].activeTenants = [];
+    for (const tenantData of tenants) {
+      const { name, moveInDate, moveOutDate, contactNumber, email, birthday, isPrimary } = tenantData;
+      
+      console.log('🔍 Processing tenant:');
+      console.log('  - name:', name ? `"${name}"` : 'MISSING');
+      console.log('  - moveInDate:', moveInDate ? `"${moveInDate}"` : 'MISSING');
+      
+      // Validate each tenant
+      if (!name || !moveInDate) {
+        console.log('❌ Tenant validation failed - missing name or moveInDate');
+        return res.status(400).json({ error: 'Tenant name and move-in date are required' });
+      }
+      
+      // Create new tenant - for now we'll use memory storage
+      // TODO: Implement proper database storage for tenants
+      const newTenant = {
+        id: Date.now() + Math.random(), // Simple ID generation with uniqueness
+        propertyAddress,
+        serviceType: serviceType || property.serviceType,
+        moveInDate,
+        moveOutDate: moveOutDate || null,
+        name,
+        contactNumber: contactNumber || null,
+        email: email || null,
+        birthday: birthday || null,
+        isPrimary: isPrimary || false
+      };
+      
+      createdTenants.push(newTenant);
+      console.log('✅ Tenant processed successfully:', name);
     }
-    propertiesData[propertyIndex].activeTenants.push(newTenant);
     
-    // Set as primary tenant if it's the first one or if specified
-    if (propertiesData[propertyIndex].activeTenants.length === 1 || isPrimary) {
-      propertiesData[propertyIndex].tenant = newTenant;
-    }
-    
-    console.log('✅ Tenant created successfully:', name);
-    res.status(201).json(newTenant);
+    console.log('✅ All tenants created successfully');
+    res.status(201).json(createdTenants);
     
   } catch (error) {
     console.error('❌ Error creating tenant:', error);
