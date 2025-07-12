@@ -1058,9 +1058,160 @@ app.get('/api/reminders/rental-increases', (req, res) => {
   res.json(reminders);
 });
 
-app.get('/api/landlords', (req, res) => res.json([]));
-app.get('/api/tenants', (req, res) => res.json([]));
-app.get('/api/users', (req, res) => res.json([adminUser]));
+// Property/Landlord management endpoints
+app.get('/api/landlords', (req, res) => {
+  console.log('🏠 Get all landlords/properties');
+  res.json(propertiesData);
+});
+
+app.post('/api/landlords', async (req, res) => {
+  try {
+    console.log('🏠 Create new property/landlord:', req.body);
+    
+    const { propertyAddress, keyNumber, serviceType, strataContactNumber, strataManagementCompany, strataContactPerson } = req.body;
+    
+    // Validation
+    if (!propertyAddress || !keyNumber || !serviceType) {
+      return res.status(400).json({ error: 'Property address, key number, and service type are required' });
+    }
+    
+    // Check if property already exists
+    const existingProperty = propertiesData.find(p => p.propertyAddress === propertyAddress);
+    if (existingProperty) {
+      return res.status(409).json({ error: 'Property with this address already exists' });
+    }
+    
+    // Create new property
+    const newProperty = {
+      propertyAddress,
+      keyNumber,
+      serviceType,
+      strataContactNumber: strataContactNumber || null,
+      strataManagementCompany: strataManagementCompany || null,
+      strataContactPerson: strataContactPerson || null,
+      landlordOwners: [], // Will be populated separately if needed
+      tenant: null,
+      activeTenants: [],
+      tenantHistory: [],
+      rentalInfo: null
+    };
+    
+    propertiesData.push(newProperty);
+    
+    console.log('✅ Property created successfully:', propertyAddress);
+    res.status(201).json(newProperty);
+    
+  } catch (error) {
+    console.error('❌ Error creating property:', error);
+    res.status(500).json({ error: 'Failed to create property' });
+  }
+});
+
+app.put('/api/landlords/:propertyAddress', async (req, res) => {
+  try {
+    const propertyAddress = decodeURIComponent(req.params.propertyAddress);
+    console.log('🏠 Update property:', propertyAddress);
+    
+    const { keyNumber, serviceType, strataContactNumber, strataManagementCompany, strataContactPerson } = req.body;
+    
+    // Find property
+    const propertyIndex = propertiesData.findIndex(p => p.propertyAddress === propertyAddress);
+    if (propertyIndex === -1) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Update property
+    const updatedProperty = {
+      ...propertiesData[propertyIndex],
+      keyNumber: keyNumber || propertiesData[propertyIndex].keyNumber,
+      serviceType: serviceType || propertiesData[propertyIndex].serviceType,
+      strataContactNumber: strataContactNumber || propertiesData[propertyIndex].strataContactNumber,
+      strataManagementCompany: strataManagementCompany || propertiesData[propertyIndex].strataManagementCompany,
+      strataContactPerson: strataContactPerson || propertiesData[propertyIndex].strataContactPerson
+    };
+    
+    propertiesData[propertyIndex] = updatedProperty;
+    
+    console.log('✅ Property updated successfully:', propertyAddress);
+    res.json(updatedProperty);
+    
+  } catch (error) {
+    console.error('❌ Error updating property:', error);
+    res.status(500).json({ error: 'Failed to update property' });
+  }
+});
+
+// Tenant management endpoints
+app.get('/api/tenants', (req, res) => {
+  console.log('👥 Get all tenants');
+  
+  // Extract all tenants from all properties
+  const allTenants = [];
+  propertiesData.forEach(property => {
+    if (property.activeTenants && property.activeTenants.length > 0) {
+      property.activeTenants.forEach(tenant => {
+        allTenants.push({
+          ...tenant,
+          propertyAddress: property.propertyAddress,
+          serviceType: property.serviceType
+        });
+      });
+    }
+  });
+  
+  res.json(allTenants);
+});
+
+app.post('/api/tenants', async (req, res) => {
+  try {
+    console.log('👤 Create new tenant:', req.body);
+    
+    const { propertyAddress, serviceType, moveInDate, moveOutDate, name, contactNumber, email, birthday, isPrimary } = req.body;
+    
+    // Validation
+    if (!propertyAddress || !name || !moveInDate) {
+      return res.status(400).json({ error: 'Property address, tenant name, and move-in date are required' });
+    }
+    
+    // Find property
+    const propertyIndex = propertiesData.findIndex(p => p.propertyAddress === propertyAddress);
+    if (propertyIndex === -1) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Create new tenant
+    const newTenant = {
+      id: Date.now(), // Simple ID generation
+      propertyAddress,
+      serviceType: serviceType || propertiesData[propertyIndex].serviceType,
+      moveInDate,
+      moveOutDate: moveOutDate || null,
+      name,
+      contactNumber: contactNumber || null,
+      email: email || null,
+      birthday: birthday || null,
+      isPrimary: isPrimary || false
+    };
+    
+    // Add tenant to property
+    if (!propertiesData[propertyIndex].activeTenants) {
+      propertiesData[propertyIndex].activeTenants = [];
+    }
+    propertiesData[propertyIndex].activeTenants.push(newTenant);
+    
+    // Set as primary tenant if it's the first one or if specified
+    if (propertiesData[propertyIndex].activeTenants.length === 1 || isPrimary) {
+      propertiesData[propertyIndex].tenant = newTenant;
+    }
+    
+    console.log('✅ Tenant created successfully:', name);
+    res.status(201).json(newTenant);
+    
+  } catch (error) {
+    console.error('❌ Error creating tenant:', error);
+    res.status(500).json({ error: 'Failed to create tenant' });
+  }
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', rentalIncreases: 'enabled' });
