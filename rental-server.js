@@ -92,12 +92,17 @@ const ROLE_PERMISSIONS = {
   ]
 };
 
-// In-memory users database
-const users = new Map();
+// Import database functionality
+import { db } from './server/db.js';
+import { users as usersTable } from './shared/schema.js';
+import { eq } from 'drizzle-orm';
+
+// In-memory storage for magic tokens and fallback if database fails
 const magicTokens = new Map(); // For magic link authentication
+let users = new Map(); // Fallback for memory storage
 
 // Helper functions for user management
-function createUser(userData) {
+async function createUser(userData) {
   const user = {
     id: userData.id || `user_${Date.now()}`,
     email: userData.email,
@@ -105,20 +110,112 @@ function createUser(userData) {
     lastName: userData.lastName,
     role: userData.role || USER_ROLES.STAFF,
     status: userData.status || 'active',
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
     lastLoginAt: null
   };
-  users.set(user.id, user);
-  return user;
-}
 
-function getUserByEmail(email) {
-  for (const user of users.values()) {
-    if (user.email.toLowerCase() === email.toLowerCase()) {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    users.set(user.id, user);
+    return user;
+  } else {
+    try {
+      const [dbUser] = await db.insert(usersTable).values(user).returning();
+      return dbUser;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      users.set(user.id, user);
       return user;
     }
   }
-  return null;
+}
+
+async function getUserByEmail(email) {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    for (const user of users.values()) {
+      if (user.email.toLowerCase() === email.toLowerCase()) {
+        return user;
+      }
+    }
+    return null;
+  } else {
+    try {
+      const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+      return user || null;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      for (const user of users.values()) {
+        if (user.email.toLowerCase() === email.toLowerCase()) {
+          return user;
+        }
+      }
+      return null;
+    }
+  }
+}
+
+async function getUserById(id) {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    return users.get(id) || null;
+  } else {
+    try {
+      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+      return user || null;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      return users.get(id) || null;
+    }
+  }
+}
+
+async function getAllUsers() {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    return Array.from(users.values());
+  } else {
+    try {
+      return await db.select().from(usersTable);
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      return Array.from(users.values());
+    }
+  }
+}
+
+async function updateUser(id, updates) {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    const user = users.get(id);
+    if (user) {
+      Object.assign(user, updates);
+      return user;
+    }
+    return null;
+  } else {
+    try {
+      const [updatedUser] = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
+      return updatedUser;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      const user = users.get(id);
+      if (user) {
+        Object.assign(user, updates);
+        return user;
+      }
+      return null;
+    }
+  }
+}
+
+async function deleteUser(id) {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    return users.delete(id);
+  } else {
+    try {
+      await db.delete(usersTable).where(eq(usersTable.id, id));
+      return true;
+    } catch (error) {
+      console.error('Database error, falling back to memory:', error);
+      return users.delete(id);
+    }
+  }
 }
 
 function hasPermission(user, permission) {
@@ -199,32 +296,49 @@ async function sendMagicLink(email, token) {
 }
 
 // Initialize with sample users
-createUser({
-  id: 'admin',
-  email: 'admin@instarealty.com',
-  firstName: 'System',
-  lastName: 'Administrator',
-  role: USER_ROLES.ADMIN,
-  status: 'active'
-});
+async function initializeSampleUsers() {
+  if (process.env.USE_MEMORY_STORAGE === 'true') {
+    await createUser({
+      id: 'admin',
+      email: 'admin@instarealty.com',
+      firstName: 'System',
+      lastName: 'Administrator',
+      role: USER_ROLES.ADMIN,
+      status: 'active'
+    });
 
-createUser({
-  id: 'manager_1',
-  email: 'sarah.manager@company.com',
-  firstName: 'Sarah',
-  lastName: 'Johnson',
-  role: USER_ROLES.MANAGER,
-  status: 'active'
-});
+    await createUser({
+      id: 'manager_1',
+      email: 'sarah.manager@company.com',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      role: USER_ROLES.MANAGER,
+      status: 'active'
+    });
 
-createUser({
-  id: 'staff_1',
-  email: 'john.staff@company.com',
-  firstName: 'John',
-  lastName: 'Smith',
-  role: USER_ROLES.STAFF,
-  status: 'active'
-});
+    await createUser({
+      id: 'staff_1',
+      email: 'john.staff@company.com',
+      firstName: 'John',
+      lastName: 'Smith',
+      role: USER_ROLES.STAFF,
+      status: 'active'
+    });
+  } else {
+    // For database mode, only create admin if it doesn't exist
+    const existingAdmin = await getUserByEmail('admin@instarealty.com');
+    if (!existingAdmin) {
+      await createUser({
+        id: 'admin',
+        email: 'admin@instarealty.com',
+        firstName: 'System',
+        lastName: 'Administrator',
+        role: USER_ROLES.ADMIN,
+        status: 'active'
+      });
+    }
+  }
+}
 
 // Initialize with sample data
 rentalRateIncreases.set('456 Oak Street, Vancouver, BC', {
@@ -350,7 +464,7 @@ app.post('/api/auth/magic-link', async (req, res) => {
     }
 
     // Check if user exists in our system
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
       console.log('❌ User not found for email:', email);
       // Don't reveal that user doesn't exist for security
@@ -420,7 +534,7 @@ app.get('/auth/magic', (req, res) => {
     }
 
     // Get user
-    const user = users.get(tokenData.userId);
+    const user = await getUserById(tokenData.userId);
     if (!user || user.status !== 'active') {
       console.log('❌ User not found or inactive for token:', token);
       magicTokens.delete(token);
@@ -435,7 +549,7 @@ app.get('/auth/magic', (req, res) => {
     };
 
     // Update last login time
-    user.lastLoginAt = new Date().toISOString();
+    await updateUser(user.id, { lastLoginAt: new Date() });
 
     // Clean up used token
     magicTokens.delete(token);
@@ -512,10 +626,10 @@ app.post('/api/simple/logout', (req, res) => {
 });
 
 // Auth check endpoint
-app.get('/api/auth/user', (req, res) => {
+app.get('/api/auth/user', async (req, res) => {
   console.log('✅ Auth check');
   if (req.session.simpleAuth) {
-    const user = users.get(req.session.simpleAuth.userId);
+    const user = await getUserById(req.session.simpleAuth.userId);
     if (user && user.status === 'active') {
       // Return user without sensitive data
       const { ...userData } = user;
@@ -660,7 +774,7 @@ app.get('/api/rental-increases/:address', (req, res) => {
 });
 
 // User management APIs (Admin only)
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   console.log('👥 Users API called');
   
   // Check if user is authenticated and is admin
@@ -668,13 +782,14 @@ app.get('/api/users', (req, res) => {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  const currentUser = users.get(req.session.simpleAuth.userId);
+  const currentUser = await getUserById(req.session.simpleAuth.userId);
   if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
   
   // Return all users (without sensitive data)
-  const userList = Array.from(users.values()).map(user => ({
+  const allUsers = await getAllUsers();
+  const userList = allUsers.map(user => ({
     id: user.id,
     email: user.email,
     firstName: user.firstName,
@@ -688,7 +803,7 @@ app.get('/api/users', (req, res) => {
   res.json(userList);
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   console.log('👤 Create user request');
   
   // Check authentication and permissions
@@ -696,7 +811,7 @@ app.post('/api/users', (req, res) => {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  const currentUser = users.get(req.session.simpleAuth.userId);
+  const currentUser = await getUserById(req.session.simpleAuth.userId);
   if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
@@ -713,12 +828,13 @@ app.post('/api/users', (req, res) => {
   }
   
   // Check if user already exists
-  if (getUserByEmail(email)) {
+  const existingUser = await getUserByEmail(email);
+  if (existingUser) {
     return res.status(400).json({ error: 'User with this email already exists' });
   }
   
   // Create new user
-  const newUser = createUser({
+  const newUser = await createUser({
     email: email.toLowerCase().trim(),
     firstName: firstName.trim(),
     lastName: lastName.trim(),
@@ -733,7 +849,7 @@ app.post('/api/users', (req, res) => {
   res.json(userData);
 });
 
-app.put('/api/users/:userId', (req, res) => {
+app.put('/api/users/:userId', async (req, res) => {
   console.log('👤 Update user request for:', req.params.userId);
   
   // Check authentication and permissions
@@ -741,7 +857,7 @@ app.put('/api/users/:userId', (req, res) => {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  const currentUser = users.get(req.session.simpleAuth.userId);
+  const currentUser = await getUserById(req.session.simpleAuth.userId);
   if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
@@ -749,7 +865,7 @@ app.put('/api/users/:userId', (req, res) => {
   const { userId } = req.params;
   const { email, firstName, lastName, role, status } = req.body;
   
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -759,21 +875,25 @@ app.put('/api/users/:userId', (req, res) => {
     return res.status(400).json({ error: 'Cannot deactivate your own account' });
   }
   
-  // Update user data
-  if (email) user.email = email.toLowerCase().trim();
-  if (firstName) user.firstName = firstName.trim();
-  if (lastName) user.lastName = lastName.trim();
-  if (role && Object.values(USER_ROLES).includes(role)) user.role = role;
-  if (status && ['active', 'inactive'].includes(status)) user.status = status;
+  // Prepare updates
+  const updates = {};
+  if (email) updates.email = email.toLowerCase().trim();
+  if (firstName) updates.firstName = firstName.trim();
+  if (lastName) updates.lastName = lastName.trim();
+  if (role && Object.values(USER_ROLES).includes(role)) updates.role = role;
+  if (status && ['active', 'inactive'].includes(status)) updates.status = status;
   
-  console.log('✅ User updated:', user.email);
+  // Update user
+  const updatedUser = await updateUser(userId, updates);
+  
+  console.log('✅ User updated:', updatedUser.email);
   
   // Return updated user
-  const { ...userData } = user;
+  const { ...userData } = updatedUser;
   res.json(userData);
 });
 
-app.delete('/api/users/:userId', (req, res) => {
+app.delete('/api/users/:userId', async (req, res) => {
   console.log('👤 Delete user request for:', req.params.userId);
   
   // Check authentication and permissions
@@ -781,7 +901,7 @@ app.delete('/api/users/:userId', (req, res) => {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  const currentUser = users.get(req.session.simpleAuth.userId);
+  const currentUser = await getUserById(req.session.simpleAuth.userId);
   if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
@@ -793,12 +913,12 @@ app.delete('/api/users/:userId', (req, res) => {
     return res.status(400).json({ error: 'Cannot delete your own account' });
   }
   
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
   
-  users.delete(userId);
+  await deleteUser(userId);
   console.log('✅ User deleted:', user.email);
   
   res.json({ success: true, message: 'User deleted successfully' });
@@ -848,10 +968,21 @@ const server = app.listen(8080, '0.0.0.0', async () => {
     console.error('❌ Failed to setup email transporter:', error);
   }
   
-  console.log('👥 Sample users available:');
-  console.log('   📧 admin@instarealty.com (Admin)');
-  console.log('   📧 sarah.manager@company.com (Manager)');
-  console.log('   📧 john.staff@company.com (Staff)');
+  // Initialize users
+  try {
+    await initializeSampleUsers();
+    if (process.env.USE_MEMORY_STORAGE === 'true') {
+      console.log('👥 Sample users available:');
+      console.log('   📧 admin@instarealty.com (Admin)');
+      console.log('   📧 sarah.manager@company.com (Manager)');
+      console.log('   📧 john.staff@company.com (Staff)');
+    } else {
+      console.log('🗄️ Database mode: Users will persist across restarts');
+      console.log('   📧 Default admin: admin@instarealty.com (Admin)');
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize users:', error);
+  }
 });
 
 export default app;
