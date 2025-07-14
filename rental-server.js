@@ -2,7 +2,7 @@
 import express from 'express';
 import session from 'express-session';
 import nodemailer from 'nodemailer';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
