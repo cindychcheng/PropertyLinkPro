@@ -2,6 +2,7 @@
 import express from 'express';
 import session from 'express-session';
 import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -125,6 +126,11 @@ async function initializeDatabase() {
           last_name VARCHAR,
           role VARCHAR DEFAULT 'staff',
           status VARCHAR DEFAULT 'active',
+          password_hash VARCHAR,
+          is_temporary_password BOOLEAN DEFAULT FALSE,
+          password_expires_at TIMESTAMP,
+          failed_login_attempts INTEGER DEFAULT 0,
+          locked_until TIMESTAMP,
           created_at TIMESTAMP DEFAULT NOW(),
           last_login_at TIMESTAMP
         )
@@ -350,6 +356,31 @@ async function updateUser(id, updates) {
         values.push(updates.lastLoginAt);
         paramIndex++;
       }
+      if (updates.passwordHash) {
+        fields.push(`password_hash = $${paramIndex}`);
+        values.push(updates.passwordHash);
+        paramIndex++;
+      }
+      if (updates.isTemporaryPassword !== undefined) {
+        fields.push(`is_temporary_password = $${paramIndex}`);
+        values.push(updates.isTemporaryPassword);
+        paramIndex++;
+      }
+      if (updates.passwordExpiresAt !== undefined) {
+        fields.push(`password_expires_at = $${paramIndex}`);
+        values.push(updates.passwordExpiresAt);
+        paramIndex++;
+      }
+      if (updates.failedLoginAttempts !== undefined) {
+        fields.push(`failed_login_attempts = $${paramIndex}`);
+        values.push(updates.failedLoginAttempts);
+        paramIndex++;
+      }
+      if (updates.lockedUntil !== undefined) {
+        fields.push(`locked_until = $${paramIndex}`);
+        values.push(updates.lockedUntil);
+        paramIndex++;
+      }
       
       values.push(id);
       
@@ -383,6 +414,86 @@ async function deleteUser(id) {
       return users.delete(id);
     }
   }
+}
+
+// Password utility functions
+async function hashPassword(password) {
+  const saltRounds = 12;
+  return await bcrypt.hash(password, saltRounds);
+}
+
+async function verifyPassword(password, hash) {
+  return await bcrypt.compare(password, hash);
+}
+
+function generateTempPassword() {
+  // Generate a 12-character temporary password with mix of chars
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let result = '';
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function validatePassword(password) {
+  // Password must be at least 8 characters with letters and numbers
+  if (password.length < 8) {
+    return { valid: false, message: 'Password must be at least 8 characters long' };
+  }
+  if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)) {
+    return { valid: false, message: 'Password must contain both letters and numbers' };
+  }
+  return { valid: true };
+}
+
+async function setUserPassword(userId, password, isTemporary = false) {
+  const passwordHash = await hashPassword(password);
+  const expiresAt = isTemporary ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null; // 24 hours
+  
+  const updates = {
+    passwordHash,
+    isTemporaryPassword: isTemporary,
+    passwordExpiresAt: expiresAt,
+    failedLoginAttempts: 0,
+    lockedUntil: null
+  };
+  
+  return await updateUser(userId, updates);
+}
+
+async function checkAccountLockout(userId) {
+  const user = await getUserById(userId);
+  if (!user) return { locked: true, message: 'User not found' };
+  
+  if (user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
+    return { locked: true, message: 'Account is temporarily locked due to failed login attempts' };
+  }
+  
+  return { locked: false };
+}
+
+async function recordFailedLogin(userId) {
+  const user = await getUserById(userId);
+  if (!user) return;
+  
+  const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+  const updates = { failedLoginAttempts: failedAttempts };
+  
+  // Lock account for 15 minutes after 5 failed attempts
+  if (failedAttempts >= 5) {
+    updates.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+  }
+  
+  await updateUser(userId, updates);
+}
+
+async function clearFailedLogins(userId) {
+  await updateUser(userId, { 
+    failedLoginAttempts: 0, 
+    lockedUntil: null,
+    lastLoginAt: new Date()
+  });
 }
 
 // Property database helper functions
@@ -1256,6 +1367,143 @@ app.post('/api/simple/login', (req, res) => {
   }
 });
 
+// Password-based login for non-admin users
+app.post('/api/password/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    console.log('🔐 Password login attempt for:', email);
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    // Get user by email
+    const user = await getUserByEmail(email);
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check if account is locked
+    const lockStatus = await checkAccountLockout(user.id);
+    if (lockStatus.locked) {
+      console.log('🔒 Account locked:', email);
+      return res.status(423).json({ error: lockStatus.message });
+    }
+
+    // Check if user has a password set
+    if (!user.passwordHash) {
+      console.log('❌ No password set for user:', email);
+      return res.status(401).json({ error: 'Password authentication not enabled for this account' });
+    }
+
+    // Check if user account is active
+    if (user.status !== 'active') {
+      console.log('❌ Inactive user:', email);
+      return res.status(401).json({ error: 'Account is not active' });
+    }
+
+    // Verify password
+    const isValidPassword = await verifyPassword(password, user.passwordHash);
+    if (!isValidPassword) {
+      console.log('❌ Invalid password for user:', email);
+      await recordFailedLogin(user.id);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check if password is expired
+    if (user.passwordExpiresAt && new Date() > new Date(user.passwordExpiresAt)) {
+      console.log('⏰ Password expired for user:', email);
+      return res.status(401).json({ 
+        error: 'Password has expired',
+        requiresPasswordChange: true,
+        userId: user.id
+      });
+    }
+
+    // Clear failed login attempts
+    await clearFailedLogins(user.id);
+
+    // Set session
+    req.session.simpleAuth = {
+      userId: user.id,
+      email: user.email,
+      loginTime: Date.now()
+    };
+
+    console.log('✅ Password login successful for:', email);
+
+    // Check if password change is required
+    const requiresPasswordChange = user.isTemporaryPassword;
+
+    // Return user info (without sensitive data)
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      status: user.status,
+      requiresPasswordChange
+    };
+
+    return res.json({ 
+      success: true, 
+      user: userResponse,
+      requiresPasswordChange
+    });
+
+  } catch (error) {
+    console.error('Password login error:', error);
+    return res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Change password endpoint
+app.post('/api/password/change', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    
+    console.log('🔄 Password change request for user:', userId);
+    
+    if (!userId || !newPassword) {
+      return res.status(400).json({ error: 'User ID and new password required' });
+    }
+
+    // Validate new password
+    const validation = validatePassword(newPassword);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+
+    // Get user
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // If user has existing password, verify current password
+    if (user.passwordHash && currentPassword) {
+      const isValidCurrent = await verifyPassword(currentPassword, user.passwordHash);
+      if (!isValidCurrent) {
+        console.log('❌ Invalid current password for user:', userId);
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+    }
+
+    // Set new password
+    await setUserPassword(userId, newPassword, false);
+    
+    console.log('✅ Password changed successfully for user:', userId);
+    return res.json({ success: true, message: 'Password changed successfully' });
+
+  } catch (error) {
+    console.error('Password change error:', error);
+    return res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
 // Logout endpoints (both GET and POST for compatibility)
 app.get('/api/logout', (req, res) => {
   if (req.session.simpleAuth) {
@@ -1517,6 +1765,99 @@ app.post('/api/users', async (req, res) => {
   // Return user without sensitive data
   const { ...userData } = newUser;
   res.json(userData);
+});
+
+// Generate password for user (admin only)
+app.post('/api/users/:userId/generate-password', async (req, res) => {
+  try {
+    console.log('🔐 Generate password request for user:', req.params.userId);
+    
+    // Check authentication and permissions
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const currentUser = await getUserById(req.session.simpleAuth.userId);
+    if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    
+    const userId = req.params.userId;
+    
+    // Check if user exists
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Generate temporary password
+    const tempPassword = generateTempPassword();
+    
+    // Set temporary password
+    await setUserPassword(userId, tempPassword, true);
+    
+    console.log('✅ Temporary password generated for user:', user.email);
+    
+    // Return the temporary password (only shown once)
+    res.json({ 
+      success: true, 
+      tempPassword,
+      message: 'Temporary password generated. Please share this securely with the user.',
+      expiresIn: '24 hours'
+    });
+    
+  } catch (error) {
+    console.error('Generate password error:', error);
+    res.status(500).json({ error: 'Failed to generate password' });
+  }
+});
+
+// Reset user password (admin only)
+app.post('/api/users/:userId/reset-password', async (req, res) => {
+  try {
+    console.log('🔄 Reset password request for user:', req.params.userId);
+    
+    // Check authentication and permissions  
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const currentUser = await getUserById(req.session.simpleAuth.userId);
+    if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    
+    const userId = req.params.userId;
+    
+    // Check if user exists
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Generate new temporary password
+    const tempPassword = generateTempPassword();
+    
+    // Set temporary password and clear lockout
+    await setUserPassword(userId, tempPassword, true);
+    await updateUser(userId, { 
+      failedLoginAttempts: 0, 
+      lockedUntil: null 
+    });
+    
+    console.log('✅ Password reset for user:', user.email);
+    
+    res.json({ 
+      success: true, 
+      tempPassword,
+      message: 'Password has been reset. Please share this temporary password securely with the user.',
+      expiresIn: '24 hours'
+    });
+    
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 app.put('/api/users/:userId', async (req, res) => {
