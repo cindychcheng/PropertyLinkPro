@@ -72,6 +72,32 @@ export default function UsersBasic() {
     }
   };
 
+  const handleGeneratePassword = async (userId: string, userName: string) => {
+    if (!confirm(`Generate a temporary password for ${userName}? This will create a new password that expires in 24 hours.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/users/${userId}/generate-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Password generated successfully!\n\nTemporary Password: ${result.tempPassword}\n\nThis password expires in 24 hours. Please share this securely with the user.`);
+        refetch();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to generate password'}`);
+      }
+    } catch (error) {
+      alert("Failed to generate password");
+    }
+  };
+
   if (isLoading) {
     return <div style={{padding: "20px"}}>Loading users...</div>;
   }
@@ -151,7 +177,22 @@ export default function UsersBasic() {
               <br />
               <small>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</small>
             </div>
-            <div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button 
+                onClick={() => handleGeneratePassword(user.id, `${user.firstName} ${user.lastName}`)}
+                style={{
+                  padding: "5px 10px", 
+                  backgroundColor: "#28a745", 
+                  color: "white", 
+                  border: "none", 
+                  borderRadius: "3px",
+                  cursor: "pointer"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#218838"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
+              >
+                Generate Password
+              </button>
               <button 
                 onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
                 style={{
