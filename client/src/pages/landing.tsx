@@ -8,7 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
   const [showMagicLogin, setShowMagicLogin] = useState(false);
+  const [showPasswordLogin, setShowPasswordLogin] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
@@ -48,6 +50,63 @@ export default function Landing() {
         toast({
           title: "Error",
           description: data.error || "Failed to send login link",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim() || !password.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/password/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password: password.trim() 
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({
+          title: "Login successful",
+          description: `Welcome, ${data.user.firstName || "User"}!`,
+        });
+        
+        // Force a page reload to refresh authentication state
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
+      } else {
+        toast({
+          title: "Login failed",
+          description: data.error || "Invalid email or password",
           variant: "destructive",
         });
       }
@@ -136,6 +195,67 @@ export default function Landing() {
                   className="flex-1"
                 >
                   {isLoading ? "Sending..." : "Send login link"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showPasswordLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Sign in with password</CardTitle>
+            <CardDescription>
+              Enter your email and password to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordLogin} className="space-y-4">
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasswordLogin(false);
+                    setEmail("");
+                    setPassword("");
+                  }}
+                  className="flex-1"
+                  disabled={isLoading}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
               </div>
             </form>
@@ -234,12 +354,22 @@ export default function Landing() {
               </div>
               <div className="space-y-3">
                 <Button 
-                  onClick={() => setShowMagicLogin(true)}
+                  onClick={() => setShowPasswordLogin(true)}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   size="lg"
                 >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Sign in with Password
+                </Button>
+                
+                <Button 
+                  onClick={() => setShowMagicLogin(true)}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
                   <Mail className="h-4 w-4 mr-2" />
-                  Sign in with Email
+                  Send Magic Link
                 </Button>
                 
                 <div className="relative">
