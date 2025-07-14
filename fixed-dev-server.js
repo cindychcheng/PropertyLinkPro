@@ -94,7 +94,7 @@ app.post('/api/simple/login', (req, res) => {
     
     // Check credentials against environment variables
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminPassword = process.env.ADMIN_PASSWORD;
     
     if (username === adminUsername && password === adminPassword) {
       console.log('✅ Admin login successful');
@@ -132,7 +132,7 @@ app.get('/admin', (req, res) => {
     user: adminUser,
     credentials: {
       username: process.env.ADMIN_USERNAME || 'admin',
-      password: process.env.ADMIN_PASSWORD || 'admin123'
+      password: process.env.ADMIN_PASSWORD
     },
     endpoints: [
       "POST /api/simple/login - Admin login",
