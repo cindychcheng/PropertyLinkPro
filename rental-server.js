@@ -1224,15 +1224,13 @@ app.post('/api/simple/login', (req, res) => {
     }
 
     // Check for the super admin account using environment variables
-    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'PropertyLink2024!';
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
     
     if (!adminUsername || !adminPassword) {
       console.error('❌ Admin credentials not configured properly');
       return res.status(500).json({ error: 'Server configuration error' });
     }
-    
-    console.log('🔧 Using admin credentials:', adminUsername ? 'Username configured' : 'Using default username');
     
     console.log('🔍 Checking credentials for user:', username);
     
