@@ -183,10 +183,45 @@ async function initializeDatabase() {
       
       console.log('📋 Database tables ready (users, properties, landlord_owners, tenants)');
       
+      // Migrate existing users to ensure password authentication compatibility
+      await migrateExistingUsers();
+      
     } catch (error) {
       console.log('⚠️ Database connection failed, using memory storage:', error.message);
       process.env.USE_MEMORY_STORAGE = 'true'; // Fallback to memory
     }
+  }
+}
+
+// Database migration function to ensure existing users have password authentication fields
+async function migrateExistingUsers() {
+  if (!global.dbPool) {
+    console.log('🔄 Skipping user migration - no database connection');
+    return;
+  }
+  
+  try {
+    console.log('🔄 Starting user migration for password authentication...');
+    
+    // Update existing users who don't have password authentication fields set
+    const result = await global.dbPool.query(`
+      UPDATE users 
+      SET 
+        password_hash = NULL,
+        is_temporary_password = FALSE,
+        password_expires_at = NULL,
+        failed_login_attempts = 0,
+        locked_until = NULL
+      WHERE 
+        password_hash IS NULL 
+        AND is_temporary_password IS NULL
+    `);
+    
+    console.log(`✅ Migrated ${result.rowCount} existing users for password authentication`);
+    
+  } catch (error) {
+    console.error('❌ Error during user migration:', error);
+    // Don't fail the startup, just log the error
   }
 }
 
@@ -384,10 +419,9 @@ async function updateUser(id, updates) {
       
       values.push(id);
       
-      await global.dbPool.query(
-        `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex}`,
-        values
-      );
+      const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex}`;
+      
+      await global.dbPool.query(query, values);
       
       return await getUserById(id);
     } catch (error) {
