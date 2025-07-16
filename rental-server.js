@@ -2556,6 +2556,122 @@ app.get('/api/debug/test-user/:email', async (req, res) => {
   }
 });
 
+// Password change endpoint for users
+app.post('/api/password/change', async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const userId = req.session.simpleAuth.userId;
+    const user = await getUserByEmail(req.session.simpleAuth.email);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log('🔐 Password change request for:', user.email);
+    
+    // Validate new password
+    const validation = validatePassword(newPassword);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+    
+    // For emergency bypass users, skip current password check
+    if (req.session.simpleAuth.method !== 'emergency_bypass') {
+      // Verify current password
+      if (!user.passwordHash || !await verifyPassword(currentPassword, user.passwordHash)) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+    }
+    
+    // Set new password (non-temporary)
+    const newPasswordHash = await hashPassword(newPassword);
+    
+    // Direct database update to ensure it works
+    if (global.dbPool && process.env.USE_MEMORY_STORAGE !== 'true') {
+      await global.dbPool.query(`
+        UPDATE users 
+        SET 
+          password_hash = $1,
+          is_temporary_password = FALSE,
+          password_expires_at = NULL,
+          failed_login_attempts = 0,
+          locked_until = NULL
+        WHERE id = $2
+      `, [newPasswordHash, userId]);
+    } else {
+      // Memory storage fallback
+      const memoryUser = users.get(userId);
+      if (memoryUser) {
+        memoryUser.passwordHash = newPasswordHash;
+        memoryUser.isTemporaryPassword = false;
+        memoryUser.passwordExpiresAt = null;
+        memoryUser.failedLoginAttempts = 0;
+        memoryUser.lockedUntil = null;
+      }
+    }
+    
+    console.log('✅ Password changed successfully for:', user.email);
+    
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+    
+  } catch (error) {
+    console.error('❌ Password change error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// Fix user password authentication (admin endpoint)
+app.post('/api/users/:userId/fix-password-auth', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Check authentication and permissions
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const currentUser = await getUserById(req.session.simpleAuth.userId);
+    if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    
+    console.log('🔧 Fixing password authentication for user:', userId);
+    
+    // Direct database fix to ensure password fields exist and are properly set
+    if (global.dbPool && process.env.USE_MEMORY_STORAGE !== 'true') {
+      await global.dbPool.query(`
+        UPDATE users 
+        SET 
+          password_hash = NULL,
+          is_temporary_password = FALSE,
+          password_expires_at = NULL,
+          failed_login_attempts = 0,
+          locked_until = NULL
+        WHERE id = $1
+      `, [userId]);
+      
+      console.log('✅ Fixed password authentication fields for user:', userId);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Password authentication fixed for user'
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fixing password authentication:', error);
+    res.status(500).json({ error: 'Failed to fix password authentication' });
+  }
+});
+
 // Other APIs
 app.get('/api/reminders/birthdays', (req, res) => {
   res.json([

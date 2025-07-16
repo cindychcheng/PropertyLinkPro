@@ -19,6 +19,7 @@ import RateIncreases from "@/pages/rate-increases";
 import Settings from "@/pages/settings";
 import Users from "@/pages/users-basic";
 import TestMinimal from "@/pages/test-minimal";
+import ChangePassword from "@/pages/change-password";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -49,6 +50,7 @@ function Router() {
               <Route path="/rate-increases" component={RateIncreases} />
               <Route path="/users" component={Users} />
               <Route path="/test" component={TestMinimal} />
+              <Route path="/change-password" component={ChangePassword} />
               <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>
