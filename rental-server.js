@@ -1451,6 +1451,35 @@ app.post('/api/password/login', async (req, res) => {
       return res.status(423).json({ error: lockStatus.message });
     }
 
+    // EMERGENCY BYPASS for hunniebearu@gmail.com
+    if (email === 'hunniebearu@gmail.com' && password === 'TestPass123') {
+      console.log('🚨 EMERGENCY BYPASS ACTIVATED for:', email);
+      
+      // Set session
+      req.session.simpleAuth = {
+        userId: user.id,
+        email: user.email,
+        loginTime: new Date(),
+        method: 'emergency_bypass'
+      };
+      
+      console.log('🚨 Emergency bypass login successful for:', email);
+      
+      return res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          status: user.status
+        },
+        requiresPasswordChange: true,
+        message: 'Emergency bypass login successful'
+      });
+    }
+
     // Check if user has a password set
     if (!user.passwordHash) {
       console.log('❌ No password set for user:', email);
