@@ -2408,6 +2408,79 @@ app.get('/api/debug/user-password-status/:email', async (req, res) => {
   }
 });
 
+// Nuclear option: Force password with direct SQL
+app.post('/api/debug/force-password/:email/:password', async (req, res) => {
+  try {
+    const { email, password } = req.params;
+    console.log('🚨 NUCLEAR PASSWORD FIX for:', email);
+    
+    // Check authentication
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Hash the password directly
+    const bcrypt = await import('bcryptjs');
+    const passwordHash = await bcrypt.hash(password, 12);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    console.log('🚨 Generated hash:', passwordHash.substring(0, 20) + '...');
+    
+    // Direct SQL update with all password fields
+    const updateResult = await global.dbPool.query(`
+      UPDATE users 
+      SET 
+        password_hash = $1,
+        is_temporary_password = TRUE,
+        password_expires_at = $2,
+        failed_login_attempts = 0,
+        locked_until = NULL
+      WHERE email = $3
+      RETURNING email, password_hash, is_temporary_password
+    `, [passwordHash, expiresAt, email]);
+    
+    console.log('🚨 Update result:', updateResult.rows[0]);
+    
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Verify the update
+    const verifyResult = await global.dbPool.query(`
+      SELECT email, password_hash, is_temporary_password, password_expires_at
+      FROM users WHERE email = $1
+    `, [email]);
+    
+    const user = verifyResult.rows[0];
+    console.log('🚨 Verification:', {
+      email: user.email,
+      hasHash: !!user.password_hash,
+      hashLength: user.password_hash ? user.password_hash.length : 0,
+      isTemporary: user.is_temporary_password
+    });
+    
+    res.json({
+      success: true,
+      message: 'Nuclear password fix completed',
+      password: password,
+      verification: {
+        hasPasswordHash: !!user.password_hash,
+        passwordHashLength: user.password_hash ? user.password_hash.length : 0,
+        isTemporary: user.is_temporary_password,
+        expiresAt: user.password_expires_at
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Nuclear password fix error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Other APIs
 app.get('/api/reminders/birthdays', (req, res) => {
   res.json([

@@ -79,6 +79,8 @@ export default function Landing() {
     setIsLoading(true);
     
     try {
+      console.log('🔐 Attempting password login for:', email);
+      
       const response = await fetch("/api/password/login", {
         method: "POST",
         headers: {
@@ -92,6 +94,7 @@ export default function Landing() {
       });
 
       const data = await response.json();
+      console.log('🔐 Login response:', data);
       
       if (response.ok && data.success) {
         toast({
@@ -99,11 +102,10 @@ export default function Landing() {
           description: `Welcome, ${data.user.firstName || "User"}!`,
         });
         
-        // Force a page reload to refresh authentication state
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
+        // Force a complete page reload to refresh authentication state
+        window.location.replace("/");
       } else {
+        console.log('🔐 Login failed:', data.error);
         toast({
           title: "Login failed",
           description: data.error || "Invalid email or password",
@@ -111,6 +113,7 @@ export default function Landing() {
         });
       }
     } catch (error: any) {
+      console.error('🔐 Login error:', error);
       toast({
         title: "Error",
         description: "Network error. Please try again.",
