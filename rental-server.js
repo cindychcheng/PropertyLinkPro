@@ -2561,6 +2561,15 @@ app.post('/api/password/change', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     
+    console.log('🔐 Password change request received');
+    console.log('🔐 Body keys:', Object.keys(req.body));
+    console.log('🔐 Has newPassword:', !!newPassword);
+    console.log('🔐 newPassword length:', newPassword ? newPassword.length : 0);
+    
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required' });
+    }
+    
     if (!req.session.simpleAuth) {
       return res.status(401).json({ error: 'Not authenticated' });
     }

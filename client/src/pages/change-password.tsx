@@ -50,7 +50,9 @@ export default function ChangePassword() {
         }),
       });
 
+      console.log('Password change response status:', response.status);
       const data = await response.json();
+      console.log('Password change response data:', data);
       
       if (response.ok && data.success) {
         toast({
@@ -63,6 +65,7 @@ export default function ChangePassword() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
+        console.error('Password change failed:', data);
         toast({
           title: "Password change failed",
           description: data.error || "Failed to change password",
