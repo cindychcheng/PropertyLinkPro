@@ -542,6 +542,112 @@ async function checkAccountLockout(userId) {
   return { locked: false };
 }
 
+async function getBirthdayReminders(month) {
+  if (process.env.USE_MEMORY_STORAGE === 'true' || !global.dbPool) {
+    // Memory storage implementation
+    const currentMonth = month || new Date().getMonth() + 1;
+    const result = [];
+    
+    console.log('🎂 Birthday reminders debug - Target month:', currentMonth);
+    console.log('🎂 Total properties:', propertiesData.length);
+    
+    // Check landlord owners from all properties
+    for (const property of propertiesData) {
+      if (property.landlordOwners) {
+        for (const owner of property.landlordOwners) {
+          if (owner.birthday) {
+            const birthday = new Date(owner.birthday);
+            const birthdayMonth = birthday.getMonth() + 1;
+            console.log('🎂 Checking owner:', owner.name, 'birthday month:', birthdayMonth);
+            if (birthdayMonth === currentMonth) {
+              console.log('🎂 ✓ Adding owner:', owner.name);
+              result.push({
+                name: owner.name,
+                role: 'Landlord',
+                contactNumber: owner.contactNumber || 'N/A',
+                birthday: new Date(owner.birthday),
+                propertyAddress: property.propertyAddress
+              });
+            }
+          }
+        }
+      }
+      
+      // Check active tenants
+      if (property.activeTenants) {
+        for (const tenant of property.activeTenants) {
+          if (tenant.birthday && !tenant.moveOutDate) {
+            const birthday = new Date(tenant.birthday);
+            const birthdayMonth = birthday.getMonth() + 1;
+            console.log('🎂 Checking tenant:', tenant.name, 'birthday month:', birthdayMonth);
+            if (birthdayMonth === currentMonth) {
+              console.log('🎂 ✓ Adding tenant:', tenant.name);
+              result.push({
+                name: tenant.name,
+                role: 'Tenant',
+                contactNumber: tenant.contactNumber || 'N/A',
+                birthday: new Date(tenant.birthday),
+                propertyAddress: property.propertyAddress
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    console.log('🎂 Total birthday reminders found:', result.length);
+    return result.sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  } else {
+    // Database implementation
+    try {
+      const currentMonth = month || new Date().getMonth() + 1;
+      console.log('🎂 Database birthday search for month:', currentMonth);
+      
+      // Get landlord owners with birthdays
+      const ownersQuery = `
+        SELECT lo.name, lo.contact_number, lo.birthday, lo.residential_address
+        FROM landlord_owners lo
+        WHERE lo.birthday IS NOT NULL
+        AND EXTRACT(MONTH FROM lo.birthday) = $1
+      `;
+      const ownersResult = await global.dbPool.query(ownersQuery, [currentMonth]);
+      
+      // Get active tenants with birthdays
+      const tenantsQuery = `
+        SELECT t.name, t.contact_number, t.birthday, t.property_address
+        FROM tenants t
+        WHERE t.birthday IS NOT NULL
+        AND t.move_out_date IS NULL
+        AND EXTRACT(MONTH FROM t.birthday) = $1
+      `;
+      const tenantsResult = await global.dbPool.query(tenantsQuery, [currentMonth]);
+      
+      const result = [
+        ...ownersResult.rows.map(owner => ({
+          name: owner.name,
+          role: 'Landlord',
+          contactNumber: owner.contact_number || 'N/A',
+          birthday: new Date(owner.birthday),
+          propertyAddress: owner.residential_address || 'N/A'
+        })),
+        ...tenantsResult.rows.map(tenant => ({
+          name: tenant.name,
+          role: 'Tenant',
+          contactNumber: tenant.contact_number || 'N/A',
+          birthday: new Date(tenant.birthday),
+          propertyAddress: tenant.property_address
+        }))
+      ];
+      
+      console.log('🎂 Database found', result.length, 'birthday reminders');
+      return result.sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+    } catch (error) {
+      console.error('Database birthday query error:', error);
+      return [];
+    }
+  }
+}
+
 async function recordFailedLogin(userId) {
   const user = await getUserById(userId);
   if (!user) return;
@@ -2692,10 +2798,20 @@ app.post('/api/users/:userId/fix-password-auth', async (req, res) => {
 });
 
 // Other APIs
-app.get('/api/reminders/birthdays', (req, res) => {
-  res.json([
-    { name: 'Jane Smith', role: 'Tenant', birthday: '1985-07-09T00:00:00.000Z', contactNumber: '604-555-1111', propertyAddress: '456 Oak Street, Vancouver, BC' }
-  ]);
+app.get('/api/reminders/birthdays', async (req, res) => {
+  try {
+    console.log('🎂 Birthday reminders endpoint called');
+    const month = req.query.month ? parseInt(req.query.month, 10) : undefined;
+    console.log('🎂 Requested month:', month);
+    
+    const birthdays = await getBirthdayReminders(month);
+    console.log('🎂 Found birthdays:', birthdays.length);
+    
+    res.json(birthdays);
+  } catch (error) {
+    console.error('Birthday reminders error:', error);
+    res.status(500).json({ error: 'Failed to fetch birthday reminders' });
+  }
 });
 
 app.get('/api/reminders/rental-increases', (req, res) => {
