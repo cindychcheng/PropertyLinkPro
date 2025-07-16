@@ -550,15 +550,20 @@ async function getBirthdayReminders(month) {
     
     console.log('🎂 Birthday reminders debug - Target month:', currentMonth);
     console.log('🎂 Total properties:', propertiesData.length);
+    console.log('🎂 Full properties data:', JSON.stringify(propertiesData, null, 2));
     
     // Check landlord owners from all properties
     for (const property of propertiesData) {
+      console.log('🎂 Processing property:', property.propertyAddress);
+      console.log('🎂 Property landlordOwners:', property.landlordOwners);
+      
       if (property.landlordOwners) {
         for (const owner of property.landlordOwners) {
+          console.log('🎂 Checking owner:', owner.name, 'birthday raw:', owner.birthday);
           if (owner.birthday) {
             const birthday = new Date(owner.birthday);
             const birthdayMonth = birthday.getMonth() + 1;
-            console.log('🎂 Checking owner:', owner.name, 'birthday month:', birthdayMonth);
+            console.log('🎂 Owner', owner.name, 'birthday month:', birthdayMonth, 'target month:', currentMonth, 'match:', birthdayMonth === currentMonth);
             if (birthdayMonth === currentMonth) {
               console.log('🎂 ✓ Adding owner:', owner.name);
               result.push({
@@ -569,17 +574,23 @@ async function getBirthdayReminders(month) {
                 propertyAddress: property.propertyAddress
               });
             }
+          } else {
+            console.log('🎂 Owner', owner.name, 'has no birthday');
           }
         }
+      } else {
+        console.log('🎂 Property has no landlordOwners');
       }
       
       // Check active tenants
+      console.log('🎂 Property activeTenants:', property.activeTenants);
       if (property.activeTenants) {
         for (const tenant of property.activeTenants) {
+          console.log('🎂 Checking tenant:', tenant.name, 'birthday raw:', tenant.birthday, 'moveOutDate:', tenant.moveOutDate);
           if (tenant.birthday && !tenant.moveOutDate) {
             const birthday = new Date(tenant.birthday);
             const birthdayMonth = birthday.getMonth() + 1;
-            console.log('🎂 Checking tenant:', tenant.name, 'birthday month:', birthdayMonth);
+            console.log('🎂 Tenant', tenant.name, 'birthday month:', birthdayMonth, 'target month:', currentMonth, 'match:', birthdayMonth === currentMonth);
             if (birthdayMonth === currentMonth) {
               console.log('🎂 ✓ Adding tenant:', tenant.name);
               result.push({
@@ -590,8 +601,12 @@ async function getBirthdayReminders(month) {
                 propertyAddress: property.propertyAddress
               });
             }
+          } else {
+            console.log('🎂 Tenant', tenant.name, 'skipped - no birthday or moved out');
           }
         }
+      } else {
+        console.log('🎂 Property has no activeTenants');
       }
     }
     
