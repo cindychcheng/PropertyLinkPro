@@ -2072,6 +2072,88 @@ app.post('/api/debug/fix-user-password-auth/:email', async (req, res) => {
   }
 });
 
+// Add missing password columns to production database
+app.post('/api/debug/add-password-columns', async (req, res) => {
+  try {
+    console.log('🔧 ADDING MISSING PASSWORD COLUMNS to production database');
+    
+    // Check authentication
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Check current table structure
+    console.log('🔍 Checking current table structure...');
+    const tableInfo = await global.dbPool.query(`
+      SELECT column_name, data_type, is_nullable 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' 
+      ORDER BY ordinal_position
+    `);
+    
+    console.log('🔍 Current columns:', tableInfo.rows);
+    
+    // Add missing password columns
+    const alterQueries = [
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR',
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS is_temporary_password BOOLEAN DEFAULT FALSE',
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS password_expires_at TIMESTAMP',
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0',
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP'
+    ];
+    
+    for (const query of alterQueries) {
+      console.log('🔧 Executing:', query);
+      await global.dbPool.query(query);
+    }
+    
+    // Verify the columns were added
+    console.log('🔍 Checking updated table structure...');
+    const updatedTableInfo = await global.dbPool.query(`
+      SELECT column_name, data_type, is_nullable 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' 
+      ORDER BY ordinal_position
+    `);
+    
+    console.log('🔍 Updated columns:', updatedTableInfo.rows);
+    
+    // Initialize existing users with default values
+    console.log('🔧 Initializing existing users with default password field values...');
+    const initResult = await global.dbPool.query(`
+      UPDATE users 
+      SET 
+        password_hash = NULL,
+        is_temporary_password = FALSE,
+        password_expires_at = NULL,
+        failed_login_attempts = 0,
+        locked_until = NULL
+      WHERE password_hash IS NULL
+    `);
+    
+    console.log('🔧 Initialized', initResult.rowCount, 'users');
+    
+    res.json({
+      success: true,
+      message: 'Password columns added successfully',
+      columnsBefore: tableInfo.rows.length,
+      columnsAfter: updatedTableInfo.rows.length,
+      usersInitialized: initResult.rowCount,
+      newColumns: updatedTableInfo.rows.filter(col => 
+        ['password_hash', 'is_temporary_password', 'password_expires_at', 'failed_login_attempts', 'locked_until'].includes(col.column_name)
+      )
+    });
+    
+  } catch (error) {
+    console.error('❌ Error adding password columns:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Direct password generation with database bypass
 app.post('/api/debug/generate-password/:email', async (req, res) => {
   try {
