@@ -2409,9 +2409,9 @@ app.get('/api/debug/user-password-status/:email', async (req, res) => {
 });
 
 // Nuclear option: Force password with direct SQL
-app.post('/api/debug/force-password/:email/:password', async (req, res) => {
+app.post('/api/debug/force-password', async (req, res) => {
   try {
-    const { email, password } = req.params;
+    const { email, password } = req.body;
     console.log('🚨 NUCLEAR PASSWORD FIX for:', email);
     
     // Check authentication
