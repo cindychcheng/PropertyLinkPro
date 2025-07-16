@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +65,39 @@ function hasAccess(userRole: string, requiredRole: string): boolean {
 function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/simple/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Clear React Query cache to reset authentication state
+        queryClient.clear();
+        
+        // Small delay to ensure state is cleared, then reload to landing page
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout failed",
+        description: "There was an error signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredNavigation = navigation.filter(item => 
     hasAccess(user?.role || "read_only", item.minRole)
@@ -131,7 +166,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
