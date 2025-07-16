@@ -1318,9 +1318,23 @@ const propertiesData = [
     propertyAddress: '456 Oak Street, Vancouver, BC',
     keyNumber: 'OAK001',
     serviceType: 'Full-Service Management',
-    landlordOwners: [{ name: 'John Doe', contactNumber: '604-555-0123' }],
-    tenant: { id: 1, name: 'Jane Smith', email: 'jane@email.com', moveInDate: '2022-01-15' },
-    activeTenants: [{ id: 1, name: 'Jane Smith' }],
+    landlordOwners: [{ 
+      name: 'John Doe', 
+      contactNumber: '604-555-0123',
+      birthday: '1975-03-15'  // March birthday
+    }],
+    tenant: { 
+      id: 1, 
+      name: 'Jane Smith', 
+      email: 'jane@email.com', 
+      moveInDate: '2022-01-15',
+      birthday: '1985-07-09'  // July birthday
+    },
+    activeTenants: [{ 
+      id: 1, 
+      name: 'Jane Smith',
+      birthday: '1985-07-09'  // July birthday
+    }],
     rentalInfo: {
       latestRentalRate: 2500,
       latestRateIncreaseDate: '2023-01-15',
@@ -1332,14 +1346,56 @@ const propertiesData = [
     propertyAddress: '789 Pine Avenue, Vancouver, BC',
     keyNumber: 'PINE002',
     serviceType: 'Tenant Placement Only',
-    landlordOwners: [{ name: 'Sarah Wilson', contactNumber: '604-555-0456' }],
-    tenant: { id: 2, name: 'Bob Wilson', email: 'bob@email.com', moveInDate: '2022-03-01' },
-    activeTenants: [{ id: 2, name: 'Bob Wilson' }],
+    landlordOwners: [{ 
+      name: 'Sarah Wilson', 
+      contactNumber: '604-555-0456',
+      birthday: '1980-12-25'  // December birthday
+    }],
+    tenant: { 
+      id: 2, 
+      name: 'Bob Wilson', 
+      email: 'bob@email.com', 
+      moveInDate: '2022-03-01',
+      birthday: '1990-01-20'  // January birthday
+    },
+    activeTenants: [{ 
+      id: 2, 
+      name: 'Bob Wilson',
+      birthday: '1990-01-20'  // January birthday
+    }],
     rentalInfo: {
       latestRentalRate: 2200,
       latestRateIncreaseDate: '2023-03-01',
       nextAllowableRentalIncreaseDate: '2024-03-01',
       nextAllowableRentalRate: 2266
+    }
+  },
+  {
+    propertyAddress: '321 Maple Drive, Vancouver, BC',
+    keyNumber: 'MAPLE003',
+    serviceType: 'Full-Service Management',
+    landlordOwners: [{ 
+      name: 'Mike Chen', 
+      contactNumber: '604-555-0789',
+      birthday: '1978-05-12'  // May birthday
+    }],
+    tenant: { 
+      id: 3, 
+      name: 'Lisa Garcia', 
+      email: 'lisa@email.com', 
+      moveInDate: '2023-02-01',
+      birthday: '1992-09-18'  // September birthday
+    },
+    activeTenants: [{ 
+      id: 3, 
+      name: 'Lisa Garcia',
+      birthday: '1992-09-18'  // September birthday
+    }],
+    rentalInfo: {
+      latestRentalRate: 2800,
+      latestRateIncreaseDate: '2023-02-01',
+      nextAllowableRentalIncreaseDate: '2024-02-01',
+      nextAllowableRentalRate: 2884
     }
   }
 ];
@@ -2804,8 +2860,14 @@ app.get('/api/reminders/birthdays', async (req, res) => {
     const month = req.query.month ? parseInt(req.query.month, 10) : undefined;
     console.log('🎂 Requested month:', month);
     
+    // First, let's debug what data we have
+    console.log('🎂 DEBUG: Storage mode:', process.env.USE_MEMORY_STORAGE === 'true' ? 'MEMORY' : 'DATABASE');
+    console.log('🎂 DEBUG: Properties data length:', propertiesData ? propertiesData.length : 'undefined');
+    console.log('🎂 DEBUG: Sample property:', propertiesData && propertiesData[0] ? JSON.stringify(propertiesData[0], null, 2) : 'none');
+    
     const birthdays = await getBirthdayReminders(month);
     console.log('🎂 Found birthdays:', birthdays.length);
+    console.log('🎂 Birthday results:', JSON.stringify(birthdays, null, 2));
     
     res.json(birthdays);
   } catch (error) {
