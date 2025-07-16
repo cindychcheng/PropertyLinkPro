@@ -620,8 +620,9 @@ async function getBirthdayReminders(month) {
       
       // Get landlord owners with birthdays
       const ownersQuery = `
-        SELECT lo.name, lo.contact_number, lo.birthday, lo.residential_address
+        SELECT lo.name, lo.contact_number, lo.birthday, lo.residential_address, p.property_address
         FROM landlord_owners lo
+        JOIN properties p ON lo.property_id = p.id
         WHERE lo.birthday IS NOT NULL
         AND EXTRACT(MONTH FROM lo.birthday) = $1
       `;
@@ -629,8 +630,9 @@ async function getBirthdayReminders(month) {
       
       // Get active tenants with birthdays
       const tenantsQuery = `
-        SELECT t.name, t.contact_number, t.birthday, t.property_address
+        SELECT t.name, t.contact_number, t.birthday, p.property_address
         FROM tenants t
+        JOIN properties p ON t.property_id = p.id
         WHERE t.birthday IS NOT NULL
         AND t.move_out_date IS NULL
         AND EXTRACT(MONTH FROM t.birthday) = $1
@@ -643,7 +645,7 @@ async function getBirthdayReminders(month) {
           role: 'Landlord',
           contactNumber: owner.contact_number || 'N/A',
           birthday: new Date(owner.birthday),
-          propertyAddress: owner.residential_address || 'N/A'
+          propertyAddress: owner.property_address
         })),
         ...tenantsResult.rows.map(tenant => ({
           name: tenant.name,
@@ -2871,31 +2873,14 @@ app.post('/api/users/:userId/fix-password-auth', async (req, res) => {
 // Other APIs
 app.get('/api/reminders/birthdays', async (req, res) => {
   try {
+    console.log('🎂 Birthday reminders endpoint called');
     const month = req.query.month ? parseInt(req.query.month, 10) : undefined;
+    console.log('🎂 Requested month:', month);
     
-    // TEMPORARY: Return test data for debugging
-    if (month === 3) {
-      return res.json([{
-        name: 'TEST John Doe (March)',
-        role: 'Landlord',
-        contactNumber: '604-555-0123',
-        birthday: '1975-03-15',
-        propertyAddress: '456 Oak Street, Vancouver, BC'
-      }]);
-    }
-    
-    if (month === 7) {
-      return res.json([{
-        name: 'TEST Jane Smith (July)',
-        role: 'Tenant', 
-        contactNumber: '604-555-1111',
-        birthday: '1985-07-09',
-        propertyAddress: '456 Oak Street, Vancouver, BC'
-      }]);
-    }
-    
-    // For other months, try the real function
     const birthdays = await getBirthdayReminders(month);
+    console.log('🎂 Found birthdays:', birthdays.length);
+    console.log('🎂 Birthday results:', JSON.stringify(birthdays, null, 2));
+    
     res.json(birthdays);
   } catch (error) {
     console.error('Birthday reminders error:', error);
