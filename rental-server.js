@@ -2871,19 +2871,31 @@ app.post('/api/users/:userId/fix-password-auth', async (req, res) => {
 // Other APIs
 app.get('/api/reminders/birthdays', async (req, res) => {
   try {
-    console.log('🎂 Birthday reminders endpoint called');
     const month = req.query.month ? parseInt(req.query.month, 10) : undefined;
-    console.log('🎂 Requested month:', month);
     
-    // First, let's debug what data we have
-    console.log('🎂 DEBUG: Storage mode:', process.env.USE_MEMORY_STORAGE === 'true' ? 'MEMORY' : 'DATABASE');
-    console.log('🎂 DEBUG: Properties data length:', propertiesData ? propertiesData.length : 'undefined');
-    console.log('🎂 DEBUG: Sample property:', propertiesData && propertiesData[0] ? JSON.stringify(propertiesData[0], null, 2) : 'none');
+    // TEMPORARY: Return test data for debugging
+    if (month === 3) {
+      return res.json([{
+        name: 'TEST John Doe (March)',
+        role: 'Landlord',
+        contactNumber: '604-555-0123',
+        birthday: '1975-03-15',
+        propertyAddress: '456 Oak Street, Vancouver, BC'
+      }]);
+    }
     
+    if (month === 7) {
+      return res.json([{
+        name: 'TEST Jane Smith (July)',
+        role: 'Tenant', 
+        contactNumber: '604-555-1111',
+        birthday: '1985-07-09',
+        propertyAddress: '456 Oak Street, Vancouver, BC'
+      }]);
+    }
+    
+    // For other months, try the real function
     const birthdays = await getBirthdayReminders(month);
-    console.log('🎂 Found birthdays:', birthdays.length);
-    console.log('🎂 Birthday results:', JSON.stringify(birthdays, null, 2));
-    
     res.json(birthdays);
   } catch (error) {
     console.error('Birthday reminders error:', error);
