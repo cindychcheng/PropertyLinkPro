@@ -203,6 +203,18 @@ async function migrateExistingUsers() {
   try {
     console.log('🔄 Starting user migration for password authentication...');
     
+    // First, let's check current user states
+    const checkResult = await global.dbPool.query(`
+      SELECT id, email, password_hash, is_temporary_password 
+      FROM users 
+      ORDER BY created_at
+    `);
+    
+    console.log('🔍 Current users in database:');
+    checkResult.rows.forEach(user => {
+      console.log(`  - ${user.email}: password_hash=${user.password_hash ? 'SET' : 'NULL'}, is_temp=${user.is_temporary_password}`);
+    });
+    
     // Update existing users who don't have password authentication fields set
     const result = await global.dbPool.query(`
       UPDATE users 
@@ -210,17 +222,30 @@ async function migrateExistingUsers() {
         password_hash = NULL,
         is_temporary_password = FALSE,
         password_expires_at = NULL,
-        failed_login_attempts = 0,
+        failed_login_attempts = COALESCE(failed_login_attempts, 0),
         locked_until = NULL
       WHERE 
-        password_hash IS NULL 
-        AND is_temporary_password IS NULL
+        is_temporary_password IS NULL
+        OR failed_login_attempts IS NULL
     `);
     
     console.log(`✅ Migrated ${result.rowCount} existing users for password authentication`);
     
+    // Verify migration results
+    const verifyResult = await global.dbPool.query(`
+      SELECT id, email, password_hash, is_temporary_password, failed_login_attempts
+      FROM users 
+      ORDER BY created_at
+    `);
+    
+    console.log('🔍 Users after migration:');
+    verifyResult.rows.forEach(user => {
+      console.log(`  - ${user.email}: password_hash=${user.password_hash ? 'SET' : 'NULL'}, is_temp=${user.is_temporary_password}, failed_attempts=${user.failed_login_attempts}`);
+    });
+    
   } catch (error) {
     console.error('❌ Error during user migration:', error);
+    console.error('Migration error details:', error.message);
     // Don't fail the startup, just log the error
   }
 }
@@ -1824,11 +1849,32 @@ app.post('/api/users/:userId/generate-password', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
+    // Check user before password generation
+    const userBeforeUpdate = await getUserById(userId);
+    console.log('🔐 User before password generation:', {
+      id: userBeforeUpdate?.id,
+      email: userBeforeUpdate?.email,
+      hasPasswordHash: !!userBeforeUpdate?.passwordHash,
+      isTemporary: userBeforeUpdate?.isTemporaryPassword
+    });
+    
     // Generate temporary password
     const tempPassword = generateTempPassword();
+    console.log('🔐 Generated temporary password:', tempPassword);
     
     // Set temporary password
-    await setUserPassword(userId, tempPassword, true);
+    const updateResult = await setUserPassword(userId, tempPassword, true);
+    console.log('🔐 Password update result:', updateResult ? 'SUCCESS' : 'FAILED');
+    
+    // Verify the password was set
+    const userAfterUpdate = await getUserById(userId);
+    console.log('🔐 User after password generation:', {
+      id: userAfterUpdate?.id,
+      email: userAfterUpdate?.email,
+      hasPasswordHash: !!userAfterUpdate?.passwordHash,
+      isTemporary: userAfterUpdate?.isTemporaryPassword,
+      passwordExpiresAt: userAfterUpdate?.passwordExpiresAt
+    });
     
     console.log('✅ Temporary password generated for user:', user.email);
     
@@ -1967,6 +2013,100 @@ app.delete('/api/users/:userId', async (req, res) => {
   console.log('✅ User deleted:', user.email);
   
   res.json({ success: true, message: 'User deleted successfully' });
+});
+
+// Debug endpoint to force enable password authentication for a user
+app.post('/api/users/:userId/enable-password-auth', async (req, res) => {
+  try {
+    console.log('🔧 Force enable password auth for user:', req.params.userId);
+    
+    // Check authentication and permissions
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const currentUser = await getUserById(req.session.simpleAuth.userId);
+    if (!currentUser || !hasPermission(currentUser, PERMISSIONS.MANAGE_USERS)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    
+    const { userId } = req.params;
+    const user = await getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log('🔧 Current user state:', {
+      id: user.id,
+      email: user.email,
+      hasPasswordHash: !!user.passwordHash,
+      isTemporary: user.isTemporaryPassword,
+      failedAttempts: user.failedLoginAttempts
+    });
+    
+    // Force update the user record to enable password authentication
+    if (global.dbPool && process.env.USE_MEMORY_STORAGE !== 'true') {
+      const updateQuery = `
+        UPDATE users 
+        SET 
+          password_hash = NULL,
+          is_temporary_password = FALSE,
+          password_expires_at = NULL,
+          failed_login_attempts = 0,
+          locked_until = NULL
+        WHERE id = $1
+      `;
+      
+      console.log('🔧 Executing database update for user:', userId);
+      const result = await global.dbPool.query(updateQuery, [userId]);
+      console.log('🔧 Database update result:', result.rowCount, 'rows affected');
+      
+      // Verify the update
+      const updatedUser = await getUserById(userId);
+      console.log('🔧 User after force update:', {
+        id: updatedUser?.id,
+        email: updatedUser?.email,
+        hasPasswordHash: !!updatedUser?.passwordHash,
+        isTemporary: updatedUser?.isTemporaryPassword,
+        failedAttempts: updatedUser?.failedLoginAttempts
+      });
+      
+      res.json({ 
+        success: true, 
+        message: 'Password authentication enabled for user',
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          passwordAuthEnabled: true
+        }
+      });
+    } else {
+      // Memory storage path
+      const memoryUser = users.get(userId);
+      if (memoryUser) {
+        memoryUser.passwordHash = null;
+        memoryUser.isTemporaryPassword = false;
+        memoryUser.passwordExpiresAt = null;
+        memoryUser.failedLoginAttempts = 0;
+        memoryUser.lockedUntil = null;
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Password authentication enabled for user (memory storage)',
+        user: {
+          id: user.id,
+          email: user.email,
+          passwordAuthEnabled: true
+        }
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error enabling password authentication:', error);
+    res.status(500).json({ error: 'Failed to enable password authentication' });
+  }
 });
 
 // Other APIs
