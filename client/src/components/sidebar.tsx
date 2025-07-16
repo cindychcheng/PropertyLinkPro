@@ -70,7 +70,11 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/simple/logout', {
+      // Clear React Query cache first
+      queryClient.clear();
+      
+      // Call logout API
+      await fetch('/api/simple/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -78,24 +82,13 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         },
       });
 
-      if (response.ok) {
-        // Clear React Query cache to reset authentication state
-        queryClient.clear();
-        
-        // Small delay to ensure state is cleared, then reload to landing page
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100);
-      } else {
-        throw new Error('Logout failed');
-      }
+      // Force a complete page reload to reset all state
+      window.location.replace('/');
+      
     } catch (error) {
       console.error('Logout error:', error);
-      toast({
-        title: "Logout failed",
-        description: "There was an error signing out. Please try again.",
-        variant: "destructive",
-      });
+      // Even if API fails, force reload to clear state
+      window.location.replace('/');
     }
   };
 

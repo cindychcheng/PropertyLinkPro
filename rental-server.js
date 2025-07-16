@@ -2316,6 +2316,98 @@ app.post('/api/users/:userId/enable-password-auth', async (req, res) => {
   }
 });
 
+// Comprehensive password debugging endpoint
+app.get('/api/debug/user-password-status/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log('🔍 COMPREHENSIVE PASSWORD DEBUG for:', email);
+    
+    // Check authentication
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Get complete user record
+    const userResult = await global.dbPool.query(`
+      SELECT * FROM users WHERE email = $1
+    `, [email]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Check table schema
+    const schemaResult = await global.dbPool.query(`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'users' 
+      AND column_name IN ('password_hash', 'is_temporary_password', 'password_expires_at', 'failed_login_attempts', 'locked_until')
+      ORDER BY column_name
+    `);
+    
+    // Test password authentication logic
+    const hasPasswordHash = user.password_hash && user.password_hash.length > 0;
+    const isTemporary = user.is_temporary_password;
+    const passwordExpired = user.password_expires_at && new Date() > new Date(user.password_expires_at);
+    const failedAttempts = user.failed_login_attempts || 0;
+    const isLocked = user.locked_until && new Date() < new Date(user.locked_until);
+    
+    // Check what the login logic would see
+    const wouldPassAuthCheck = hasPasswordHash;
+    
+    console.log('🔍 Complete user debug:', {
+      email: user.email,
+      hasPasswordHash,
+      passwordHashLength: user.password_hash ? user.password_hash.length : 0,
+      isTemporary,
+      passwordExpired,
+      failedAttempts,
+      isLocked,
+      wouldPassAuthCheck
+    });
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+        status: user.status
+      },
+      passwordStatus: {
+        hasPasswordHash,
+        passwordHashLength: user.password_hash ? user.password_hash.length : 0,
+        passwordHashPreview: user.password_hash ? user.password_hash.substring(0, 10) + '...' : null,
+        isTemporary,
+        passwordExpiresAt: user.password_expires_at,
+        passwordExpired,
+        failedAttempts,
+        lockedUntil: user.locked_until,
+        isLocked,
+        wouldPassAuthCheck
+      },
+      schemaColumns: schemaResult.rows,
+      debugInfo: {
+        databaseConnected: !!global.dbPool,
+        memoryStorage: process.env.USE_MEMORY_STORAGE === 'true',
+        currentTime: new Date().toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Password debug error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Other APIs
 app.get('/api/reminders/birthdays', (req, res) => {
   res.json([
