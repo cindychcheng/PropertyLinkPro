@@ -2015,6 +2015,131 @@ app.delete('/api/users/:userId', async (req, res) => {
   res.json({ success: true, message: 'User deleted successfully' });
 });
 
+// Direct database fix for password authentication
+app.post('/api/debug/fix-user-password-auth/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log('🔧 DIRECT DATABASE FIX for user:', email);
+    
+    // Check authentication
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Get current user state
+    console.log('🔍 Checking current user state...');
+    const currentState = await global.dbPool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('🔍 Current user state:', currentState.rows[0]);
+    
+    if (currentState.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Force update with explicit SQL
+    console.log('🔧 Executing direct SQL update...');
+    const updateResult = await global.dbPool.query(`
+      UPDATE users 
+      SET 
+        password_hash = NULL,
+        is_temporary_password = FALSE,
+        password_expires_at = NULL,
+        failed_login_attempts = 0,
+        locked_until = NULL
+      WHERE email = $1
+      RETURNING *
+    `, [email]);
+    
+    console.log('🔧 Update result:', updateResult.rows[0]);
+    
+    // Verify the update worked
+    const verifyResult = await global.dbPool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('🔧 Verification result:', verifyResult.rows[0]);
+    
+    res.json({
+      success: true,
+      message: 'Direct database fix completed',
+      before: currentState.rows[0],
+      after: verifyResult.rows[0]
+    });
+    
+  } catch (error) {
+    console.error('❌ Direct database fix error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Direct password generation with database bypass
+app.post('/api/debug/generate-password/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log('🔧 DIRECT PASSWORD GENERATION for user:', email);
+    
+    // Check authentication
+    if (!req.session.simpleAuth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Generate password
+    const tempPassword = generateTempPassword();
+    const passwordHash = await hashPassword(tempPassword);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    console.log('🔧 Generated password:', tempPassword);
+    console.log('🔧 Password hash:', passwordHash ? 'Created' : 'Failed');
+    
+    // Direct database update
+    const updateResult = await global.dbPool.query(`
+      UPDATE users 
+      SET 
+        password_hash = $1,
+        is_temporary_password = TRUE,
+        password_expires_at = $2,
+        failed_login_attempts = 0,
+        locked_until = NULL
+      WHERE email = $3
+      RETURNING *
+    `, [passwordHash, expiresAt, email]);
+    
+    console.log('🔧 Database update completed:', updateResult.rows[0]);
+    
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Verify the password was set
+    const verifyResult = await global.dbPool.query(`
+      SELECT email, password_hash, is_temporary_password, password_expires_at 
+      FROM users WHERE email = $1
+    `, [email]);
+    
+    console.log('🔧 Verification - user has password hash:', !!verifyResult.rows[0]?.password_hash);
+    
+    res.json({
+      success: true,
+      tempPassword: tempPassword,
+      message: 'Password generated via direct database update',
+      expiresIn: '24 hours',
+      verification: {
+        hasPasswordHash: !!verifyResult.rows[0]?.password_hash,
+        isTemporary: verifyResult.rows[0]?.is_temporary_password,
+        expiresAt: verifyResult.rows[0]?.password_expires_at
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Direct password generation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Debug endpoint to force enable password authentication for a user
 app.post('/api/users/:userId/enable-password-auth', async (req, res) => {
   try {
