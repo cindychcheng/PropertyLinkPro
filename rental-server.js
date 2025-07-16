@@ -2870,6 +2870,52 @@ app.post('/api/users/:userId/fix-password-auth', async (req, res) => {
   }
 });
 
+// Test endpoint to add sample birthday data
+app.post('/api/test/add-birthday-data', async (req, res) => {
+  try {
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+
+    // Create a test property first
+    const propertyResult = await global.dbPool.query(`
+      INSERT INTO properties (id, property_address, key_number, service_type)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (property_address) DO UPDATE SET
+        key_number = EXCLUDED.key_number
+      RETURNING id
+    `, [Date.now(), 'Test Birthday Property', 'TEST001', 'Full-Service Management']);
+    
+    const propertyId = propertyResult.rows[0].id;
+
+    // Add landlord owner with March birthday
+    await global.dbPool.query(`
+      INSERT INTO landlord_owners (id, property_id, name, contact_number, birthday)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (id) DO NOTHING
+    `, [Date.now() + 1, propertyId, 'John Doe', '604-555-0123', '1975-03-15']);
+
+    // Add tenant with July birthday
+    await global.dbPool.query(`
+      INSERT INTO tenants (id, property_id, name, contact_number, birthday, move_in_date, is_primary)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (id) DO NOTHING
+    `, [Date.now() + 2, propertyId, 'Jane Smith', '604-555-1111', '1985-07-09', '2023-01-01', true]);
+
+    // Add tenant with January birthday
+    await global.dbPool.query(`
+      INSERT INTO tenants (id, property_id, name, contact_number, birthday, move_in_date, is_primary)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (id) DO NOTHING
+    `, [Date.now() + 3, propertyId, 'Bob Wilson', '604-555-2222', '1990-01-20', '2023-02-01', false]);
+
+    res.json({ success: true, message: 'Test birthday data added', propertyId });
+  } catch (error) {
+    console.error('Error adding test data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Other APIs
 app.get('/api/reminders/birthdays', async (req, res) => {
   try {
