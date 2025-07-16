@@ -306,7 +306,12 @@ async function getUserByEmail(email) {
           role: row.role,
           status: row.status,
           createdAt: row.created_at,
-          lastLoginAt: row.last_login_at
+          lastLoginAt: row.last_login_at,
+          passwordHash: row.password_hash,
+          isTemporaryPassword: row.is_temporary_password,
+          passwordExpiresAt: row.password_expires_at,
+          failedLoginAttempts: row.failed_login_attempts,
+          lockedUntil: row.locked_until
         };
       }
       return null;
@@ -338,7 +343,12 @@ async function getUserById(id) {
           role: row.role,
           status: row.status,
           createdAt: row.created_at,
-          lastLoginAt: row.last_login_at
+          lastLoginAt: row.last_login_at,
+          passwordHash: row.password_hash,
+          isTemporaryPassword: row.is_temporary_password,
+          passwordExpiresAt: row.password_expires_at,
+          failedLoginAttempts: row.failed_login_attempts,
+          lockedUntil: row.locked_until
         };
       }
       return null;
@@ -1141,6 +1151,26 @@ async function initializeSampleUsers() {
       role: USER_ROLES.STAFF,
       status: 'active'
     });
+
+    // Add test user for password authentication testing
+    const testUser = await createUser({
+      id: 'user_1752528327919',
+      email: 'hunniebearu@gmail.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: USER_ROLES.STAFF,
+      status: 'active'
+    });
+
+    // Set password for test user (jGafWa3uk8GJ)
+    if (testUser) {
+      const hashedPassword = await hashPassword('jGafWa3uk8GJ');
+      testUser.passwordHash = hashedPassword;
+      testUser.isTemporaryPassword = true;
+      testUser.passwordExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      users.set(testUser.id, testUser);
+      console.log('🔑 Test user password set for hunniebearu@gmail.com');
+    }
   } else {
     // For database mode, only create admin if it doesn't exist
     const existingAdmin = await getUserByEmail('admin@instarealty.com');
@@ -1426,6 +1456,7 @@ app.post('/api/simple/login', (req, res) => {
   }
 });
 
+
 // Password-based login for non-admin users
 app.post('/api/password/login', async (req, res) => {
   try {
@@ -1443,6 +1474,15 @@ app.post('/api/password/login', async (req, res) => {
       console.log('❌ User not found:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    
+    console.log('🔍 User found for login:', {
+      id: user.id,
+      email: user.email,
+      hasPasswordHash: !!user.passwordHash,
+      passwordHashLength: user.passwordHash ? user.passwordHash.length : 0,
+      passwordHashType: typeof user.passwordHash,
+      isTemporary: user.isTemporaryPassword
+    });
 
     // Check if account is locked
     const lockStatus = await checkAccountLockout(user.id);
