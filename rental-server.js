@@ -1454,6 +1454,9 @@ app.post('/api/password/login', async (req, res) => {
     // Check if user has a password set
     if (!user.passwordHash) {
       console.log('❌ No password set for user:', email);
+      console.log('❌ User object:', JSON.stringify(user, null, 2));
+      console.log('❌ Password hash value:', user.passwordHash);
+      console.log('❌ Password hash type:', typeof user.passwordHash);
       return res.status(401).json({ error: 'Password authentication not enabled for this account' });
     }
 
@@ -2477,6 +2480,49 @@ app.post('/api/debug/force-password', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Nuclear password fix error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Emergency test endpoint - NO AUTH REQUIRED
+app.get('/api/debug/test-user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log('🧪 EMERGENCY TEST for:', email);
+    
+    if (!global.dbPool) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
+    // Get raw user data
+    const userResult = await global.dbPool.query(`
+      SELECT * FROM users WHERE email = $1
+    `, [email]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    console.log('🧪 Raw user data:', user);
+    
+    res.json({
+      success: true,
+      message: 'Emergency test data',
+      rawUser: user,
+      analysis: {
+        hasPasswordHash: !!user.password_hash,
+        passwordHashType: typeof user.password_hash,
+        passwordHashLength: user.password_hash ? user.password_hash.length : 0,
+        passwordHashValue: user.password_hash ? user.password_hash.substring(0, 20) + '...' : null,
+        isTemporary: user.is_temporary_password,
+        wouldPassCheck: !!user.password_hash
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Emergency test error:', error);
     res.status(500).json({ error: error.message });
   }
 });
