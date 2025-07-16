@@ -1551,49 +1551,6 @@ app.post('/api/password/login', async (req, res) => {
   }
 });
 
-// Change password endpoint
-app.post('/api/password/change', async (req, res) => {
-  try {
-    const { userId, currentPassword, newPassword } = req.body;
-    
-    console.log('🔄 Password change request for user:', userId);
-    
-    if (!userId || !newPassword) {
-      return res.status(400).json({ error: 'User ID and new password required' });
-    }
-
-    // Validate new password
-    const validation = validatePassword(newPassword);
-    if (!validation.valid) {
-      return res.status(400).json({ error: validation.message });
-    }
-
-    // Get user
-    const user = await getUserById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // If user has existing password, verify current password
-    if (user.passwordHash && currentPassword) {
-      const isValidCurrent = await verifyPassword(currentPassword, user.passwordHash);
-      if (!isValidCurrent) {
-        console.log('❌ Invalid current password for user:', userId);
-        return res.status(401).json({ error: 'Current password is incorrect' });
-      }
-    }
-
-    // Set new password
-    await setUserPassword(userId, newPassword, false);
-    
-    console.log('✅ Password changed successfully for user:', userId);
-    return res.json({ success: true, message: 'Password changed successfully' });
-
-  } catch (error) {
-    console.error('Password change error:', error);
-    return res.status(500).json({ error: 'Failed to change password' });
-  }
-});
 
 // Logout endpoints (both GET and POST for compatibility)
 app.get('/api/logout', (req, res) => {
