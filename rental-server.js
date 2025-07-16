@@ -1568,6 +1568,13 @@ app.post('/api/password/login', async (req, res) => {
     // Check if password change is required
     const requiresPasswordChange = user.isTemporaryPassword;
 
+    console.log('🔍 Password change check:', {
+      email: user.email,
+      isTemporaryPassword: user.isTemporaryPassword,
+      requiresPasswordChange,
+      passwordExpiresAt: user.passwordExpiresAt
+    });
+
     // Return user info (without sensitive data)
     const userResponse = {
       id: user.id,
@@ -1578,6 +1585,12 @@ app.post('/api/password/login', async (req, res) => {
       status: user.status,
       requiresPasswordChange
     };
+
+    console.log('🔍 Login response being sent:', { 
+      success: true, 
+      requiresPasswordChange,
+      userEmail: userResponse.email
+    });
 
     return res.json({ 
       success: true, 
