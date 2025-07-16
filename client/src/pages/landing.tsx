@@ -102,26 +102,22 @@ export default function Landing() {
           description: `Welcome, ${data.user.firstName || "User"}!`,
         });
         
-        // Check if password change is required
-        console.log('🔐 DEBUG: Checking password change requirement:', {
-          requiresPasswordChange: data.requiresPasswordChange,
-          dataKeys: Object.keys(data),
-          fullData: data
-        });
+        // Check if password change is required - force redirect for now
+        console.log('🔐 Login response data:', data);
         
-        if (data.requiresPasswordChange) {
+        if (data.requiresPasswordChange === true) {
           console.log('🔐 Password change required, redirecting...');
-          alert('DEBUG: Password change required! Redirecting to /change-password');
           toast({
             title: "Password change required",
             description: "Please update your temporary password",
             variant: "default",
           });
-          // Redirect to password change page
-          window.location.replace("/change-password");
+          // Use setTimeout to ensure toast shows before redirect
+          setTimeout(() => {
+            window.location.href = "/change-password";
+          }, 1000);
         } else {
           console.log('🔐 No password change required, going to dashboard');
-          alert('DEBUG: No password change required, going to dashboard');
           // Force a complete page reload to refresh authentication state
           window.location.replace("/");
         }
