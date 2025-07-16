@@ -102,8 +102,20 @@ export default function Landing() {
           description: `Welcome, ${data.user.firstName || "User"}!`,
         });
         
-        // Force a complete page reload to refresh authentication state
-        window.location.replace("/");
+        // Check if password change is required
+        if (data.requiresPasswordChange) {
+          console.log('🔐 Password change required, redirecting...');
+          toast({
+            title: "Password change required",
+            description: "Please update your temporary password",
+            variant: "default",
+          });
+          // Redirect to password change page
+          window.location.replace("/change-password");
+        } else {
+          // Force a complete page reload to refresh authentication state
+          window.location.replace("/");
+        }
       } else {
         console.log('🔐 Login failed:', data.error);
         toast({
